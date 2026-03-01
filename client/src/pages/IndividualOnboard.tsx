@@ -244,7 +244,7 @@ export default function IndividualOnboard() {
   const { data: existingProfile } = useQuery({
     queryKey: ["individual-profile"],
     queryFn: async () => {
-      const r = await fetch("/api/individual", {
+      const r = await fetch("/api/profile", {
         headers: { "Content-Type": "application/json" },
       });
       if (r.status === 404) return null;
@@ -270,7 +270,7 @@ export default function IndividualOnboard() {
 
   function canProceed() {
     switch (step) {
-      case 0: return fullName.trim() && email.trim() && phone.trim();
+      case 0: return fullName.trim() && email.trim();
       case 1: return profileType;
       case 2: return skills.length > 0 && experienceLevel;
       case 3: return lookingFor.length > 0;
@@ -290,7 +290,7 @@ export default function IndividualOnboard() {
       return;
     }
 
-    const res = await fetch("/api/individual", {
+    const res = await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -356,7 +356,7 @@ export default function IndividualOnboard() {
       <StepHeader step={0} title="Individual Onboarding" />
       <Field label="Your Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
       <Field label="Email Address" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
-      <Field label="Phone Number" value={phone} onChange={setPhone} placeholder="+1 234 567 8900" />
+      <Field label="Phone Number (Optional)" value={phone} onChange={setPhone} placeholder="+1 234 567 8900" />
       <Field label="LinkedIn Profile (Optional)" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
       <Field label="Portfolio URL (Optional)" value={portfolioUrl} onChange={setPortfolioUrl} placeholder="https://yoursite.com" />
     </div>,

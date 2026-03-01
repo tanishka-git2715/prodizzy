@@ -248,7 +248,7 @@ export default function PartnerOnboard() {
   const { data: existingProfile } = useQuery({
     queryKey: ["partner-profile"],
     queryFn: async () => {
-      const r = await fetch("/api/partner", {
+      const r = await fetch("/api/profile", {
         headers: { "Content-Type": "application/json" },
       });
       if (r.status === 404) return null;

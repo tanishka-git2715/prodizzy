@@ -222,7 +222,7 @@ export const insertPartnerSchema = z.object({
   role: z.string().min(1, "Your role is required"),
   full_name: z.string().min(1, "Full name is required"),
   email: z.string().email("Valid email required"),
-  phone: z.string().min(1, "Phone is required"),
+  phone: z.string().optional(),
   website: z.string().optional(),
   linkedin_url: z.string().optional(),
   partner_type: z.enum(["Agency", "Investor", "Service Provider", "Institutional Firm"]),
@@ -261,7 +261,7 @@ export type PartnerProfile = InsertPartner & {
 export const insertIndividualSchema = z.object({
   full_name: z.string().min(1, "Name is required"),
   email: z.string().email("Valid email required"),
-  phone: z.string().min(1, "Phone is required"),
+  phone: z.string().optional(),
   linkedin_url: z.string().optional(),
   portfolio_url: z.string().optional(),
   profile_type: z.enum(["Student", "Freelancer", "Professional", "Content Creator", "Community Admin"]),

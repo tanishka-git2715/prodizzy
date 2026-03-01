@@ -79,15 +79,9 @@ function TextArea({ label, value, onChange, placeholder }: { label: string; valu
 
 // ─── Startup Dashboard as a proper component ────────────────────────────────────
 const INDUSTRY_OPTIONS = ["Software & AI", "Fintech", "Healthtech", "Edtech", "D2C / Consumer", "SaaS", "Deeptech", "Climate", "Other"];
-const STAGE_OPTIONS = [
-  "Pre-Seed (Ideation Stage)",
-  "Seed (MVP & Early traction)",
-  "Series A (Generating Revenue)",
-  "Series B/C/D (Expansion & Scaling)",
-  "MNC (Global)"
-];
-const TEAM_SIZE_OPTIONS = ["Solo", "2–10", "11–50", "51–500", "500–1000", "1000+"];
-const IS_REGISTERED_OPTIONS = ["Yes", "No"];
+const STAGE_OPTIONS = ["Pre-Seed (Idea Stage)", "Seed (MVP & Validation)", "Series A (Growth)", "Expansion (Scaling)", "MNC (Global)"];
+const TEAM_SIZE_OPTIONS = ["Solo (1)", "2-10", "11-50", "50+"];
+const IS_REGISTERED_OPTIONS = ["Yes, registered", "In progress", "No, not yet"];
 
 function StartupDashboard({ profile, session, signOut, patchMutation, connections, greeting }: {
   profile: StartupProfile; session: any; signOut: () => void;
@@ -317,7 +311,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                   </div>
 
                   <TextArea label="Product Description" value={productDescription} onChange={setProductDescription} placeholder="What does your product do?" />
-                  <TextArea label="Problem Solved" value={problemSolved} onChange={setProblemSolved} placeholder="What problem are you solving?" />
                   <TextInput label="Target Audience" value={targetAudience} onChange={setTargetAudience} placeholder="SMBs, Students, D2C brands..." />
                   <TextArea label="Traction Highlights" value={tractionHighlights} onChange={setTractionHighlights} placeholder="Key milestones, partnerships, press..." />
 
@@ -369,7 +362,7 @@ export default function Dashboard() {
     enabled: !!session,
   });
 
-  const { data: profile, isLoading, isFetched } = useQuery<StartupProfile | null>({
+  const { data: profile, isLoading, isFetched } = useQuery<any | null>({
     queryKey: ["profile"],
     queryFn: async () => {
       const r = await fetch("/api/profile", { headers: authHeaders() });
@@ -380,38 +373,16 @@ export default function Dashboard() {
     enabled: !!session,
   });
 
-  const { data: partnerProfile, isLoading: partnerLoading, isFetched: partnerFetched } = useQuery<PartnerProfile | null>({
-    queryKey: ["partner-profile"],
-    queryFn: async () => {
-      if (!session) return null;
-      const r = await fetch("/api/partner", { headers: authHeaders() });
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error("Failed to fetch partner profile");
-      return r.json();
-    },
-    enabled: !!session,
-  });
-
-  const { data: individualProfile, isLoading: individualLoading, isFetched: individualFetched } = useQuery<IndividualProfile | null>({
-    queryKey: ["individual-profile"],
-    queryFn: async () => {
-      if (!session) return null;
-      const r = await fetch("/api/individual", { headers: authHeaders() });
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error("Failed to fetch individual profile");
-      return r.json();
-    },
-    enabled: !!session,
-  });
-
   const patchMutation = useMutation({
-    mutationFn: (patch: Partial<StartupProfile>) =>
+    mutationFn: (patch: any) =>
       fetch("/api/profile", {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify(patch),
       }).then(r => r.json()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
+    onSuccess: (data: any) => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    },
   });
 
   async function signOut() {
@@ -420,12 +391,7 @@ export default function Dashboard() {
     setLocation("/");
   }
 
-  const anyLoading = isLoading || partnerLoading || individualLoading;
-  const startupReady = !session || isFetched;
-  const partnerReady = !session || partnerFetched;
-  const individualReady = !session || individualFetched;
-
-  if (authLoading || anyLoading || !startupReady || !partnerReady || !individualReady) {
+  if (authLoading || isLoading || !isFetched) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
@@ -433,9 +399,7 @@ export default function Dashboard() {
     );
   }
 
-  const allFetched = (!session) || (isFetched && partnerFetched && individualFetched);
-  if (session && allFetched && !profile && !partnerProfile && !individualProfile) {
-    // Redirect to home page which shows the role selection modal (Startup / Partner / Individual)
+  if (session && isFetched && !profile) {
     setLocation("/");
     return null;
   }
@@ -443,139 +407,17 @@ export default function Dashboard() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-  // ── Startup dashboard view
-  if (profile) {
+  if (profile.type === "startup") {
     return <StartupDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
   }
 
-  // ── Individual dashboard view
-  if (individualProfile) {
-    const firstName = (individualProfile.full_name || "").split(" ")[0] || "there";
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-6 py-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
-              <span className="font-semibold tracking-tight">Prodizzy</span>
-            </div>
-            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
-              <LogOut className="w-3.5 h-3.5" /> Sign out
-            </button>
-          </div>
-        </nav>
-        <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
-            <p className="text-white/35 mt-1 text-sm">{individualProfile.profile_type} · {individualProfile.location || "Location not set"}</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-4">
-              <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">Overview</h2>
-              <p className="text-white/40 text-sm">We&apos;re rolling out tailored opportunities for individuals — roles, gigs, and collaborations based on your profile.</p>
-              {individualProfile.looking_for?.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs text-white/35 uppercase tracking-wider">You&apos;re looking for</p>
-                  <div className="flex flex-wrap gap-2">{individualProfile.looking_for.map((g: string) => <Tag key={g} label={g} />)}</div>
-                </div>
-              )}
-            </div>
-            <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-4">
-              <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">Profile snapshot</h2>
-              {individualProfile.skills?.length > 0 && (
-                <div className="space-y-1.5 text-sm">
-                  <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
-                  <p className="text-white/70">{individualProfile.skills.join(", ")}</p>
-                </div>
-              )}
-              {individualProfile.experience_level && (
-                <div className="space-y-1.5 text-sm">
-                  <p className="text-xs text-white/35 uppercase tracking-wider">Experience</p>
-                  <p className="text-white/70">{individualProfile.experience_level}</p>
-                </div>
-              )}
-              {(individualProfile.availability || individualProfile.work_mode) && (
-                <div className="space-y-1.5 text-sm">
-                  <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
-                  <p className="text-white/70">{individualProfile.availability || "—"} {individualProfile.work_mode && `· ${individualProfile.work_mode}`}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* ── Matches ──────────────────────────────────────────────────────── */}
-          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
-            <p className="text-white/25 text-sm">Coming soon — we&apos;re curating based on your profile.</p>
-          </div>
-        </div>
-      </div>
-    );
+  if (profile.type === "individual") {
+    return <IndividualDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
   }
 
-  // ── Partner dashboard view
-  if (partnerProfile) {
-    const firstName = (partnerProfile.full_name || "").split(" ")[0] || "there";
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-6 py-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
-              <span className="font-semibold tracking-tight">Prodizzy</span>
-            </div>
-            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
-              <LogOut className="w-3.5 h-3.5" /> Sign out
-            </button>
-          </div>
-        </nav>
-        <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
-            <p className="text-white/35 mt-1 text-sm">{partnerProfile.partner_type} · {partnerProfile.company_name}</p>
-          </div>
-          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-4">
-            <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">Your Partner Profile</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              {partnerProfile.services_offered?.length > 0 && (
-                <div>
-                  <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Services</p>
-                  <p className="text-white/70">{partnerProfile.services_offered.join(", ")}</p>
-                </div>
-              )}
-              {partnerProfile.industries_served?.length > 0 && (
-                <div>
-                  <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Industries</p>
-                  <p className="text-white/70">{partnerProfile.industries_served.join(", ")}</p>
-                </div>
-              )}
-              {partnerProfile.stages_served?.length > 0 && (
-                <div>
-                  <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Stages</p>
-                  <p className="text-white/70">{partnerProfile.stages_served.join(", ")}</p>
-                </div>
-              )}
-              <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Contact</p>
-                <p className="text-white/70">{partnerProfile.email}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Matches ──────────────────────────────────────────────────────── */}
-          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
-            <p className="text-white/25 text-sm">Coming soon — we&apos;re curating based on your profile.</p>
-          </div>
-        </div>
-      </div>
-    );
+  if (profile.type === "partner") {
+    return <PartnerDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
   }
 
-  // Fallback
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
-    </div>
-  );
+  return null;
 }

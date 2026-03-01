@@ -372,7 +372,7 @@ export default function Home() {
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
-                title: "Startup",
+                title: "Join as Startup",
                 desc: "Build and scale your startup with the right people, partners, and capital.",
                 for: "For founders from ideation to growth stage and beyond",
                 action: () => handleRoleCardClick("startup" as const),
