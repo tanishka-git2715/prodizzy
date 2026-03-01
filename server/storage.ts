@@ -27,13 +27,13 @@ export class DatabaseStorage implements IStorage {
   async createWaitlistEntry(entry: InsertWaitlistEntry): Promise<WaitlistResponse> {
     const doc = new Waitlist({ name: entry.name, email: entry.email, role: entry.role });
     await doc.save();
-    return doc.toObject() as WaitlistResponse;
+    return doc.toObject() as unknown as WaitlistResponse;
   }
 
   async getWaitlistEntryByEmail(email: string): Promise<WaitlistResponse | undefined> {
     const doc = await Waitlist.findOne({ email });
     if (!doc) return undefined;
-    return doc.toObject() as WaitlistResponse;
+    return doc.toObject() as unknown as WaitlistResponse;
   }
 
   private getModelByType(type: string) {
@@ -50,10 +50,9 @@ export class DatabaseStorage implements IStorage {
     // Check all models to find where the user has a profile
     const models = [StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile];
     for (const Model of models) {
-      const doc = await Model.findOne({ user_id: userId });
+      const doc = await (Model as any).findOne({ user_id: userId });
       if (doc) {
         const obj = doc.toObject();
-        // @ts-ignore
         obj.type = Model.modelName.replace("Profile", "").toLowerCase();
         return obj;
       }
@@ -63,7 +62,7 @@ export class DatabaseStorage implements IStorage {
 
   async upsertProfile(userId: string, email: string, profile: any, type: string): Promise<any> {
     const Model = this.getModelByType(type);
-    const doc = await Model.findOneAndUpdate(
+    const doc = await (Model as any).findOneAndUpdate(
       { user_id: userId },
       { user_id: userId, email, ...profile, onboarding_completed: true },
       { upsert: true, new: true }
@@ -77,7 +76,7 @@ export class DatabaseStorage implements IStorage {
     if (!profile) throw new Error("Profile not found");
 
     const Model = this.getModelByType(profile.type);
-    const doc = await Model.findOneAndUpdate(
+    const doc = await (Model as any).findOneAndUpdate(
       { user_id: userId },
       { $set: patch },
       { new: true }
@@ -87,10 +86,9 @@ export class DatabaseStorage implements IStorage {
 
   async getAllProfiles(type: string): Promise<any[]> {
     const Model = this.getModelByType(type);
-    const docs = await Model.find({}).sort({ createdAt: -1 });
-    return docs.map(d => {
+    const docs = await (Model as any).find({}).sort({ createdAt: -1 });
+    return docs.map((d: any) => {
       const obj = d.toObject();
-      // @ts-ignore
       obj.id = obj._id.toString(); // Map _id to id for frontend compatibility
       return obj;
     });
@@ -98,7 +96,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateProfileApproval(type: string, id: string, approved: boolean): Promise<any> {
     const Model = this.getModelByType(type);
-    const doc = await Model.findByIdAndUpdate(id, { approved }, { new: true });
+    const doc = await (Model as any).findByIdAndUpdate(id, { approved }, { new: true });
     if (!doc) throw new Error("Profile not found");
     return doc.toObject();
   }
@@ -113,4 +111,3 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
-
