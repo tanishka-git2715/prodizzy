@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI must be set in your .env file");
-}
-
 let isConnected = false;
 
 export const connectDB = async () => {
+  const MONGODB_URI = process.env.MONGODB_URI;
+
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI environment variable is not set. Please add it to your Vercel project settings.");
+  }
+
   if (isConnected) {
     console.log("Using existing MongoDB connection");
     return;
@@ -25,6 +25,7 @@ export const connectDB = async () => {
     console.log("Connected to MongoDB successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error);
+    isConnected = false;
     throw error;
   }
 };
