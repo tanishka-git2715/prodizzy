@@ -3322,7 +3322,7 @@ function setupAuth(app3) {
     "/api/auth/google/callback",
     import_passport.default.authenticate("google", { failureRedirect: "/login?error=google" }),
     (req, res) => {
-      res.redirect("/dashboard");
+      res.redirect("/");
     }
   );
   app3.post("/api/auth/register", async (req, res, next) => {

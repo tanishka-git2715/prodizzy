@@ -6,9 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 interface AuthFormProps {
     onSuccess?: () => void;
     initialTab?: "signup" | "signin";
+    pendingRole?: string | null;
 }
 
-export function AuthForm({ onSuccess, initialTab = "signup" }: AuthFormProps) {
+export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: AuthFormProps) {
     const { loginWithGoogle, login, register } = useAuth();
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState<"signup" | "signin">(initialTab);
@@ -65,8 +66,8 @@ export function AuthForm({ onSuccess, initialTab = "signup" }: AuthFormProps) {
                     type="button"
                     onClick={() => setActiveTab("signup")}
                     className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${activeTab === "signup"
-                            ? "bg-[#1A1A1A] text-white shadow-lg border border-white/5"
-                            : "text-white/40 hover:text-white/60"
+                        ? "bg-[#1A1A1A] text-white shadow-lg border border-white/5"
+                        : "text-white/40 hover:text-white/60"
                         }`}
                 >
                     Sign up
@@ -75,8 +76,8 @@ export function AuthForm({ onSuccess, initialTab = "signup" }: AuthFormProps) {
                     type="button"
                     onClick={() => setActiveTab("signin")}
                     className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${activeTab === "signin"
-                            ? "bg-[#1A1A1A] text-white shadow-lg border border-white/5"
-                            : "text-white/40 hover:text-white/60"
+                        ? "bg-[#1A1A1A] text-white shadow-lg border border-white/5"
+                        : "text-white/40 hover:text-white/60"
                         }`}
                 >
                     Sign in
@@ -85,7 +86,15 @@ export function AuthForm({ onSuccess, initialTab = "signup" }: AuthFormProps) {
 
             <button
                 type="button"
-                onClick={loginWithGoogle}
+                onClick={() => {
+                    // Persist pendingRole across the Google OAuth full-page redirect
+                    if (pendingRole) {
+                        sessionStorage.setItem("prodizzy-pending-role", pendingRole);
+                    } else {
+                        sessionStorage.removeItem("prodizzy-pending-role");
+                    }
+                    loginWithGoogle();
+                }}
                 className="w-full bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mb-8 shadow-sm"
             >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">

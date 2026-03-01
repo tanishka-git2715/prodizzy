@@ -628,7 +628,8 @@ export default function Dashboard() {
 
   const allFetched = (!session) || (isFetched && partnerFetched && individualFetched);
   if (session && allFetched && !profile && !partnerProfile && !individualProfile) {
-    setLocation("/join-startup");
+    // Redirect to home page which shows the role selection modal (Startup / Partner / Individual)
+    setLocation("/");
     return null;
   }
 

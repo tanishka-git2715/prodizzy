@@ -35,7 +35,17 @@ export default function Home() {
   });
   const [authError, setAuthError] = useState("");
   const [authMode, setAuthMode] = useState<"signup" | "signin">("signup");
-  const [pendingRole, setPendingRole] = useState<"startup" | "partner" | "individual" | "intent_join" | null>(null);
+  const [pendingRole, setPendingRole] = useState<"startup" | "partner" | "individual" | "intent_join" | null>(() => {
+    // Restore pendingRole from sessionStorage after Google OAuth redirect
+    try {
+      const saved = sessionStorage.getItem("prodizzy-pending-role");
+      if (saved) {
+        sessionStorage.removeItem("prodizzy-pending-role");
+        return saved as "startup" | "partner" | "individual" | "intent_join";
+      }
+    } catch { /* ignore */ }
+    return null;
+  });
 
   // Smooth typing animation for hero subtitle
   const fullText = "Stop relying on random connections. Get matched with the right people for hiring, partnerships, growth, and fundraising.";
@@ -539,7 +549,7 @@ export default function Home() {
             style={{ background: "#0D0E0F", border: "1px solid rgba(255,255,255,0.1)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <AuthForm onSuccess={() => setShowAuthModal(false)} initialTab={authMode} />
+            <AuthForm onSuccess={() => setShowAuthModal(false)} initialTab={authMode} pendingRole={pendingRole} />
           </motion.div>
         </div>
       )}

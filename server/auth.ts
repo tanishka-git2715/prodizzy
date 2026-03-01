@@ -117,8 +117,9 @@ export function setupAuth(app: Express) {
         "/api/auth/google/callback",
         passport.authenticate("google", { failureRedirect: "/login?error=google" }),
         (req, res) => {
-            // Redirect to dashboard after successful Google login
-            res.redirect("/dashboard");
+            // Redirect to home; the Home page handles new-user role selection and
+            // existing-user redirection to /dashboard via its useEffect logic.
+            res.redirect("/");
         }
     );
 
