@@ -3206,8 +3206,9 @@ var import_passport = __toESM(require("passport"), 1);
 var import_passport_google_oauth20 = require("passport-google-oauth20");
 var import_passport_local = require("passport-local");
 var import_express_session = __toESM(require("express-session"), 1);
-var import_connect_mongo = __toESM(require("connect-mongo"), 1);
 var import_bcryptjs = __toESM(require("bcryptjs"), 1);
+var connectMongo = require("connect-mongo");
+var MongoStore = connectMongo.default ?? connectMongo;
 function setupAuth(app3) {
   const sessionSecret = process.env.SESSION_SECRET || "prodizzy_default_secret";
   const mongoUrl = process.env.MONGODB_URI || "mongodb://localhost:27017/prodizzy";
@@ -3216,7 +3217,7 @@ function setupAuth(app3) {
       secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
-      store: import_connect_mongo.default.create({
+      store: MongoStore.create({
         mongoUrl,
         ttl: 14 * 24 * 60 * 60
         // 14 days

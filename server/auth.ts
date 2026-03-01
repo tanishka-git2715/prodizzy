@@ -3,7 +3,12 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as LocalStrategy } from "passport-local";
 import { User } from "./models";
 import session from "express-session";
-import MongoStore from "connect-mongo";
+// Use require-style interop to avoid esbuild CJS bundle wrapping connect-mongo with .default
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const connectMongo = require("connect-mongo");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const MongoStore: any = connectMongo.default ?? connectMongo;
+
 import { Express } from "express";
 import bcrypt from "bcryptjs";
 
