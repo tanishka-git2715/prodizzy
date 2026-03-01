@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
-import { LogOut, ChevronRight, Check, Edit2, X } from "lucide-react";
+import { LogOut, ChevronRight, Check, Edit2, X, Mail, Phone, Linkedin, Globe, Github, FileText, MapPin, Briefcase } from "lucide-react";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -56,12 +56,17 @@ function PickMany({ options, value, onChange }: { options: string[]; value: stri
   );
 }
 
-function TextInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+function FormField({ label, value, onChange, placeholder, type = "text" }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
   return (
-    <div className="space-y-1.5">
-      <label className="text-xs text-white/35 uppercase tracking-wider">{label}</label>
-      <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/20 focus:outline-none focus:border-white/25 transition-colors" />
+    <div className="space-y-1.5 flex-1">
+      <p className="text-[10px] text-white/25 uppercase tracking-wider ml-1">{label}</p>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors"
+      />
     </div>
   );
 }
@@ -79,9 +84,15 @@ function TextArea({ label, value, onChange, placeholder }: { label: string; valu
 
 // ─── Startup Dashboard as a proper component ────────────────────────────────────
 const INDUSTRY_OPTIONS = ["Software & AI", "Fintech", "Healthtech", "Edtech", "D2C / Consumer", "SaaS", "Deeptech", "Climate", "Other"];
-const STAGE_OPTIONS = ["Pre-Seed (Idea Stage)", "Seed (MVP & Validation)", "Series A (Growth)", "Expansion (Scaling)", "MNC (Global)"];
-const TEAM_SIZE_OPTIONS = ["Solo (1)", "2-10", "11-50", "50+"];
-const IS_REGISTERED_OPTIONS = ["Yes, registered", "In progress", "No, not yet"];
+const STAGE_OPTIONS = [
+  "Pre-Seed (Ideation Stage)",
+  "Seed (MVP & Early traction)",
+  "Series A (Generating Revenue)",
+  "Series B/C/D (Expansion & Scaling)",
+  "MNC (Global)"
+];
+const TEAM_SIZE_OPTIONS = ["Solo", "2–10", "11–50", "51–500", "500–1000", "1000+"];
+const IS_REGISTERED_OPTIONS = ["Yes", "No"];
 
 function StartupDashboard({ profile, session, signOut, patchMutation, connections, greeting }: {
   profile: StartupProfile; session: any; signOut: () => void;
@@ -94,11 +105,13 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
   const [companyName, setCompanyName] = useState(profile.company_name || "");
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [role, setRole] = useState(profile.role || "");
+  const [email, setEmail] = useState(profile.email || "");
   const [phone, setPhone] = useState(profile.phone || "");
   const [website, setWebsite] = useState(profile.website || "");
   const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
   const [location, setLocation] = useState(profile.location || "");
   const [industry, setIndustry] = useState<string[]>(Array.isArray(profile.industry) ? profile.industry : profile.industry ? [profile.industry] : []);
+  const [customIndustry, setCustomIndustry] = useState("");
   const [stage, setStage] = useState<string>(profile.stage || "");
   const [teamSize, setTeamSize] = useState<string>(profile.team_size || "");
   const [isRegistered, setIsRegistered] = useState<string>(profile.is_registered || "");
@@ -111,15 +124,20 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
 
 
   function saveCore() {
+    const finalIndustry = industry.includes("Other") && customIndustry.trim()
+      ? [...industry.filter(i => i !== "Other"), customIndustry]
+      : industry;
+
     patchMutation.mutate({
       company_name: companyName,
       full_name: fullName,
       role,
+      email,
       phone,
       website,
       linkedin_url: linkedinUrl,
       location,
-      industry,
+      industry: finalIndustry,
       stage,
       team_size: teamSize,
       is_registered: isRegistered,
@@ -153,10 +171,9 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
           <p className="text-white/35 mt-1 text-sm">{profile.company_name} · {profile.role} · {profile.stage}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
+        <div className="flex flex-col gap-5">
           {/* ── Main startup profile card ──────────────────────────────────────── */}
-          <div className="lg:col-span-2 bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
             {/* Card header */}
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Startup Profile</h2>
@@ -167,6 +184,7 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     setCompanyName(profile.company_name || "");
                     setFullName(profile.full_name || "");
                     setRole(profile.role || "");
+                    setEmail(profile.email || "");
                     setPhone(profile.phone || "");
                     setWebsite(profile.website || "");
                     setLinkedinUrl(profile.linkedin_url || "");
@@ -251,7 +269,8 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                   <div className="pt-4 border-t border-white/6 grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
                       <p className="text-[10px] text-white/25 uppercase tracking-wider mb-0.5">Contact</p>
-                      <p className="text-xs text-white/60 truncate">{profile.phone}</p>
+                      <p className="text-xs text-white/60 truncate" title={profile.email}>{profile.email}</p>
+                      <p className="text-xs text-white/60 truncate mt-0.5">{profile.phone}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-white/25 uppercase tracking-wider mb-0.5">LinkedIn</p>
@@ -282,18 +301,24 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                 /* ── EDIT MODE ── */
                 <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <TextInput label="Company Name" value={companyName} onChange={setCompanyName} placeholder="Prodizzy" />
-                    <TextInput label="Your Full Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
-                    <TextInput label="Your Role" value={role} onChange={setRole} placeholder="Co-founder & CEO" />
-                    <TextInput label="Phone" value={phone} onChange={setPhone} placeholder="+91 98765 43210" />
-                    <TextInput label="Website" value={website} onChange={setWebsite} placeholder="https://yourco.com" />
-                    <TextInput label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
-                    <TextInput label="Location" value={location} onChange={setLocation} placeholder="Delhi, India" />
+                    <FormField label="Company Name" value={companyName} onChange={setCompanyName} placeholder="Prodizzy" />
+                    <FormField label="Your Full Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
+                    <FormField label="Your Role" value={role} onChange={setRole} placeholder="Co-founder & CEO" />
+                    <FormField label="Email" value={email} onChange={setEmail} type="email" placeholder="jane@prodizzy.com" />
+                    <FormField label="Phone" value={phone} onChange={setPhone} placeholder="+91 98765 43210" />
+                    <FormField label="Website" value={website} onChange={setWebsite} placeholder="https://yourco.com" />
+                    <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
+                    <FormField label="Location" value={location} onChange={setLocation} placeholder="Delhi, India" />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <p className="text-xs text-white/35 uppercase tracking-wider">Industry</p>
-                    <PickMany options={INDUSTRY_OPTIONS} value={industry} onChange={(v) => setIndustry(v)} />
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-white/35 uppercase tracking-wider">Industry</p>
+                      <PickMany options={INDUSTRY_OPTIONS} value={industry} onChange={(v) => setIndustry(v)} />
+                    </div>
+                    {industry.includes("Other") && (
+                      <FormField label="Custom Industry" value={customIndustry} onChange={setCustomIndustry} placeholder="Your industry..." />
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <p className="text-xs text-white/35 uppercase tracking-wider">Stage</p>
@@ -311,12 +336,13 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                   </div>
 
                   <TextArea label="Product Description" value={productDescription} onChange={setProductDescription} placeholder="What does your product do?" />
-                  <TextInput label="Target Audience" value={targetAudience} onChange={setTargetAudience} placeholder="SMBs, Students, D2C brands..." />
+                  <TextArea label="Problem Solved" value={problemSolved} onChange={setProblemSolved} placeholder="What specific problem are you addressing?" />
+                  <FormField label="Target Audience" value={targetAudience} onChange={setTargetAudience} placeholder="SMBs, Students, D2C brands..." />
                   <TextArea label="Traction Highlights" value={tractionHighlights} onChange={setTractionHighlights} placeholder="Key milestones, partnerships, press..." />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <TextInput label="Number of Users" value={numUsers} onChange={setNumUsers} placeholder="500 beta users" />
-                    <TextInput label="Monthly Revenue" value={monthlyRevenue} onChange={setMonthlyRevenue} placeholder="₹2L MRR" />
+                    <FormField label="Number of Users" value={numUsers} onChange={setNumUsers} placeholder="500 beta users" />
+                    <FormField label="Monthly Revenue" value={monthlyRevenue} onChange={setMonthlyRevenue} placeholder="₹2L MRR" />
                   </div>
 
                   <div className="pt-3 border-t border-white/8 flex gap-3">
@@ -345,6 +371,612 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
     </div>
   );
 }
+
+// ─── Individual Dashboard component ──────────────────────────────────────────
+function IndividualDashboard({ profile, session, signOut, patchMutation, connections, greeting }: {
+  profile: IndividualProfile; session: any; signOut: () => void;
+  patchMutation: any; connections: any[]; greeting: string;
+}) {
+  const [editingCore, setEditingCore] = useState(false);
+  const firstName = profile.full_name?.split(" ")[0] || "there";
+
+  // Form state
+  const [fullName, setFullName] = useState(profile.full_name || "");
+  const [email, setEmail] = useState(profile.email || "");
+  const [phone, setPhone] = useState(profile.phone || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
+  const [portfolioUrl, setPortfolioUrl] = useState(profile.portfolio_url || "");
+  const [profileType, setProfileType] = useState<"Student" | "Freelancer" | "Professional" | "Content Creator" | "Community Admin">(profile.profile_type as any);
+  const [skills, setSkills] = useState<string[]>(profile.skills || []);
+  const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
+  const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
+  const [lookingFor, setLookingFor] = useState<string[]>(profile.looking_for || []);
+  const [preferredRoles, setPreferredRoles] = useState(profile.preferred_roles || "");
+  const [preferredIndustries, setPreferredIndustries] = useState<string[]>(profile.preferred_industries?.split(", ") || []);
+  const [availability, setAvailability] = useState(profile.availability || "");
+  const [workMode, setWorkMode] = useState(profile.work_mode || "");
+  const [expectedPay, setExpectedPay] = useState(profile.expected_pay || "");
+  const [location, setLocation] = useState(profile.location || "");
+  const [resumeUrl, setResumeUrl] = useState(profile.resume_url || "");
+  const [projects, setProjects] = useState(profile.projects || "");
+  const [achievements, setAchievements] = useState(profile.achievements || "");
+  const [githubUrl, setGithubUrl] = useState(profile.github_url || "");
+
+  // Constants
+  const PROFILE_TYPES = ["Student", "Freelancer", "Professional", "Content Creator", "Community Admin"];
+  const EXPERIENCE_LEVELS = ["Fresher", "0-2 years", "2-4 years", "4+ years"];
+  const LOOKING_FOR_OPTIONS = ["Job", "Internship", "Freelance", "Collaboration"];
+  const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Project-based"];
+  const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "Onsite"];
+
+  function saveCore() {
+    patchMutation.mutate({
+      full_name: fullName,
+      email,
+      phone,
+      location,
+      linkedin_url: linkedinUrl,
+      portfolio_url: portfolioUrl,
+      resume_url: resumeUrl,
+      profile_type: profileType,
+      preferred_roles: preferredRoles,
+      experience_level: experienceLevel,
+      looking_for: lookingFor,
+      availability,
+      work_mode: workMode,
+      expected_pay: expectedPay,
+    });
+    setEditingCore(false);
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
+            <span className="font-semibold tracking-tight">Prodizzy</span>
+          </div>
+          <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
+            <LogOut className="w-3.5 h-3.5" /> Sign out
+          </button>
+        </div>
+      </nav>
+
+      <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
+          <p className="text-white/35 mt-1 text-sm">{profile.profile_type} · {profile.experience_level}</p>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Individual Profile</h2>
+              <button onClick={() => setEditingCore(!editingCore)} className="flex items-center gap-1.5 text-white/40 hover:text-white/70 transition-colors text-xs">
+                {editingCore ? <><X className="w-3.5 h-3.5" /> Cancel</> : <><Edit2 className="w-3.5 h-3.5" /> Edit Profile</>}
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {!editingCore ? (
+                <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                    <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl font-bold text-white shadow-2xl">
+                      {profile.full_name?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="text-2xl font-semibold tracking-tight text-white">{profile.full_name}</h2>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-white/45 text-sm">
+                        <span>{profile.profile_type}</span>
+                        <span className="w-1 h-1 rounded-full bg-white/20" />
+                        <span>{profile.experience_level}</span>
+                        {profile.location && (
+                          <>
+                            <span className="w-1 h-1 rounded-full bg-white/20" />
+                            <span>{profile.location}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+                    {/* Column 1 */}
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Contact & Progress</h3>
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-3 text-sm">
+                            <Mail className="w-3.5 h-3.5 text-white/30" />
+                            <span className="text-white/70">{profile.email}</span>
+                          </div>
+                          {profile.phone && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Phone className="w-3.5 h-3.5 text-white/30" />
+                              <span className="text-white/70">{profile.phone}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 text-sm">
+                            <Linkedin className="w-3.5 h-3.5 text-white/30" />
+                            <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn Profile &rarr;</a>
+                          </div>
+                          {profile.portfolio_url && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Globe className="w-3.5 h-3.5 text-white/30" />
+                              <a href={profile.portfolio_url} target="_blank" rel="noreferrer" className="text-white/70 hover:underline truncate">{profile.portfolio_url.replace(/^https?:\/\//, "")}</a>
+                            </div>
+                          )}
+                          {profile.resume_url && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <FileText className="w-3.5 h-3.5 text-white/30" />
+                              <a href={profile.resume_url} target="_blank" rel="noreferrer" className="text-teal-400 hover:underline transition-colors uppercase text-[10px] font-bold tracking-wider">View Resume</a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Profile & Expertise</h3>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">You are</p>
+                            <p className="text-sm text-white/70">{profile.profile_type}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Role / Services</p>
+                            <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{profile.preferred_roles || "Not specified"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Experience</p>
+                            <p className="text-sm text-white/70">{profile.experience_level}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Column 2 */}
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Requirements</h3>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {profile.looking_for?.map(item => (
+                                <Tag key={item} label={item} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
+                              ))}
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-[10px] text-white/20 uppercase mb-1">Availability</p>
+                              <p className="text-sm text-white/70">{profile.availability || "Not specified"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-white/20 uppercase mb-1">Work Mode</p>
+                              <p className="text-sm text-white/70">{profile.work_mode || "Not specified"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-white/20 uppercase mb-1">Location</p>
+                              <p className="text-sm text-white/70">{profile.location || "Not specified"}</p>
+                            </div>
+                            {profile.expected_pay && (
+                              <div>
+                                <p className="text-[10px] text-white/20 uppercase mb-1">Expected Pay</p>
+                                <p className="text-sm text-white/70">{profile.expected_pay}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+                  {/* Section: Basic Details */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Basic Details</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField label="Full Name" value={fullName} onChange={setFullName} />
+                      <FormField label="Email" value={email} onChange={setEmail} type="email" />
+                      <FormField label="Phone Number" value={phone} onChange={setPhone} />
+                      <FormField label="Location" value={location} onChange={setLocation} placeholder="City, Country" />
+                      <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} />
+                      <FormField label="Portfolio URL" value={portfolioUrl} onChange={setPortfolioUrl} />
+                      <FormField label="Resume URL" value={resumeUrl} onChange={setResumeUrl} />
+                    </div>
+                  </div>
+
+                  {/* Section: Profile & Expertise */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Individual Profile</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">You are</p>
+                        <PickOne options={PROFILE_TYPES} value={profileType} onChange={(v) => setProfileType(v as any)} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Experience Level</p>
+                        <PickOne options={EXPERIENCE_LEVELS} value={experienceLevel} onChange={setExperienceLevel} />
+                      </div>
+                    </div>
+                    <TextArea label="Preferred role / Services you provide" value={preferredRoles} onChange={setPreferredRoles} placeholder="Describe your core expertise..." />
+                  </div>
+
+                  {/* Section: Requirements */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Requirements</h3>
+                    <div className="space-y-4">
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
+                        <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
+                        <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Work Mode</p>
+                        <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                      </div>
+                      <FormField label="Expected Pay" value={expectedPay} onChange={setExpectedPay} placeholder="$X/hr or $X/year" />
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/8 flex gap-3">
+                    <button onClick={saveCore} disabled={patchMutation.isPending}
+                      className="flex items-center gap-2 bg-white text-black text-xs font-bold px-6 py-3 rounded-xl hover:bg-white/90 transition-all active:scale-95 disabled:opacity-50">
+                      {patchMutation.isPending ? "Saving..." : <><Check className="w-3.5 h-3.5" /> Save Profile</>}
+                    </button>
+                    <button onClick={() => setEditingCore(false)}
+                      className="text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-4 py-3">
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
+            <p className="text-white/25 text-sm">Coming soon — we're curating based on your skills.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Partner Dashboard component ─────────────────────────────────────────────
+function PartnerDashboard({ profile, session, signOut, patchMutation, connections, greeting }: {
+  profile: PartnerProfile; session: any; signOut: () => void;
+  patchMutation: any; connections: any[]; greeting: string;
+}) {
+  const [editingCore, setEditingCore] = useState(false);
+  const firstName = profile.full_name?.split(" ")[0] || "there";
+
+  // Form state
+  const [companyName, setCompanyName] = useState(profile.company_name || "");
+  const [role, setRole] = useState(profile.role || "");
+  const [fullName, setFullName] = useState(profile.full_name || "");
+  const [email, setEmail] = useState(profile.email || "");
+  const [phone, setPhone] = useState(profile.phone || "");
+  const [website, setWebsite] = useState(profile.website || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
+  const [partnerType, setPartnerType] = useState(profile.partner_type || "");
+  const [services, setServices] = useState(
+    Array.isArray(profile.services_offered)
+      ? profile.services_offered.join(", ")
+      : (profile.services_offered as string || "")
+  );
+  const [industries, setIndustries] = useState<string[]>(profile.industries_served || []);
+  const [stages, setStages] = useState<string[]>(profile.stages_served || []);
+  const [pricingModel, setPricingModel] = useState(profile.pricing_model || "");
+  const [averageDealSize, setAverageDealSize] = useState(profile.average_deal_size || "");
+  const [teamSize, setTeamSize] = useState(profile.team_size || "");
+  const [yearsExperience, setYearsExperience] = useState(profile.years_experience || "");
+  const [workMode, setWorkMode] = useState(profile.work_mode || "");
+  const [portfolioLinks, setPortfolioLinks] = useState(profile.portfolio_links || "");
+  const [certifications, setCertifications] = useState(profile.certifications || "");
+  const [lookingFor, setLookingFor] = useState<string[]>(profile.looking_for || []);
+  const [monthlyCapacity, setMonthlyCapacity] = useState(profile.monthly_capacity || "");
+  const [preferredBudgetRange, setPreferredBudgetRange] = useState(profile.preferred_budget_range || "");
+
+  const PARTNER_TYPES = ["Agency", "Investor", "Service Provider", "Institutional Firm"];
+  const PRICING_MODELS = ["Fixed", "Hourly", "Commission", "Retainer"];
+  const TEAM_SIZE_OPTIONS = ["Solo", "2-10", "11-50", "51-200", "200+"];
+  const INDUSTRY_OPTIONS = [
+    "Software & AI",
+    "E-commerce & Retail",
+    "Finance & Payments",
+    "Healthcare & Wellness",
+    "Education & Training",
+    "Food & Beverage",
+    "Transportation & Delivery",
+    "Real Estate & Construction",
+    "Marketing & Advertising",
+    "Energy & Sustainability",
+    "Any"
+  ];
+  const STAGE_OPTIONS = ["Pre-Seed", "Seed", "Series A", "Expansion", "MNC"];
+  const LOOKING_FOR_OPTIONS = ["Clients", "Deal flow", "Partnerships"];
+
+  function saveCore() {
+    patchMutation.mutate({
+      company_name: companyName,
+      role,
+      full_name: fullName,
+      email,
+      phone,
+      website,
+      linkedin_url: linkedinUrl,
+      partner_type: partnerType,
+      services_offered: services,
+      industries_served: industries,
+      stages_served: stages,
+      pricing_model: pricingModel,
+      average_deal_size: averageDealSize,
+      team_size: teamSize,
+      years_experience: yearsExperience,
+      work_mode: workMode,
+      portfolio_links: portfolioLinks,
+      certifications: certifications,
+      looking_for: lookingFor,
+      monthly_capacity: monthlyCapacity,
+      preferred_budget_range: preferredBudgetRange
+    });
+    setEditingCore(false);
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
+            <span className="font-semibold tracking-tight">Prodizzy</span>
+          </div>
+          <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
+            <LogOut className="w-3.5 h-3.5" /> Sign out
+          </button>
+        </div>
+      </nav>
+
+      <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
+          <p className="text-white/35 mt-1 text-sm">{profile.company_name} · {profile.partner_type}</p>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Partner Profile</h2>
+              <button onClick={() => setEditingCore(!editingCore)} className="flex items-center gap-1.5 text-white/40 hover:text-white/70 transition-colors text-xs">
+                {editingCore ? <><X className="w-3.5 h-3.5" /> Cancel</> : <><Edit2 className="w-3.5 h-3.5" /> Edit Profile</>}
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {!editingCore ? (
+                <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-semibold tracking-tight text-white">{profile.company_name}</h2>
+                      <p className="text-white/45 text-sm mt-1">{profile.partner_type}</p>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-3 bg-white/[0.03] px-4 py-3 rounded-2xl border border-white/5">
+                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white font-medium border border-white/10 text-xs">
+                        {profile.full_name?.[0]?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium text-sm leading-tight">{profile.full_name}</p>
+                        <p className="text-white/40 text-[11px] uppercase tracking-wider mt-0.5">{profile.role}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+                    {/* Column 1 */}
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Contact & Links</h3>
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-3 text-sm">
+                            <Mail className="w-3.5 h-3.5 text-white/30" />
+                            <span className="text-white/70">{profile.email}</span>
+                          </div>
+                          {profile.phone && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Phone className="w-3.5 h-3.5 text-white/30" />
+                              <span className="text-white/70">{profile.phone}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 text-sm">
+                            <Linkedin className="w-3.5 h-3.5 text-white/30" />
+                            <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn Profile &rarr;</a>
+                          </div>
+                          {profile.website && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Globe className="w-3.5 h-3.5 text-white/30" />
+                              <a href={profile.website} target="_blank" rel="noreferrer" className="text-white/70 hover:underline truncate">{profile.website.replace(/^https?:\/\//, "")}</a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Expertise</h3>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1.5">Services Offered</p>
+                            <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{profile.services_offered || "Not specified"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1.5">Industries Served</p>
+                            <div className="flex flex-wrap gap-2">
+                              {profile.industries_served?.map(i => <Tag key={i} label={i} />)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Column 2 */}
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Operations</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Company Type</p>
+                            <p className="text-sm text-white/70">{profile.partner_type || "Not specified"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Team Size</p>
+                            <p className="text-sm text-white/70">{profile.team_size || "Not specified"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Experience</p>
+                            <p className="text-sm text-white/70">{profile.years_experience || "Not specified"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Work Mode</p>
+                            <p className="text-sm text-white/70">{profile.work_mode || "Not specified"}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Requirements</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Pricing Model</p>
+                            <p className="text-sm text-white/70">{profile.pricing_model || "Not specified"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Avg Deal Size</p>
+                            <p className="text-sm text-white/70">{profile.average_deal_size || "Not specified"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Preferred Budget</p>
+                            <p className="text-sm text-white/70">{profile.preferred_budget_range || "Not specified"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Monthly Capacity</p>
+                            <p className="text-sm text-white/70">{profile.monthly_capacity || "Not specified"}</p>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
+                          <div className="flex flex-wrap gap-2">
+                            {profile.looking_for?.map(item => <Tag key={item} label={item} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {profile.portfolio_links && (
+                        <div className="space-y-3 pt-2">
+                          <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Portfolio</h3>
+                          <div className="text-xs text-white/60">
+                            <p className="leading-relaxed break-words">{profile.portfolio_links}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+                  {/* Section: Basic Details */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Basic Details</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField label="Company Name" value={companyName} onChange={setCompanyName} />
+                      <FormField label="Full Name" value={fullName} onChange={setFullName} />
+                      <FormField label="Role" value={role} onChange={setRole} />
+                      <FormField label="Email" value={email} onChange={setEmail} type="email" />
+                      <FormField label="Phone" value={phone} onChange={setPhone} />
+                      <FormField label="Website" value={website} onChange={setWebsite} />
+                      <FormField label="LinkedIn" value={linkedinUrl} onChange={setLinkedinUrl} />
+                    </div>
+                  </div>
+
+                  {/* Section: Partner Info */}
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Partner Profile</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Partner Type</p>
+                          <PickOne options={PARTNER_TYPES} value={partnerType} onChange={(v) => setPartnerType(v as any)} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Work Mode</p>
+                          <PickOne options={["Remote", "Hybrid", "Onsite"]} value={workMode} onChange={setWorkMode} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Team Size</p>
+                          <PickOne options={TEAM_SIZE_OPTIONS} value={teamSize} onChange={setTeamSize} />
+                        </div>
+                        <FormField label="Years Experience" value={yearsExperience} onChange={setYearsExperience} />
+                      </div>
+
+                      <TextArea label="What services do you offer?" value={services} onChange={setServices} placeholder="Describe the specific services and value you provide..." />
+
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Industries Worked With</p>
+                        <PickMany options={INDUSTRY_OPTIONS} value={industries} onChange={v => setIndustries(v)} />
+                      </div>
+
+                      <FormField label="Portfolio Links" value={portfolioLinks} onChange={setPortfolioLinks} placeholder="https://..." />
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Requirements</h3>
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">What are you looking for?</p>
+                        <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={v => setLookingFor(v)} />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Pricing Model</p>
+                          <PickOne options={PRICING_MODELS} value={pricingModel} onChange={setPricingModel} />
+                        </div>
+                        <FormField label="Average Deal Size" value={averageDealSize} onChange={setAverageDealSize} placeholder="e.g. $5k" />
+                        <FormField label="Preferred Budget Range" value={preferredBudgetRange} onChange={setPreferredBudgetRange} placeholder="e.g. $10k+" />
+                        <FormField label="Monthly Capacity" value={monthlyCapacity} onChange={setMonthlyCapacity} placeholder="e.g. 2 new slots" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/8 flex gap-3">
+                    <button onClick={saveCore} className="bg-white text-black text-xs font-bold px-6 py-3 rounded-xl hover:bg-white/90 transition-all active:scale-95">
+                      Save changes
+                    </button>
+                    <button onClick={() => setEditingCore(false)} className="text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-4 py-3">
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
+            <p className="text-white/25 text-sm">Coming soon — we're curating scaleups that need your services.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 // ─── Dashboard ──────────────────────────────────────────────────────────────────
 export default function Dashboard() {

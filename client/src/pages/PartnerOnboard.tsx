@@ -216,26 +216,17 @@ export default function PartnerOnboard() {
   const [website, setWebsite] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
 
-  // Step 2: Partner Type
+  // Step 2-3: Profile & Requirements
   const [partnerType, setPartnerType] = useState("");
-
-  // Step 3: Offerings
-  const [servicesOffered, setServicesOffered] = useState<string[]>([]);
+  const [servicesOffered, setServicesOffered] = useState("");
   const [industriesServed, setIndustriesServed] = useState<string[]>([]);
   const [stagesServed, setStagesServed] = useState<string[]>([]);
   const [pricingModel, setPricingModel] = useState("");
   const [averageDealSize, setAverageDealSize] = useState("");
-
-  // Step 4: Capability
   const [teamSize, setTeamSize] = useState("");
   const [yearsExperience, setYearsExperience] = useState("");
-  const [toolsTechStack, setToolsTechStack] = useState("");
   const [workMode, setWorkMode] = useState("");
-
-  // Step 5: Proof
   const [portfolioLinks, setPortfolioLinks] = useState("");
-  const [caseStudies, setCaseStudies] = useState("");
-  const [pastClients, setPastClients] = useState("");
   const [certifications, setCertifications] = useState("");
 
   // Step 6: Intent + Account
@@ -309,15 +300,12 @@ export default function PartnerOnboard() {
         services_offered: servicesOffered,
         industries_served: industriesServed,
         stages_served: stagesServed,
-        pricing_model: pricingModel || undefined,
+        pricing_model: pricingModel,
         average_deal_size: averageDealSize || undefined,
         team_size: teamSize,
         years_experience: yearsExperience,
-        tools_tech_stack: toolsTechStack || undefined,
         work_mode: workMode,
         portfolio_links: portfolioLinks || undefined,
-        case_studies: caseStudies || undefined,
-        past_clients: pastClients || undefined,
         certifications: certifications || undefined,
         looking_for: lookingFor,
         monthly_capacity: monthlyCapacity || undefined,
@@ -371,24 +359,41 @@ export default function PartnerOnboard() {
     </div>,
 
     <div key="1" className="space-y-6">
-      <StepHeader step={1} title="Partner Profile & Offerings" />
+      <StepHeader step={1} title="Partner Profile" />
       <div className="space-y-4">
         <Dropdown
-          label="Partner Type"
+          label="What type of partner are you?"
           options={["Agency", "Investor", "Service Provider", "Institutional Firm"]}
           value={partnerType}
           onChange={setPartnerType}
         />
 
-        <MultiSelectDropdown
-          label="Services offered"
-          options={["Development", "Design", "Marketing", "Sales", "Operations", "Funding", "Consulting", "Other"]}
-          selected={servicesOffered}
-          onToggle={v => setServicesOffered(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
+        <Field
+          label="What services do you offer?"
+          value={servicesOffered}
+          onChange={setServicesOffered}
+          multiline
+          placeholder="Describe the specific services and value you provide..."
+        />
+
+        <Dropdown
+          label="Team size"
+          options={["Solo", "2-10", "11-50", "51-200", "200+"]}
+          value={teamSize}
+          onChange={setTeamSize}
+        />
+
+        <Field label="Years of experience" value={yearsExperience} onChange={setYearsExperience} placeholder="e.g. 5+ years" />
+
+        <Dropdown
+          label="Work mode"
+          options={["Remote", "Hybrid", "Onsite"]}
+          value={workMode}
+          onChange={setWorkMode}
         />
 
         <MultiSelectDropdown
-          label="Industries you serve"
+          label="Industries you work with"
           options={[
             "Software & AI",
             "E-commerce & Retail",
@@ -406,56 +411,30 @@ export default function PartnerOnboard() {
           onToggle={v => setIndustriesServed(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
         />
 
-        <MultiSelectDropdown
-          label="Stages you work with"
-          options={["Pre-Seed (Idea Stage)", "Seed (MVP & Validation)", "Series A (Growth)", "Expansion (Scaling)", "MNC (Global)"]}
-          selected={stagesServed}
-          onToggle={v => setStagesServed(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Pricing model (optional)" value={pricingModel} onChange={setPricingModel} placeholder="Fixed, Hourly, etc." />
-          <Field label="Avg deal size (optional)" value={averageDealSize} onChange={setAverageDealSize} placeholder="$5K-$50K" />
-        </div>
+        <Field label="Portfolio links (optional)" value={portfolioLinks} onChange={setPortfolioLinks} placeholder="https://..." />
       </div>
     </div>,
 
     <div key="2" className="space-y-6">
-      <StepHeader step={2} title="Capability & Proof" />
+      <StepHeader step={2} title="Requirements" />
       <div className="space-y-4">
-        <Dropdown
-          label="Team size"
-          options={["Solo", "2-10", "11-50", "100+"]}
-          value={teamSize}
-          onChange={setTeamSize}
+        <MultiSelectDropdown
+          label="What are you looking for?"
+          options={["Clients", "Deal flow", "Partnerships"]}
+          selected={lookingFor}
+          onToggle={v => setLookingFor(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
         />
-        <Dropdown
-          label="Experience"
-          options={["<1y", "1-3y", "3-5y", "5y+"]}
-          value={yearsExperience}
-          onChange={setYearsExperience}
-        />
-        <Dropdown
-          label="Work mode"
-          options={["Remote", "Hybrid", "Onsite"]}
-          value={workMode}
-          onChange={setWorkMode}
-        />
-        <Field label="Portfolio / Case Studies (optional)" value={portfolioLinks} onChange={setPortfolioLinks} placeholder="Describe your best work or link to it..." multiline />
-        <Field label="Past Clients & Tools (optional)" value={pastClients} onChange={setPastClients} placeholder="Notable clients or technology used..." multiline />
-      </div>
-    </div>,
 
-    <div key="3" className="space-y-6">
-      <StepHeader step={3} title="Final steps" />
-      <MultiSelectDropdown
-        label="Looking for"
-        options={["Clients", "Deal flow", "Partnerships"]}
-        selected={lookingFor}
-        onToggle={v => setLookingFor(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
-      />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Dropdown
+          label="Pricing model"
+          options={["Fixed", "Hourly", "Commission", "Retainer"]}
+          value={pricingModel}
+          onChange={setPricingModel}
+        />
+
+        <Field label="Average deal size (optional)" value={averageDealSize} onChange={setAverageDealSize} placeholder="e.g. $5k" />
         <Field label="Monthly capacity (optional)" value={monthlyCapacity} onChange={setMonthlyCapacity} placeholder="e.g. 2 new slots" />
-        <Field label="Preferred budget (optional)" value={preferredBudgetRange} onChange={setPreferredBudgetRange} placeholder="e.g. $5K+" />
+        <Field label="Preferred budget range (optional)" value={preferredBudgetRange} onChange={setPreferredBudgetRange} placeholder="e.g. $10k+" />
       </div>
     </div>,
   ];

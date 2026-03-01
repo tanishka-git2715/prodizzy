@@ -559,27 +559,29 @@ export default function Admin() {
         )}
 
         {/* Pending */}
-        {activeTab !== "users" && pending.length > 0 && (
+        {activeTab !== "users" && activeTab !== "waitlist" && pending.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
             {pending.map(p => {
-              if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={activeTab} />;
-              if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={activeTab} />;
-              if (activeTab === "investor") return <InvestorProfileRow key={p.id} profile={p} profileType={activeTab} />;
-              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={activeTab} />;
+              const pt = activeTab as ProfileType;
+              if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
+              if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
+              if (activeTab === "investor") return <InvestorProfileRow key={p.id} profile={p} profileType={pt} />;
+              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
             })}
           </div>
         )}
 
         {/* Approved */}
-        {activeTab !== "users" && approved.length > 0 && (
+        {activeTab !== "users" && activeTab !== "waitlist" && approved.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Approved ({approved.length})</h2>
             {approved.map(p => {
-              if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={activeTab} />;
-              if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={activeTab} />;
-              if (activeTab === "investor") return <InvestorProfileRow key={p.id} profile={p} profileType={activeTab} />;
-              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={activeTab} />;
+              const pt = activeTab as ProfileType;
+              if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
+              if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
+              if (activeTab === "investor") return <InvestorProfileRow key={p.id} profile={p} profileType={pt} />;
+              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
             })}
           </div>
         )}

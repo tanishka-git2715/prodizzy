@@ -199,7 +199,7 @@ export default function IndividualOnboard() {
   const { session, loading } = useAuth();
   const qc = useQueryClient();
   const isLoggedIn = !!session;
-  const EFFECTIVE_STEPS = 5;
+  const EFFECTIVE_STEPS = 3;
 
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(0);
@@ -214,30 +214,18 @@ export default function IndividualOnboard() {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
 
-  // Step 2: Profile Type
+  // Step 2-3: Profile & Requirements
   const [profileType, setProfileType] = useState("");
-
-  // Step 3: Skills
-  const [skills, setSkills] = useState<string[]>([]);
-  const [experienceLevel, setExperienceLevel] = useState("");
-  const [toolsUsed, setToolsUsed] = useState("");
-
-  // Step 4: Looking For
-  const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [preferredRoles, setPreferredRoles] = useState("");
-  const [preferredIndustries, setPreferredIndustries] = useState<string[]>([]);
-
-  // Step 5: Availability
+  const [experienceLevel, setExperienceLevel] = useState("");
+  const [lookingFor, setLookingFor] = useState<string[]>([]);
   const [availability, setAvailability] = useState("");
   const [workMode, setWorkMode] = useState("");
-  const [expectedPay, setExpectedPay] = useState("");
   const [userLocation, setUserLocation] = useState("");
+  const [expectedPay, setExpectedPay] = useState("");
+  const [resumeUrl, setResumeUrl] = useState("");
 
   // Step 6: Proof + Account
-  const [resumeUrl, setResumeUrl] = useState("");
-  const [projects, setProjects] = useState("");
-  const [achievements, setAchievements] = useState("");
-  const [githubUrl, setGithubUrl] = useState("");
   const [password, setPassword] = useState("");
 
   // If already logged in with a completed profile, send to dashboard
@@ -271,11 +259,8 @@ export default function IndividualOnboard() {
   function canProceed() {
     switch (step) {
       case 0: return fullName.trim() && email.trim();
-      case 1: return profileType;
-      case 2: return skills.length > 0 && experienceLevel;
-      case 3: return lookingFor.length > 0;
-      case 4: return availability && workMode && userLocation;
-      case 5: return true;
+      case 1: return profileType && preferredRoles.trim() && experienceLevel;
+      case 2: return lookingFor.length > 0 && availability && workMode && userLocation;
       default: return true;
     }
   }
@@ -300,20 +285,14 @@ export default function IndividualOnboard() {
         linkedin_url: linkedinUrl || undefined,
         portfolio_url: portfolioUrl || undefined,
         profile_type: profileType,
-        skills,
+        preferred_roles: preferredRoles,
         experience_level: experienceLevel,
-        tools_used: toolsUsed || undefined,
         looking_for: lookingFor,
-        preferred_roles: preferredRoles || undefined,
-        preferred_industries: preferredIndustries.join(", ") || undefined,
         availability,
         work_mode: workMode,
-        expected_pay: expectedPay || undefined,
         location: userLocation,
+        expected_pay: expectedPay || undefined,
         resume_url: resumeUrl || undefined,
-        projects: projects || undefined,
-        achievements: achievements || undefined,
-        github_url: githubUrl || undefined,
         type: "individual",
       }),
     });
@@ -354,93 +333,63 @@ export default function IndividualOnboard() {
   const steps = [
     <div key="0" className="space-y-5">
       <StepHeader step={0} title="Individual Onboarding" />
-      <Field label="Your Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
-      <Field label="Email Address" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
-      <Field label="Phone Number (Optional)" value={phone} onChange={setPhone} placeholder="+1 234 567 8900" />
-      <Field label="LinkedIn Profile (Optional)" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
-      <Field label="Portfolio URL (Optional)" value={portfolioUrl} onChange={setPortfolioUrl} placeholder="https://yoursite.com" />
+      <Field label="Full Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
+      <Field label="Email" value={email} onChange={setEmail} type="email" placeholder="you@email.com" />
+      <Field label="Phone (Optional)" value={phone} onChange={setPhone} placeholder="+1 234 567 8900" />
+      <Field label="LinkedIn (Optional)" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
+      <Field label="Portfolio (Optional)" value={portfolioUrl} onChange={setPortfolioUrl} placeholder="https://yoursite.com" />
+      <Field label="Resume Link (Optional)" value={resumeUrl} onChange={setResumeUrl} placeholder="Google Drive, Dropbox, etc." />
     </div>,
 
     <div key="1" className="space-y-6">
-      <StepHeader step={1} title="Profile type" />
-      <Dropdown
-        label="Profile Type"
-        options={["Student", "Freelancer", "Professional", "Content Creator", "Community Admin"]}
-        value={profileType}
-        onChange={setProfileType}
-      />
+      <StepHeader step={1} title="Individual Profile" />
+      <div className="space-y-4">
+        <Dropdown
+          label="You are"
+          options={["Student", "Freelancer", "Professional", "Content Creator", "Community Admin"]}
+          value={profileType}
+          onChange={setProfileType}
+        />
+        <Field
+          label="Preferred role / Services you provide"
+          value={preferredRoles}
+          onChange={setPreferredRoles}
+          multiline
+          placeholder="Describe your core expertise and what you offer..."
+        />
+        <Dropdown
+          label="Experience level"
+          options={["Fresher", "0-2 years", "2-4 years", "4+ years"]}
+          value={experienceLevel}
+          onChange={setExperienceLevel}
+        />
+      </div>
     </div>,
 
     <div key="2" className="space-y-6">
-      <StepHeader step={2} title="Your skills" />
-      <MultiSelectDropdown
-        label="Skills"
-        options={["Design", "Development", "Marketing", "Sales", "Writing", "Video Editing", "Community", "Operations"]}
-        selected={skills}
-        onToggle={v => setSkills(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
-      />
-      <Dropdown
-        label="Experience level"
-        options={["Fresher", "0-2 years", "2-4 years", "4+ years"]}
-        value={experienceLevel}
-        onChange={setExperienceLevel}
-      />
-      <Field label="Tools you use (optional)" value={toolsUsed} onChange={setToolsUsed} placeholder="Figma, Photoshop, React..." multiline />
-    </div>,
-
-    <div key="3" className="space-y-6">
-      <StepHeader step={3} title="What are you looking for?" />
-      <MultiSelectDropdown
-        label="Looking for"
-        options={["Job", "Internship", "Freelance", "Collaboration"]}
-        selected={lookingFor}
-        onToggle={v => setLookingFor(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
-      />
-      <Field label="Preferred roles (optional)" value={preferredRoles} onChange={setPreferredRoles} placeholder="Product Designer, Frontend Developer..." multiline />
-      <MultiSelectDropdown
-        label="Preferred industries"
-        options={[
-          "Software & AI",
-          "E-commerce & Retail",
-          "Finance & Payments",
-          "Healthcare & Wellness",
-          "Education & Training",
-          "Food & Beverage",
-          "Transportation & Delivery",
-          "Real Estate & Construction",
-          "Marketing & Advertising",
-          "Energy & Sustainability",
-          "Any"
-        ]}
-        selected={preferredIndustries}
-        onToggle={v => setPreferredIndustries(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
-      />
-    </div>,
-
-    <div key="4" className="space-y-6">
-      <StepHeader step={4} title="Your availability" />
-      <Dropdown
-        label="Availability"
-        options={["Full-time", "Part-time", "Project-based"]}
-        value={availability}
-        onChange={setAvailability}
-      />
-      <Dropdown
-        label="Work mode"
-        options={["Remote", "Hybrid", "Onsite"]}
-        value={workMode}
-        onChange={setWorkMode}
-      />
-      <Field label="Expected pay (optional)" value={expectedPay} onChange={setExpectedPay} placeholder="$50K-$80K or $50/hr" />
-      <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="San Francisco, CA" />
-    </div>,
-
-    <div key="5" className="space-y-5">
-      <StepHeader step={5} title="Final steps" />
-      <Field label="Resume URL (optional)" value={resumeUrl} onChange={setResumeUrl} placeholder="https://drive.google.com/..." />
-      <Field label="Projects (optional)" value={projects} onChange={setProjects} placeholder="Describe your best projects..." multiline />
-      <Field label="Achievements (optional)" value={achievements} onChange={setAchievements} placeholder="Awards, certifications..." multiline />
-      <Field label="GitHub URL (optional)" value={githubUrl} onChange={setGithubUrl} placeholder="https://github.com/..." />
+      <StepHeader step={2} title="Requirements" />
+      <div className="space-y-4">
+        <MultiSelectDropdown
+          label="Looking for"
+          options={["Job", "Internship", "Freelance", "Collaboration"]}
+          selected={lookingFor}
+          onToggle={v => setLookingFor(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
+        />
+        <Dropdown
+          label="Availability"
+          options={["Full-time", "Part-time", "Project-based"]}
+          value={availability}
+          onChange={setAvailability}
+        />
+        <Dropdown
+          label="Work mode"
+          options={["Remote", "Hybrid", "Onsite"]}
+          value={workMode}
+          onChange={setWorkMode}
+        />
+        <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="City, Country" />
+        <Field label="Expected pay (optional)" value={expectedPay} onChange={setExpectedPay} placeholder="e.g. $50k/year or $40/hr" />
+      </div>
     </div>,
   ];
 
