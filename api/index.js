@@ -3312,13 +3312,17 @@ function setupAuth(app3) {
   });
   app3.get(
     "/api/auth/google",
-    import_passport.default.authenticate("google", { scope: ["profile", "email"] })
+    import_passport.default.authenticate("google", {
+      scope: ["profile", "email"],
+      prompt: "select_account"
+      // always show account chooser
+    })
   );
   app3.get(
     "/api/auth/google/callback",
-    import_passport.default.authenticate("google", { failureRedirect: "/login" }),
+    import_passport.default.authenticate("google", { failureRedirect: "/login?error=google" }),
     (req, res) => {
-      res.redirect("/");
+      res.redirect("/dashboard");
     }
   );
   app3.post("/api/auth/register", async (req, res, next) => {

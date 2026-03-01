@@ -107,14 +107,18 @@ export function setupAuth(app: Express) {
     // Auth Routes
     app.get(
         "/api/auth/google",
-        passport.authenticate("google", { scope: ["profile", "email"] })
+        passport.authenticate("google", {
+            scope: ["profile", "email"],
+            prompt: "select_account",   // always show account chooser
+        })
     );
 
     app.get(
         "/api/auth/google/callback",
-        passport.authenticate("google", { failureRedirect: "/login" }),
+        passport.authenticate("google", { failureRedirect: "/login?error=google" }),
         (req, res) => {
-            res.redirect("/");
+            // Redirect to dashboard after successful Google login
+            res.redirect("/dashboard");
         }
     );
 
