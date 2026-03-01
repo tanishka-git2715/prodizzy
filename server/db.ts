@@ -1,10 +1,32 @@
-import { createClient } from "@supabase/supabase-js";
+import mongoose from "mongoose";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error("SUPABASE_URL and SUPABASE_ANON_KEY must be set in your .env file");
+if (!MONGODB_URI) {
+  throw new Error("MONGODB_URI must be set in your .env file");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+let isConnected = false;
+
+export const connectDB = async () => {
+  if (isConnected) {
+    console.log("Using existing MongoDB connection");
+    return;
+  }
+
+  try {
+    console.log("Connecting to MongoDB...");
+    const db = await mongoose.connect(MONGODB_URI, {
+      family: 4,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+    });
+    isConnected = db.connection.readyState === 1;
+    console.log("Connected to MongoDB successfully");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    throw error;
+  }
+};
+
+export default mongoose;

@@ -1,18 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { auth, googleProvider } from "@/lib/firebase";
-import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Login() {
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, loginWithGoogle } = useAuth();
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [googleRedirecting, setGoogleRedirecting] = useState(false);
 
   // If already logged in, redirect straight to dashboard
   useEffect(() => {
@@ -20,35 +13,6 @@ export default function Login() {
       setLocation("/dashboard");
     }
   }, [session, authLoading, setLocation]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setLocation("/dashboard");
-    } catch (error: any) {
-      setError(error.message);
-    }
-
-    setLoading(false);
-  }
-
-  async function handleGoogleLogin() {
-    if (googleRedirecting) return;
-    setError("");
-    setGoogleRedirecting(true);
-
-    try {
-      await signInWithPopup(auth, googleProvider);
-      // Auth state listener will redirect to dashboard
-    } catch (error: any) {
-      setError(error.message);
-      setGoogleRedirecting(false);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-6">
@@ -70,9 +34,8 @@ export default function Login() {
         {/* Google OAuth Button */}
         <button
           type="button"
-          onClick={handleGoogleLogin}
-          disabled={googleRedirecting}
-          className="w-full bg-white text-black font-semibold py-3 rounded-lg text-sm hover:bg-white/90 transition-colors flex items-center justify-center gap-2 mb-5 disabled:opacity-60 disabled:cursor-not-allowed"
+          onClick={loginWithGoogle}
+          className="w-full bg-white text-black font-semibold py-3 rounded-lg text-sm hover:bg-white/90 transition-colors flex items-center justify-center gap-2 mb-5"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -80,60 +43,8 @@ export default function Login() {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
-          {googleRedirecting ? "Redirecting…" : "Continue with Google"}
+          Continue with Google
         </button>
-
-        {/* Divider */}
-        <div className="relative mb-5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-white/10"></div>
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-black px-2 text-white/30">or sign in with email</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-white/50 mb-1.5 uppercase tracking-wider">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-white/30 transition-colors"
-              placeholder="you@startup.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-white/50 mb-1.5 uppercase tracking-wider">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-white/30 transition-colors"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-white text-black font-semibold py-3 rounded-lg text-sm hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-          >
-            {loading ? "Signing in…" : "Sign in"}
-          </button>
-        </form>
 
         <p className="text-white/30 text-sm mt-6 text-center">
           New here?{" "}
@@ -148,3 +59,4 @@ export default function Login() {
     </div>
   );
 }
+

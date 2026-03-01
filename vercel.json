@@ -3,14 +3,13 @@
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "rewrites": [
-    { "source": "/api/waitlist", "destination": "/api/waitlist" },
-    { "source": "/api/profile", "destination": "/api/profile" },
-    { "source": "/api/partner", "destination": "/api/partner" },
-    { "source": "/api/individual", "destination": "/api/individual" },
-    { "source": "/api/admin", "destination": "/api/admin" },
-    { "source": "/api/investor", "destination": "/api/investor" },
-    { "source": "/api/discover", "destination": "/api/discover" },
-    { "source": "/api/connections", "destination": "/api/connections" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

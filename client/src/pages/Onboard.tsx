@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/hooks/use-auth";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, LogIn } from "lucide-react";
 
 const TOTAL_STEPS = 4;
 
@@ -220,11 +218,11 @@ export default function Onboard() {
     window.scrollTo(0, 0);
   }, []);
 
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const qc = useQueryClient();
   const isLoggedIn = !!session;
-  // When already logged in, skip the account-creation step (step 3)
-  const EFFECTIVE_STEPS = isLoggedIn ? TOTAL_STEPS - 1 : TOTAL_STEPS;
+  // Account creation step (step 3) is removed, now we only use Google Login
+  const EFFECTIVE_STEPS = 3;
 
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(0);
@@ -263,9 +261,8 @@ export default function Onboard() {
   const { data: existingProfile } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      if (!session?.access_token) return null;
       const r = await fetch("/api/profile", {
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        headers: { "Content-Type": "application/json" },
       });
       if (r.status === 404) return null;
       if (!r.ok) throw new Error("Failed to fetch profile");
@@ -296,7 +293,6 @@ export default function Onboard() {
       case 0: return companyName.trim() && role.trim() && fullName.trim() && email.trim();
       case 1: return stage && industry.length > 0 && (!industry.includes("Other") || customIndustry.trim()) && teamSize && location.trim() && isRegistered;
       case 2: return productDesc.trim() && targetAudience.trim();
-      case 3: return email.trim() && password.length >= 6;
       default: return true;
     }
   }
@@ -305,22 +301,10 @@ export default function Onboard() {
     setSubmitting(true);
     setError("");
 
-    let token: string;
-
-    if (isLoggedIn) {
-      // Already authenticated — skip signUp, just save the profile
-      token = session!.access_token;
-    } else {
-      // 1. Sign up with Firebase
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const t = await userCredential.user.getIdToken();
-        token = t;
-      } catch (error: any) {
-        setError(error.message);
-        setSubmitting(false);
-        return;
-      }
+    if (!isLoggedIn) {
+      setError("Please sign in with Google to submit your profile.");
+      setSubmitting(false);
+      return;
     }
 
     // 2. Save profile
@@ -342,15 +326,13 @@ export default function Onboard() {
       num_users: numUsers,
       monthly_revenue: monthlyRevenue,
       traction_highlights: tractionHighlights,
+      type: "startup",
       onboarding_completed: true,
     };
 
     const res = await fetch("/api/profile", {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(profilePayload),
     });
 
@@ -467,20 +449,42 @@ export default function Onboard() {
       />
     </div>,
 
-    // Step 3: Account (only shown when NOT already logged in)
-    <div key="3" className="space-y-5">
-      <StepHeader
-        step={3}
-        title="Create your account."
-      />
-      <Field label="Email" value={email} onChange={setEmail} type="email" placeholder="you@startup.com" />
-      <Field label="Password" value={password} onChange={setPassword} type="password" placeholder="Min 6 characters" />
-      {error && <p className="text-red-400 text-sm">{error}</p>}
-    </div>,
   ];
 
-  // When logged in, skip the account-creation step
-  const steps = isLoggedIn ? allSteps.slice(0, 3) : allSteps;
+  // We only show the first 3 steps
+  const steps = allSteps.slice(0, 3);
+
+  if (!isLoggedIn && !loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center space-y-6">
+          <div className="flex flex-col items-center">
+            <img src="/logo.png" alt="Prodizzy" className="w-12 h-12 rounded-xl mb-4" />
+            <h1 className="text-2xl font-semibold text-white">Startup Onboarding</h1>
+            <p className="text-white/40 text-sm mt-2">Please sign in with Google to begin your onboarding.</p>
+          </div>
+          <button
+            onClick={() => window.location.href = "/api/auth/google"}
+            className="w-full bg-white text-black font-semibold py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            Sign in with Google
+          </button>
+          <button onClick={() => setLocation("/")} className="text-white/25 text-xs hover:text-white/50 transition-colors">
+            Back to home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black flex flex-col">

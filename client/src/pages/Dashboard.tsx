@@ -3,14 +3,12 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { auth } from "@/lib/firebase";
-import { signOut as firebaseSignOut } from "firebase/auth";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
 import { LogOut, ChevronRight, Check, Edit2 } from "lucide-react";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
-function authHeaders(token: string) {
-  return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+function authHeaders() {
+  return { "Content-Type": "application/json" };
 }
 
 function matchScore(p: StartupProfile): number {
@@ -167,14 +165,14 @@ function ProCard({ title, unlockLabel, isFilled, filledPreview, form, onSave, sa
 
 // ─── Dashboard ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, logout } = useAuth();
   const [, setLocation] = useLocation();
   const qc = useQueryClient();
 
   const { data: connections } = useQuery<any[]>({
     queryKey: ["connections"],
     queryFn: async () => {
-      const r = await fetch("/api/connections", { headers: authHeaders(session!.access_token) });
+      const r = await fetch("/api/connections", { headers: authHeaders() });
       if (!r.ok) return [];
       return r.json();
     },
@@ -184,7 +182,7 @@ export default function Dashboard() {
   const { data: profile, isLoading, isFetched } = useQuery<StartupProfile | null>({
     queryKey: ["profile"],
     queryFn: async () => {
-      const r = await fetch("/api/profile", { headers: authHeaders(session!.access_token) });
+      const r = await fetch("/api/profile", { headers: authHeaders() });
       if (r.status === 404) return null;
       if (!r.ok) throw new Error("Failed to fetch profile");
       return r.json();
@@ -195,8 +193,8 @@ export default function Dashboard() {
   const { data: partnerProfile, isLoading: partnerLoading, isFetched: partnerFetched } = useQuery<PartnerProfile | null>({
     queryKey: ["partner-profile"],
     queryFn: async () => {
-      if (!session?.access_token) return null;
-      const r = await fetch("/api/partner", { headers: authHeaders(session!.access_token) });
+      if (!session) return null;
+      const r = await fetch("/api/partner", { headers: authHeaders() });
       if (r.status === 404) return null;
       if (!r.ok) throw new Error("Failed to fetch partner profile");
       return r.json();
@@ -207,8 +205,8 @@ export default function Dashboard() {
   const { data: individualProfile, isLoading: individualLoading, isFetched: individualFetched } = useQuery<IndividualProfile | null>({
     queryKey: ["individual-profile"],
     queryFn: async () => {
-      if (!session?.access_token) return null;
-      const r = await fetch("/api/individual", { headers: authHeaders(session!.access_token) });
+      if (!session) return null;
+      const r = await fetch("/api/individual", { headers: authHeaders() });
       if (r.status === 404) return null;
       if (!r.ok) throw new Error("Failed to fetch individual profile");
       return r.json();
@@ -220,7 +218,7 @@ export default function Dashboard() {
     mutationFn: (patch: Partial<StartupProfile>) =>
       fetch("/api/profile", {
         method: "PATCH",
-        headers: authHeaders(session!.access_token),
+        headers: authHeaders(),
         body: JSON.stringify(patch),
       }).then(r => r.json()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
@@ -228,7 +226,7 @@ export default function Dashboard() {
 
   async function signOut() {
     qc.clear();
-    await firebaseSignOut(auth);
+    await logout();
     setLocation("/");
   }
 

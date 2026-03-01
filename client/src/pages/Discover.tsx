@@ -3,13 +3,11 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { auth } from "@/lib/firebase";
-import { signOut as firebaseSignOut } from "firebase/auth";
 import { LogOut, ChevronDown, ChevronUp, X } from "lucide-react";
 import type { PublicStartupProfile } from "@shared/schema";
 
-function authHeaders(token: string) {
-  return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+function authHeaders() {
+  return { "Content-Type": "application/json" };
 }
 
 const INDUSTRIES = ["FinTech", "HealthTech", "AI/ML", "SaaS B2B", "Consumer", "Marketplace", "DeepTech", "Other"];
@@ -40,14 +38,14 @@ function Tag({ label, color }: { label: string; color?: string }) {
 }
 
 // Interest modal
-function InterestModal({ startup, token, onClose }: { startup: PublicStartupProfile; token: string; onClose: () => void }) {
+function InterestModal({ startup, onClose }: { startup: PublicStartupProfile; onClose: () => void }) {
   const [message, setMessage] = useState("");
   const [done, setDone] = useState(false);
 
   const mutation = useMutation({
     mutationFn: () => fetch("/api/connections", {
       method: "POST",
-      headers: authHeaders(token),
+      headers: authHeaders(),
       body: JSON.stringify({ startup_id: startup.id, message: message || undefined }),
     }).then(async r => { if (!r.ok) throw new Error((await r.json()).message); return r.json(); }),
     onSuccess: () => setDone(true),
@@ -97,7 +95,7 @@ function InterestModal({ startup, token, onClose }: { startup: PublicStartupProf
 }
 
 // Startup card
-function StartupCard({ profile, token }: { profile: PublicStartupProfile; token: string }) {
+function StartupCard({ profile }: { profile: PublicStartupProfile }) {
   const [expanded, setExpanded] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -170,14 +168,14 @@ function StartupCard({ profile, token }: { profile: PublicStartupProfile; token:
       </div>
 
       <AnimatePresence>
-        {showModal && <InterestModal startup={profile} token={token} onClose={() => setShowModal(false)} />}
+        {showModal && <InterestModal startup={profile} onClose={() => setShowModal(false)} />}
       </AnimatePresence>
     </>
   );
 }
 
 export default function Discover() {
-  const { session } = useAuth();
+  const { session, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [industry, setIndustry] = useState("");
   const [stage, setStage] = useState("");
@@ -185,7 +183,7 @@ export default function Discover() {
   const [locationQ, setLocationQ] = useState("");
 
   async function signOut() {
-    await firebaseSignOut(auth);
+    await logout();
     setLocation("/");
   }
 
@@ -198,7 +196,7 @@ export default function Discover() {
   const { data: profiles, isLoading, error } = useQuery<PublicStartupProfile[]>({
     queryKey: ["discover", industry, stage, fundraising, locationQ],
     queryFn: async () => {
-      const r = await fetch(`/api/discover?${params.toString()}`, { headers: authHeaders(session!.access_token) });
+      const r = await fetch(`/api/discover?${params.toString()}`, { headers: authHeaders() });
       if (r.status === 403) throw new Error("investor_gate");
       if (!r.ok) throw new Error("Failed to load");
       return r.json();
@@ -280,7 +278,7 @@ export default function Discover() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {profiles?.map(p => <StartupCard key={p.id} profile={p} token={session!.access_token} />)}
+          {profiles?.map(p => <StartupCard key={p.id} profile={p} />)}
         </div>
       </div>
     </div>

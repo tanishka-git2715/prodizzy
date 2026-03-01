@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/hooks/use-auth";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, LogIn } from "lucide-react";
 
 const TOTAL_STEPS = 4;
 
@@ -198,11 +196,10 @@ export default function PartnerOnboard() {
     window.scrollTo(0, 0);
   }, []);
 
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const qc = useQueryClient();
   const isLoggedIn = !!session;
-  // When already logged in, skip the account-creation step (step 5)
-  const EFFECTIVE_STEPS = isLoggedIn ? TOTAL_STEPS - 1 : TOTAL_STEPS;
+  const EFFECTIVE_STEPS = 3;
 
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(0);
@@ -251,9 +248,8 @@ export default function PartnerOnboard() {
   const { data: existingProfile } = useQuery({
     queryKey: ["partner-profile"],
     queryFn: async () => {
-      if (!session?.access_token) return null;
       const r = await fetch("/api/partner", {
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        headers: { "Content-Type": "application/json" },
       });
       if (r.status === 404) return null;
       if (!r.ok) throw new Error("Failed to fetch profile");
@@ -281,7 +277,7 @@ export default function PartnerOnboard() {
       case 0: return companyName.trim() && role.trim() && fullName.trim() && email.trim();
       case 1: return partnerType && servicesOffered.length > 0 && industriesServed.length > 0 && stagesServed.length > 0;
       case 2: return teamSize && yearsExperience && workMode;
-      case 3: return lookingFor.length > 0 && password.length >= 6;
+      case 3: return lookingFor.length > 0;
       default: return true;
     }
   }
@@ -290,28 +286,18 @@ export default function PartnerOnboard() {
     setSubmitting(true);
     setError("");
 
-    let token: string;
-
-    if (isLoggedIn) {
-      // Already authenticated — skip signUp, just save the profile
-      token = session!.access_token;
-    } else {
-      // Sign up with Firebase
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const t = await userCredential.user.getIdToken();
-        token = t;
-      } catch (error: any) {
-        setError(error.message);
-        setSubmitting(false);
-        return;
-      }
+    if (!isLoggedIn) {
+      setError("Please sign in with Google to submit your profile.");
+      setSubmitting(false);
+      return;
     }
 
-    const res = await fetch("/api/partner", {
+
+    const res = await fetch("/api/profile", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        type: "partner",
         company_name: companyName,
         role,
         full_name: fullName,
@@ -349,12 +335,11 @@ export default function PartnerOnboard() {
     const savedProfile = await res.json();
     console.log("Partner profile saved successfully:", savedProfile);
 
-    // Verify profile was saved successfully before redirecting
-    const verifyRes = await fetch("/api/partner", {
+    // Verify partner profile was saved before redirecting
+    const verifyRes = await fetch("/api/profile", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -472,13 +457,43 @@ export default function PartnerOnboard() {
         <Field label="Monthly capacity (optional)" value={monthlyCapacity} onChange={setMonthlyCapacity} placeholder="e.g. 2 new slots" />
         <Field label="Preferred budget (optional)" value={preferredBudgetRange} onChange={setPreferredBudgetRange} placeholder="e.g. $5K+" />
       </div>
-      <Field label="Password" value={password} onChange={setPassword} type="password" placeholder="Min 6 characters" />
-      {error && <p className="text-red-400 text-sm">{error}</p>}
     </div>,
   ];
 
-  // When logged in, skip the account-creation step (last step)
-  const steps = isLoggedIn ? allSteps.slice(0, 3) : allSteps;
+  if (!isLoggedIn && !loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center space-y-6">
+          <div className="flex flex-col items-center">
+            <img src="/logo.png" alt="Prodizzy" className="w-12 h-12 rounded-xl mb-4" />
+            <h1 className="text-2xl font-semibold text-white">Partner Onboarding</h1>
+            <p className="text-white/40 text-sm mt-2">Please sign in with Google to begin your onboarding.</p>
+          </div>
+          <button
+            onClick={() => window.location.href = "/api/auth/google"}
+            className="w-full bg-white text-black font-semibold py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            Sign in with Google
+          </button>
+          <button onClick={() => setLocation("/")} className="text-white/25 text-xs hover:text-white/50 transition-colors">
+            Back to home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const stepsToShow = allSteps.slice(0, 3);
+
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
@@ -499,7 +514,7 @@ export default function PartnerOnboard() {
         <div className="w-full max-w-lg">
           <AnimatePresence mode="wait" initial={false} custom={dir}>
             <motion.div key={step} custom={dir} variants={slideVariants(dir)} initial="initial" animate="animate" exit="exit">
-              {steps[step]}
+              {stepsToShow[step]}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -524,8 +539,8 @@ export default function PartnerOnboard() {
             <button onClick={handleSubmit} disabled={!canProceed() || submitting}
               className="flex-1 bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
               {submitting
-                ? (isLoggedIn ? "Saving…" : "Creating account…")
-                : (isLoggedIn ? "Save & go to dashboard" : "Create account")
+                ? (isLoggedIn ? "Saving…" : "Submitting…")
+                : (isLoggedIn ? "Save & go to dashboard" : "Submit profile")
               }
             </button>
           )}

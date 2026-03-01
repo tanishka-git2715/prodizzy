@@ -1,0 +1,113 @@
+import mongoose, { Schema, Document } from "mongoose";
+
+// Waitlist Model
+const WaitlistSchema = new Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    role: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+});
+
+export const Waitlist = mongoose.model("Waitlist", WaitlistSchema);
+
+// Profile Schemas are more complex. Let's use a flexible approach for the shared data.
+
+const StartupProfileSchema = new Schema({
+    user_id: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
+    company_name: { type: String, required: true },
+    role: { type: String, required: true },
+    full_name: { type: String, required: true },
+    phone: String,
+    website: String,
+    linkedin_url: String,
+    stage: String,
+    industry: [String],
+    team_size: String,
+    location: String,
+    is_registered: String,
+    product_description: String,
+    problem_solved: String,
+    target_audience: String,
+    num_users: String,
+    monthly_revenue: String,
+    traction_highlights: String,
+    intents: [String],
+    onboarding_completed: { type: Boolean, default: false },
+    approved: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+    // Intent data
+    intent_validation: Object,
+    intent_hiring: Object,
+    intent_partnerships: Object,
+    intent_promotions: Object,
+    intent_fundraising: Object,
+}, { strict: false });
+
+export const StartupProfile = mongoose.model("StartupProfile", StartupProfileSchema);
+
+const InvestorProfileSchema = new Schema({
+    user_id: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
+    full_name: { type: String, required: true },
+    firm_name: String,
+    investor_type: String,
+    check_size: String,
+    sectors: [String],
+    stages: [String],
+    geography: String,
+    thesis: String,
+    onboarding_completed: { type: Boolean, default: false },
+    approved: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+}, { strict: false });
+
+export const InvestorProfile = mongoose.model("InvestorProfile", InvestorProfileSchema);
+
+const PartnerProfileSchema = new Schema({
+    user_id: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
+    company_name: String,
+    role: String,
+    full_name: String,
+    phone: String,
+    website: String,
+    linkedin_url: String,
+    partner_type: String,
+    services_offered: [String],
+    industries_served: [String],
+    stages_served: [String],
+    onboarding_completed: { type: Boolean, default: false },
+    approved: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+}, { strict: false });
+
+export const PartnerProfile = mongoose.model("PartnerProfile", PartnerProfileSchema);
+
+const IndividualProfileSchema = new Schema({
+    user_id: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
+    full_name: String,
+    phone: String,
+    linkedin_url: String,
+    profile_type: String,
+    skills: [String],
+    experience_level: String,
+    onboarding_completed: { type: Boolean, default: false },
+    approved: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+}, { strict: false });
+
+export const IndividualProfile = mongoose.model("IndividualProfile", IndividualProfileSchema);
+
+// User Model for Authentication
+const UserSchema = new Schema({
+    googleId: { type: String, unique: true },
+    email: { type: String, required: true, unique: true },
+    displayName: String,
+    avatarUrl: String,
+    role: { type: String, default: "user", enum: ["user", "admin"] },
+    createdAt: { type: Date, default: Date.now },
+});
+
+export const User = mongoose.model("User", UserSchema);

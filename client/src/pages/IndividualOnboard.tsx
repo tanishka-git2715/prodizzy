@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/hooks/use-auth";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, LogIn } from "lucide-react";
 
 const TOTAL_STEPS = 6;
 
@@ -198,11 +196,10 @@ export default function IndividualOnboard() {
     window.scrollTo(0, 0);
   }, []);
 
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const qc = useQueryClient();
   const isLoggedIn = !!session;
-  // When already logged in, skip the account-creation step (step 5)
-  const EFFECTIVE_STEPS = isLoggedIn ? TOTAL_STEPS - 1 : TOTAL_STEPS;
+  const EFFECTIVE_STEPS = 5;
 
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(0);
@@ -247,9 +244,8 @@ export default function IndividualOnboard() {
   const { data: existingProfile } = useQuery({
     queryKey: ["individual-profile"],
     queryFn: async () => {
-      if (!session?.access_token) return null;
       const r = await fetch("/api/individual", {
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        headers: { "Content-Type": "application/json" },
       });
       if (r.status === 404) return null;
       if (!r.ok) throw new Error("Failed to fetch profile");
@@ -279,7 +275,7 @@ export default function IndividualOnboard() {
       case 2: return skills.length > 0 && experienceLevel;
       case 3: return lookingFor.length > 0;
       case 4: return availability && workMode && userLocation;
-      case 5: return password.length >= 6;
+      case 5: return true;
       default: return true;
     }
   }
@@ -288,27 +284,15 @@ export default function IndividualOnboard() {
     setSubmitting(true);
     setError("");
 
-    let token: string;
-
-    if (isLoggedIn) {
-      // Already authenticated — skip signUp, just save the profile
-      token = session!.access_token;
-    } else {
-      // Sign up with Firebase
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const t = await userCredential.user.getIdToken();
-        token = t;
-      } catch (error: any) {
-        setError(error.message);
-        setSubmitting(false);
-        return;
-      }
+    if (!isLoggedIn) {
+      setError("Please sign in with Google to submit your profile.");
+      setSubmitting(false);
+      return;
     }
 
     const res = await fetch("/api/individual", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         full_name: fullName,
         email,
@@ -330,6 +314,7 @@ export default function IndividualOnboard() {
         projects: projects || undefined,
         achievements: achievements || undefined,
         github_url: githubUrl || undefined,
+        type: "individual",
       }),
     });
 
@@ -344,11 +329,10 @@ export default function IndividualOnboard() {
     console.log("Individual profile saved successfully:", savedProfile);
 
     // Verify profile was saved successfully before redirecting
-    const verifyRes = await fetch("/api/individual", {
+    const verifyRes = await fetch("/api/profile", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -457,16 +441,46 @@ export default function IndividualOnboard() {
       <Field label="Projects (optional)" value={projects} onChange={setProjects} placeholder="Describe your best projects..." multiline />
       <Field label="Achievements (optional)" value={achievements} onChange={setAchievements} placeholder="Awards, certifications..." multiline />
       <Field label="GitHub URL (optional)" value={githubUrl} onChange={setGithubUrl} placeholder="https://github.com/..." />
-      <Field label="Password" value={password} onChange={setPassword} type="password" placeholder="Min 6 characters" />
-      {error && <p className="text-red-400 text-sm">{error}</p>}
     </div>,
   ];
+
+  if (!isLoggedIn && !loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center space-y-6">
+          <div className="flex flex-col items-center">
+            <img src="/logo.png" alt="Prodizzy" className="w-12 h-12 rounded-xl mb-4" />
+            <h1 className="text-2xl font-semibold text-white">Individual Onboarding</h1>
+            <p className="text-white/40 text-sm mt-2">Please sign in with Google to begin your onboarding.</p>
+          </div>
+          <button
+            onClick={() => window.location.href = "/api/auth/google"}
+            className="w-full bg-white text-black font-semibold py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            Sign in with Google
+          </button>
+          <button onClick={() => setLocation("/")} className="text-white/25 text-xs hover:text-white/50 transition-colors">
+            Back to home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Progress */}
       <div className="fixed top-0 left-0 right-0 h-0.5 bg-white/5 z-50">
-        <motion.div className="h-full bg-white" animate={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} />
+        <motion.div className="h-full bg-white" animate={{ width: `${((step + 1) / EFFECTIVE_STEPS) * 100}%` }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} />
       </div>
 
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
@@ -474,7 +488,7 @@ export default function IndividualOnboard() {
           <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
           <span className="text-white font-semibold tracking-tight">Prodizzy</span>
         </button>
-        <span className="text-white/25 text-xs tabular-nums">{step + 1} / {TOTAL_STEPS}</span>
+        <span className="text-white/25 text-xs tabular-nums">{step + 1} / {EFFECTIVE_STEPS}</span>
       </div>
 
       <div className="flex-1 flex items-start justify-center px-6 pt-10 pb-32">
@@ -494,7 +508,7 @@ export default function IndividualOnboard() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           )}
-          {step < TOTAL_STEPS - 1 ? (
+          {step < EFFECTIVE_STEPS - 1 ? (
             <button onClick={() => { if (canProceed()) go(step + 1); }} disabled={!canProceed()}
               className="flex-1 bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
               Continue
@@ -502,7 +516,7 @@ export default function IndividualOnboard() {
           ) : (
             <button onClick={handleSubmit} disabled={!canProceed() || submitting}
               className="flex-1 bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
-              {submitting ? "Creating account…" : "Create account"}
+              {submitting ? "Saving profile…" : "Save profile"}
             </button>
           )}
         </div>

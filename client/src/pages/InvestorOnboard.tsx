@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { ChevronLeft } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { ChevronLeft, LogIn } from "lucide-react";
 
 const TOTAL_STEPS = 5;
 
@@ -67,6 +66,10 @@ function MultiPill({ options, selected, onToggle }: { options: string[]; selecte
 }
 
 export default function InvestorOnboard() {
+  const { session, loading } = useAuth();
+  const isLoggedIn = !!session;
+  const EFFECTIVE_STEPS = 4;
+
   const [, setLocation] = useLocation();
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
@@ -92,7 +95,7 @@ export default function InvestorOnboard() {
       case 1: return investorType;
       case 2: return checkSize && stages.length > 0;
       case 3: return sectors.length > 0;
-      case 4: return email.trim() && password.length >= 6;
+      case 4: return true;
       default: return true;
     }
   }
@@ -101,20 +104,27 @@ export default function InvestorOnboard() {
     setSubmitting(true);
     setError("");
 
-    let token: string;
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      token = await userCredential.user.getIdToken();
-    } catch (error: any) {
-      setError(error.message);
+    if (!isLoggedIn) {
+      setError("Please sign in with Google to submit your profile.");
       setSubmitting(false);
       return;
     }
 
-    const res = await fetch("/api/investor", {
+
+    const res = await fetch("/api/profile", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ name, firm_name: firmName || undefined, investor_type: investorType, check_size: checkSize, stages, sectors, geography, thesis: thesis || undefined }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "investor",
+        name,
+        firm_name: firmName || undefined,
+        investor_type: investorType,
+        check_size: checkSize,
+        stages,
+        sectors,
+        geography,
+        thesis: thesis || undefined
+      }),
     });
 
     if (!res.ok) {
@@ -125,9 +135,9 @@ export default function InvestorOnboard() {
     }
 
     // Verify investor profile was saved before redirecting
-    const verifyRes = await fetch("/api/investor", {
+    const verifyRes = await fetch("/api/profile", {
       method: "GET",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json" },
     });
 
     if (!verifyRes.ok) {
@@ -190,19 +200,48 @@ export default function InvestorOnboard() {
       <Field label="Investment thesis (optional)" value={thesis} onChange={setThesis} placeholder="We back founders solving infrastructure problems in emerging markets." multiline />
     </div>,
 
-    <div key="4" className="space-y-5">
-      <StepHeader step={4} title="Final steps." />
-      <Field label="Email" value={email} onChange={setEmail} type="email" placeholder="you@fund.com" />
-      <Field label="Password" value={password} onChange={setPassword} type="password" placeholder="Min 6 characters" />
-      {error && <p className="text-red-400 text-sm">{error}</p>}
-    </div>,
   ];
+
+  if (!isLoggedIn && !loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center space-y-6">
+          <div className="flex flex-col items-center">
+            <img src="/logo.png" alt="Prodizzy" className="w-12 h-12 rounded-xl mb-4" />
+            <h1 className="text-2xl font-semibold text-white">Investor Onboarding</h1>
+            <p className="text-white/40 text-sm mt-2">Please sign in with Google to begin your onboarding.</p>
+          </div>
+          <button
+            onClick={() => window.location.href = "/api/auth/google"}
+            className="w-full bg-white text-black font-semibold py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            Sign in with Google
+          </button>
+          <button onClick={() => setLocation("/")} className="text-white/25 text-xs hover:text-white/50 transition-colors">
+            Back to home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const stepsToShow = steps.slice(0, 4);
+
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
       {/* Progress */}
       <div className="fixed top-0 left-0 right-0 h-0.5 bg-white/5 z-50">
-        <motion.div className="h-full bg-white" animate={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} />
+        <motion.div className="h-full bg-white" animate={{ width: `${((step + 1) / EFFECTIVE_STEPS) * 100}%` }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} />
       </div>
 
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
@@ -210,14 +249,14 @@ export default function InvestorOnboard() {
           <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
           <span className="text-white font-semibold tracking-tight">Prodizzy</span>
         </button>
-        <span className="text-white/25 text-xs tabular-nums">{step + 1} / {TOTAL_STEPS}</span>
+        <span className="text-white/25 text-xs tabular-nums">{step + 1} / {EFFECTIVE_STEPS}</span>
       </div>
 
       <div className="flex-1 flex items-start justify-center px-6 pt-10 pb-32">
         <div className="w-full max-w-lg">
           <AnimatePresence mode="wait" initial={false} custom={dir}>
             <motion.div key={step} custom={dir} variants={slideVariants(dir)} initial="initial" animate="animate" exit="exit">
-              {steps[step]}
+              {stepsToShow[step]}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -230,7 +269,7 @@ export default function InvestorOnboard() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           )}
-          {step < TOTAL_STEPS - 1 ? (
+          {step < EFFECTIVE_STEPS - 1 ? (
             <button onClick={() => { if (canProceed()) go(step + 1); }} disabled={!canProceed()}
               className="flex-1 bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
               Continue
@@ -238,7 +277,7 @@ export default function InvestorOnboard() {
           ) : (
             <button onClick={handleSubmit} disabled={!canProceed() || submitting}
               className="flex-1 bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
-              {submitting ? "Creating account…" : "Create account & browse startups"}
+              {submitting ? "Saving profile…" : "Save profile & browse startups"}
             </button>
           )}
         </div>

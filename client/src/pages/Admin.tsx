@@ -3,29 +3,28 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { auth } from "@/lib/firebase";
-import { signOut as firebaseSignOut } from "firebase/auth";
 import { LogOut, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
 
 type ProfileType = "startup" | "partner" | "investor" | "individual";
+type AdminTab = ProfileType | "users";
 
-function authHeaders(token: string) {
-  return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+function authHeaders() {
+  return { "Content-Type": "application/json" };
 }
 
 function Tag({ label }: { label: string }) {
   return <span className="px-2 py-0.5 rounded-full text-xs border bg-white/5 text-white/50 border-white/10">{label}</span>;
 }
 
-function StartupProfileRow({ profile, token, profileType }: { profile: StartupProfile; token: string; profileType: ProfileType }) {
+function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; profileType: ProfileType }) {
   const [expanded, setExpanded] = useState(false);
   const qc = useQueryClient();
 
   const approveMutation = useMutation({
     mutationFn: (approved: boolean) => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
       method: "PATCH",
-      headers: authHeaders(token),
+      headers: authHeaders(),
       body: JSON.stringify({ approved }),
     }).then(r => r.json()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
@@ -121,14 +120,40 @@ function StartupProfileRow({ profile, token, profileType }: { profile: StartupPr
   );
 }
 
-function PartnerProfileRow({ profile, token, profileType }: { profile: PartnerProfile; token: string; profileType: ProfileType }) {
+function UserRow({ user }: { user: any }) {
+  return (
+    <div className="border border-white/8 bg-white/[0.02] rounded-xl px-5 py-4 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+        {user.avatarUrl ? (
+          <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-white/20 text-xs font-bold">{user.displayName?.charAt(0) || user.email.charAt(0)}</span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-white font-medium text-sm">{user.displayName || "Unknown User"}</span>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-tight border ${user.role === 'admin' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-white/5 text-white/40 border-white/10'}`}>
+            {user.role || 'user'}
+          </span>
+        </div>
+        <p className="text-white/35 text-xs mt-0.5 truncate">{user.email} · Registered {new Date(user.createdAt).toLocaleDateString()}</p>
+      </div>
+      <div className="text-xs text-white/20 tabular-nums">
+        ID: {user.googleId || user._id}
+      </div>
+    </div>
+  );
+}
+
+function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; profileType: ProfileType }) {
   const [expanded, setExpanded] = useState(false);
   const qc = useQueryClient();
 
   const approveMutation = useMutation({
     mutationFn: (approved: boolean) => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
       method: "PATCH",
-      headers: authHeaders(token),
+      headers: authHeaders(),
       body: JSON.stringify({ approved }),
     }).then(r => r.json()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
@@ -209,14 +234,14 @@ function PartnerProfileRow({ profile, token, profileType }: { profile: PartnerPr
   );
 }
 
-function InvestorProfileRow({ profile, token, profileType }: { profile: any; token: string; profileType: ProfileType }) {
+function InvestorProfileRow({ profile, profileType }: { profile: any; profileType: ProfileType }) {
   const [expanded, setExpanded] = useState(false);
   const qc = useQueryClient();
 
   const approveMutation = useMutation({
     mutationFn: (approved: boolean) => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
       method: "PATCH",
-      headers: authHeaders(token),
+      headers: authHeaders(),
       body: JSON.stringify({ approved }),
     }).then(r => r.json()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
@@ -289,14 +314,14 @@ function InvestorProfileRow({ profile, token, profileType }: { profile: any; tok
   );
 }
 
-function IndividualProfileRow({ profile, token, profileType }: { profile: IndividualProfile; token: string; profileType: ProfileType }) {
+function IndividualProfileRow({ profile, profileType }: { profile: IndividualProfile; profileType: ProfileType }) {
   const [expanded, setExpanded] = useState(false);
   const qc = useQueryClient();
 
   const approveMutation = useMutation({
     mutationFn: (approved: boolean) => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
       method: "PATCH",
-      headers: authHeaders(token),
+      headers: authHeaders(),
       body: JSON.stringify({ approved }),
     }).then(r => r.json()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
@@ -375,24 +400,39 @@ function IndividualProfileRow({ profile, token, profileType }: { profile: Indivi
 }
 
 export default function Admin() {
-  const { session } = useAuth();
+  const { session, logout } = useAuth();
   const [, setLocation] = useLocation();
-  const [profileType, setProfileType] = useState<ProfileType>("startup");
+  const [activeTab, setActiveTab] = useState<AdminTab>("startup");
 
-  const { data: profiles, isLoading, error } = useQuery<any[]>({
-    queryKey: ["admin-profiles", profileType],
+  const { data: profiles, isLoading: profilesLoading, error: profilesError } = useQuery<any[]>({
+    queryKey: ["admin-profiles", activeTab],
     queryFn: async () => {
-      const r = await fetch(`/api/admin?type=${profileType}`, { headers: authHeaders(session!.access_token) });
+      const r = await fetch(`/api/admin?type=${activeTab}`, { headers: authHeaders() });
       if (r.status === 403) throw new Error("forbidden");
       if (!r.ok) throw new Error("Failed to load");
       return r.json();
     },
-    enabled: !!session,
+    enabled: !!session && activeTab !== "users",
     retry: false,
   });
 
+  const { data: users, isLoading: usersLoading, error: usersError } = useQuery<any[]>({
+    queryKey: ["admin-users"],
+    queryFn: async () => {
+      const r = await fetch(`/api/admin/users`, { headers: authHeaders() });
+      if (r.status === 403) throw new Error("forbidden");
+      if (!r.ok) throw new Error("Failed to load");
+      return r.json();
+    },
+    enabled: !!session && activeTab === "users",
+    retry: false,
+  });
+
+  const isLoading = activeTab === "users" ? usersLoading : profilesLoading;
+  const error = activeTab === "users" ? usersError : profilesError;
+
   async function signOut() {
-    await firebaseSignOut(auth);
+    await logout();
     setLocation("/");
   }
 
@@ -423,17 +463,18 @@ export default function Admin() {
 
       {/* Tabs */}
       <div className="bg-black/60 border-b border-white/5 px-6">
-        <div className="max-w-5xl mx-auto flex gap-6">
+        <div className="max-w-5xl mx-auto flex gap-6 overflow-x-auto no-scrollbar">
           {[
-            { type: "startup" as ProfileType, label: "Startups" },
-            { type: "partner" as ProfileType, label: "Partners" },
-            { type: "investor" as ProfileType, label: "Investors" },
-            { type: "individual" as ProfileType, label: "Individuals" },
+            { type: "startup" as AdminTab, label: "Startups" },
+            { type: "partner" as AdminTab, label: "Partners" },
+            { type: "investor" as AdminTab, label: "Investors" },
+            { type: "individual" as AdminTab, label: "Individuals" },
+            { type: "users" as AdminTab, label: "All Users" },
           ].map(tab => (
             <button
               key={tab.type}
-              onClick={() => setProfileType(tab.type)}
-              className={`py-3 text-sm font-medium border-b-2 transition-colors ${profileType === tab.type
+              onClick={() => setActiveTab(tab.type)}
+              className={`py-3 text-sm font-medium border-b-2 transition-colors shrink-0 ${activeTab === tab.type
                 ? "border-white text-white"
                 : "border-transparent text-white/40 hover:text-white/60"
                 }`}
@@ -446,11 +487,12 @@ export default function Admin() {
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Total profiles", value: profiles?.length ?? "—" },
-            { label: "Pending approval", value: pending.length || "—" },
-            { label: "Approved", value: approved.length || "—" },
+            { label: "Total Users", value: users?.length ?? (activeTab === "users" ? "..." : "—") },
+            { label: "Filtered profiles", value: profiles?.length ?? (activeTab !== "users" ? "..." : "—") },
+            { label: "Pending approval", value: pending.length || (activeTab !== "users" ? "0" : "—") },
+            { label: "Approved", value: approved.length || (activeTab !== "users" ? "0" : "—") },
           ].map(s => (
             <div key={s.label} className="bg-white/[0.03] border border-white/8 rounded-xl p-4">
               <div className="text-2xl font-bold tabular-nums">{s.value}</div>
@@ -465,28 +507,38 @@ export default function Admin() {
           </div>
         )}
 
+        {/* Users List */}
+        {activeTab === "users" && users && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Registered Users ({users.length})</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {users.map(u => <UserRow key={u.id || u.googleId} user={u} />)}
+            </div>
+          </div>
+        )}
+
         {/* Pending */}
-        {pending.length > 0 && (
+        {activeTab !== "users" && pending.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
             {pending.map(p => {
-              if (profileType === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} token={session!.access_token} profileType={profileType} />;
-              if (profileType === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} token={session!.access_token} profileType={profileType} />;
-              if (profileType === "investor") return <InvestorProfileRow key={p.id} profile={p} token={session!.access_token} profileType={profileType} />;
-              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} token={session!.access_token} profileType={profileType} />;
+              if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={activeTab} />;
+              if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={activeTab} />;
+              if (activeTab === "investor") return <InvestorProfileRow key={p.id} profile={p} profileType={activeTab} />;
+              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={activeTab} />;
             })}
           </div>
         )}
 
         {/* Approved */}
-        {approved.length > 0 && (
+        {activeTab !== "users" && approved.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Approved ({approved.length})</h2>
             {approved.map(p => {
-              if (profileType === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} token={session!.access_token} profileType={profileType} />;
-              if (profileType === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} token={session!.access_token} profileType={profileType} />;
-              if (profileType === "investor") return <InvestorProfileRow key={p.id} profile={p} token={session!.access_token} profileType={profileType} />;
-              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} token={session!.access_token} profileType={profileType} />;
+              if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={activeTab} />;
+              if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={activeTab} />;
+              if (activeTab === "investor") return <InvestorProfileRow key={p.id} profile={p} profileType={activeTab} />;
+              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={activeTab} />;
             })}
           </div>
         )}
