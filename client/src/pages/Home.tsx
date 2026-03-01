@@ -35,6 +35,7 @@ export default function Home() {
   });
   const [authError, setAuthError] = useState("");
   const [authMode, setAuthMode] = useState<"signup" | "signin">("signup");
+  const [pendingRole, setPendingRole] = useState<"startup" | "partner" | "individual" | null>(null);
 
   // Smooth typing animation for hero subtitle
   const fullText = "Stop relying on random connections. Get matched with the right people for hiring, partnerships, growth, and fundraising.";
@@ -150,12 +151,21 @@ export default function Home() {
   useEffect(() => {
     if (!session || !profileStatus) return;
 
+    // Handle pending role navigation after login
+    if (pendingRole && !showAuthModal) {
+      if (pendingRole === "startup") setLocation("/join-startup");
+      else if (pendingRole === "partner") setLocation("/partner-onboard");
+      else if (pendingRole === "individual") setLocation("/individual-onboard");
+      setPendingRole(null);
+      return;
+    }
+
     // If user is authenticated but has no profile, show role selection automatically
     // Only show if user hasn't manually dismissed it
     if (profileStatus.needsOnboarding && !showRoleModal && !showAuthModal && !roleModalDismissed) {
       setShowRoleModal(true);
     }
-  }, [session, profileStatus, showRoleModal, showAuthModal, roleModalDismissed]);
+  }, [session, profileStatus, showRoleModal, showAuthModal, roleModalDismissed, pendingRole, setLocation]);
 
   const handleGoogleLogin = () => {
     loginWithGoogle();
@@ -167,13 +177,17 @@ export default function Home() {
   };
 
   const handleRoleCardClick = (role: "startup" | "partner" | "individual") => {
-    // Navigate directly to onboarding — auth is handled by the onboarding pages themselves
-    if (role === "startup") {
-      setLocation("/join-startup");
-    } else if (role === "partner") {
-      setLocation("/partner-onboard");
+    if (session) {
+      if (role === "startup") {
+        setLocation("/join-startup");
+      } else if (role === "partner") {
+        setLocation("/partner-onboard");
+      } else {
+        setLocation("/individual-onboard");
+      }
     } else {
-      setLocation("/individual-onboard");
+      setPendingRole(role);
+      setShowAuthModal(true);
     }
   };
 

@@ -23,6 +23,10 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
+// IMPORTANT FOR VERCEL
+// Allows express-session secure cookies and passport's correct callbackUrl protocol (HTTPS)
+app.set("trust proxy", 1);
+
 // Setup Passport and Session
 setupAuth(app);
 

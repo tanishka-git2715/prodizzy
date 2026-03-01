@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 
 export function setupAuth(app: Express) {
     const sessionSecret = process.env.SESSION_SECRET || "prodizzy_default_secret";
+    const mongoUrl = process.env.MONGODB_URI || "mongodb://localhost:27017/prodizzy";
 
     app.use(
         session({
@@ -16,7 +17,7 @@ export function setupAuth(app: Express) {
             resave: false,
             saveUninitialized: false,
             store: MongoStore.create({
-                mongoUrl: process.env.MONGODB_URI,
+                mongoUrl: mongoUrl,
                 ttl: 14 * 24 * 60 * 60, // 14 days
             }),
             cookie: {
@@ -30,32 +31,36 @@ export function setupAuth(app: Express) {
     app.use(passport.initialize());
     app.use(passport.session());
 
-    passport.use(
-        new GoogleStrategy(
-            {
-                clientID: process.env.GOOGLE_CLIENT_ID!,
-                clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-                callbackURL: "/api/auth/google/callback",
-            },
-            async (_accessToken, _refreshToken, profile, done) => {
-                try {
-                    let user = await User.findOne({ googleId: profile.id });
-                    if (!user) {
-                        user = new User({
-                            googleId: profile.id,
-                            email: profile.emails?.[0].value,
-                            displayName: profile.displayName,
-                            avatarUrl: profile.photos?.[0].value,
-                        });
-                        await user.save();
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        passport.use(
+            new GoogleStrategy(
+                {
+                    clientID: process.env.GOOGLE_CLIENT_ID,
+                    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                    callbackURL: "/api/auth/google/callback",
+                },
+                async (_accessToken, _refreshToken, profile, done) => {
+                    try {
+                        let user = await User.findOne({ googleId: profile.id });
+                        if (!user) {
+                            user = new User({
+                                googleId: profile.id,
+                                email: profile.emails?.[0].value,
+                                displayName: profile.displayName,
+                                avatarUrl: profile.photos?.[0].value,
+                            });
+                            await user.save();
+                        }
+                        return done(null, user);
+                    } catch (error) {
+                        return done(error);
                     }
-                    return done(null, user);
-                } catch (error) {
-                    return done(error);
                 }
-            }
-        )
-    );
+            )
+        );
+    } else {
+        console.warn("Google OAuth credentials missing. Google login disabled.");
+    }
 
     passport.use(
         new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
