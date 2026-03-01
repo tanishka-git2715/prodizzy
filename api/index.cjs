@@ -27,7 +27,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// api/index.ts
+// _api-src/index.ts
 var index_exports = {};
 __export(index_exports, {
   default: () => handler
@@ -3437,7 +3437,7 @@ async function setupApp() {
   return { app, httpServer };
 }
 
-// api/index.ts
+// _api-src/index.ts
 process.on("uncaughtException", (err) => {
   console.error("[Vercel] UNCAUGHT EXCEPTION:", err.message, err.stack);
 });
