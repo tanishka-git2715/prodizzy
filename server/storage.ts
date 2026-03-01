@@ -52,9 +52,11 @@ export class DatabaseStorage implements IStorage {
     // Check all models to find where the user has a profile
     const models = [StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile];
     for (const Model of models) {
-      const doc = await (Model as any).findOne({ user_id: userId });
+      // Use projection to exclude large intent objects if not needed, 
+      // but for now let's just ensure we use .lean() for speed
+      const doc = await (Model as any).findOne({ user_id: userId }).lean();
       if (doc) {
-        const obj = doc.toObject();
+        const obj = { ...doc };
         obj.type = Model.modelName.replace("Profile", "").toLowerCase();
         return obj;
       }
@@ -68,8 +70,8 @@ export class DatabaseStorage implements IStorage {
       { user_id: userId },
       { user_id: userId, email, ...profile, onboarding_completed: true },
       { upsert: true, new: true }
-    );
-    return doc.toObject();
+    ).lean();
+    return doc;
   }
 
   async patchProfile(userId: string, patch: any): Promise<any> {
@@ -82,18 +84,25 @@ export class DatabaseStorage implements IStorage {
       { user_id: userId },
       { $set: patch },
       { new: true }
-    );
-    return doc!.toObject();
+    ).lean();
+    return doc;
   }
 
   async getAllProfiles(type: string): Promise<any[]> {
     const Model = this.getModelByType(type);
-    const docs = await (Model as any).find({}).sort({ createdAt: -1 });
-    return docs.map((d: any) => {
-      const obj = d.toObject();
-      obj.id = obj._id.toString(); // Map _id to id for frontend compatibility
-      return obj;
-    });
+    // Exclude large intent fields for list views
+    const projection = {
+      intent_validation: 0,
+      intent_hiring: 0,
+      intent_partnerships: 0,
+      intent_promotions: 0,
+      intent_fundraising: 0
+    };
+    const docs = await (Model as any).find({}, projection).sort({ createdAt: -1 }).lean();
+    return docs.map((d: any) => ({
+      ...d,
+      id: d._id.toString()
+    }));
   }
 
   async updateProfileApproval(type: string, id: string, approved: boolean): Promise<any> {

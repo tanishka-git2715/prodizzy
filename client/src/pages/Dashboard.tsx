@@ -371,6 +371,7 @@ export default function Dashboard() {
       return r.json();
     },
     enabled: !!session,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
   const patchMutation = useMutation({

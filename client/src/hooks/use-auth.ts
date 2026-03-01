@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface CustomSession {
   user: {
@@ -11,92 +11,92 @@ export interface CustomSession {
 }
 
 export function useAuth() {
-  const [session, setSession] = useState<CustomSession | null>(null);
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const refreshSession = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/me");
-      if (res.ok) {
-        const data = await res.json();
-        setSession({ user: data });
-        setUser(data);
-      } else {
-        setSession(null);
-        setUser(null);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: user, isLoading: loading, error: queryError } = useQuery<any>({
+    queryKey: ["/api/auth/me"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false,
+  });
 
-  useEffect(() => {
-    refreshSession();
-  }, [refreshSession]);
+  const session = user ? { user } : null;
 
-  const loginWithGoogle = () => {
-    window.location.href = "/api/auth/google";
-  };
-
-  const login = async (data: any) => {
-    setError(null);
-    try {
+  const loginMutation = useMutation({
+    mutationFn: async (data: any) => {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (res.ok) {
-        const user = await res.json();
-        setSession({ user });
-        setUser(user);
-        return { success: true };
-      } else {
+      if (!res.ok) {
         const errorData = await res.json();
-        setError(errorData.message || "Login failed");
-        return { success: false, message: errorData.message };
+        throw new Error(errorData.message || "Login failed");
       }
-    } catch (err: any) {
-      setError(err.message);
-      return { success: false, message: err.message };
-    }
-  };
+      return res.json();
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(["/api/auth/me"], user);
+    },
+  });
 
-  const register = async (data: any) => {
-    setError(null);
-    try {
+  const registerMutation = useMutation({
+    mutationFn: async (data: any) => {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (res.ok) {
-        const user = await res.json();
-        setSession({ user });
-        setUser(user);
-        return { success: true };
-      } else {
+      if (!res.ok) {
         const errorData = await res.json();
-        setError(errorData.message || "Registration failed");
-        return { success: false, message: errorData.message };
+        throw new Error(errorData.message || "Registration failed");
       }
-    } catch (err: any) {
-      setError(err.message);
-      return { success: false, message: err.message };
-    }
+      return res.json();
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(["/api/auth/me"], user);
+    },
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (!res.ok) throw new Error("Logout failed");
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["/api/auth/me"], null);
+      queryClient.clear();
+      window.location.href = "/";
+    },
+  });
+
+  const loginWithGoogle = () => {
+    window.location.href = "/api/auth/google";
   };
 
-  const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setSession(null);
-    setUser(null);
-    window.location.href = "/";
+  return {
+    session,
+    user,
+    loading,
+    error: (queryError as Error)?.message || loginMutation.error?.message || registerMutation.error?.message || null,
+    refreshSession: () => queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] }),
+    loginWithGoogle,
+    logout: logoutMutation.mutateAsync,
+    login: async (data: any) => {
+      try {
+        await loginMutation.mutateAsync(data);
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, message: err.message };
+      }
+    },
+    register: async (data: any) => {
+      try {
+        await registerMutation.mutateAsync(data);
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, message: err.message };
+      }
+    },
   };
-
-  return { session, user, loading, error, refreshSession, loginWithGoogle, logout, login, register };
 }
 
