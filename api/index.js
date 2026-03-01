@@ -3438,34 +3438,23 @@ async function setupApp() {
 }
 
 // _api-src/index.ts
-process.on("uncaughtException", (err) => {
-  console.error("[Vercel] UNCAUGHT EXCEPTION:", err.message, err.stack);
-});
-process.on("unhandledRejection", (reason) => {
-  console.error("[Vercel] UNHANDLED REJECTION:", reason);
-});
 var app2;
 var setupPromise = null;
-var setupError = null;
 async function handler(req, res) {
-  if (setupError) {
-    console.error("[Vercel] Returning cached setup error:", setupError.message);
-    return res.status(500).json({ error: "Server Initialization Failed", details: setupError.message });
-  }
   if (!app2) {
     try {
       if (!setupPromise) {
-        console.log("[Vercel] Starting app setup...");
         setupPromise = setupApp();
       }
       const result = await setupPromise;
       app2 = result.app;
-      console.log("[Vercel] App setup complete.");
     } catch (error) {
-      setupError = error;
       setupPromise = null;
       console.error("[Vercel] Setup failed:", error.message, error.stack);
-      return res.status(500).json({ error: "Server Initialization Failed", details: error.message || String(error) });
+      return res.status(500).json({
+        error: "Server Initialization Failed",
+        details: error.message || String(error)
+      });
     }
   }
   return app2(req, res);
