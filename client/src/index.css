@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 220 15% 4%;
+  --foreground: 0 0% 98%;
+
+  --primary: 354 73% 56%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 220 15% 10%;
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 220 15% 8%;
+  --muted-foreground: 215 15% 55%;
+
+  --accent: 354 73% 56%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 220 15% 12%;
+  --input: 220 15% 10%;
+  --ring: 354 73% 56%;
+
+  --card: 220 15% 6%;
+  --card-foreground: 0 0% 98%;
+  --card-border: 220 15% 12%;
+
+  --popover: 220 15% 6%;
+  --popover-foreground: 0 0% 98%;
+  --popover-border: 220 15% 12%;
+
+  --radius: 0.75rem;
+
+  /* button borders */
+  --primary-border: transparent;
+  --secondary-border: rgba(255,255,255,0.09);
+  --muted-border: rgba(255,255,255,0.06);
+  --button-outline: rgba(255,255,255,0.12);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    @apply tracking-tight;
+  }
+
+  ::selection {
+    background: rgba(230, 57, 70, 0.25);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.18);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
