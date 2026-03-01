@@ -71,7 +71,7 @@ export class DatabaseStorage implements IStorage {
       { user_id: userId, email, ...profile, onboarding_completed: true },
       { upsert: true, new: true }
     ).lean();
-    return doc;
+    return { ...doc, type: Model.modelName.replace("Profile", "").toLowerCase() };
   }
 
   async patchProfile(userId: string, patch: any): Promise<any> {
@@ -85,7 +85,7 @@ export class DatabaseStorage implements IStorage {
       { $set: patch },
       { new: true }
     ).lean();
-    return doc;
+    return { ...doc, type: profile.type };
   }
 
   async getAllProfiles(type: string): Promise<any[]> {

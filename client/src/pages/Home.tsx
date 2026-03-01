@@ -290,7 +290,6 @@ export default function Home() {
         <motion.section
           id="how-it-works"
           className="px-6 py-24"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.055)" }}
           initial="hidden"
           whileInView="visible"
           viewport={scrollRevealViewport}
@@ -347,7 +346,6 @@ export default function Home() {
         {/* ── ROLE CARDS ── */}
         <motion.section
           className="px-6 py-24"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.055)" }}
           initial="hidden"
           whileInView="visible"
           viewport={scrollRevealViewport}
@@ -427,7 +425,6 @@ export default function Home() {
         {/* ── VALUE STRIP ── */}
         <motion.section
           className="px-6 py-16"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.055)", borderBottom: "1px solid rgba(255,255,255,0.055)" }}
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -473,7 +470,6 @@ export default function Home() {
         {/* ── FOOTER ── */}
         <motion.footer
           className="px-8 py-7"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.055)" }}
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
