@@ -266,9 +266,8 @@ export default function PartnerOnboard() {
   function canProceed() {
     switch (step) {
       case 0: return companyName.trim() && role.trim() && fullName.trim() && email.trim();
-      case 1: return partnerType && servicesOffered.length > 0 && industriesServed.length > 0 && stagesServed.length > 0;
-      case 2: return teamSize && yearsExperience && workMode;
-      case 3: return lookingFor.length > 0;
+      case 1: return partnerType && servicesOffered.trim() && teamSize && yearsExperience.trim() && workMode && industriesServed.length > 0;
+      case 2: return lookingFor.length > 0 && pricingModel;
       default: return true;
     }
   }
