@@ -10,16 +10,6 @@ function authHeaders() {
   return { "Content-Type": "application/json" };
 }
 
-function matchScore(p: StartupProfile): number {
-  const fields = [
-    p.company_name, p.phone, p.linkedin_url,
-    p.stage, p.industry, p.team_size, p.location, p.is_registered,
-    p.product_description, p.problem_solved, p.target_audience,
-    p.num_users, p.monthly_revenue, p.traction_highlights, p.website
-  ];
-  const filled = fields.filter(f => f !== null && f !== undefined && f !== "" && (Array.isArray(f) ? f.length > 0 : true)).length;
-  return Math.round((filled / fields.length) * 100);
-}
 
 const GOAL_COLORS: Record<string, string> = {
   Investors: "bg-red-500/15 text-red-400 border-red-500/20",
@@ -86,61 +76,24 @@ function TextArea({ label, value, onChange, placeholder }: { label: string; valu
   );
 }
 
-interface ProCardProps {
-  title: string; unlockLabel: string; isFilled: boolean;
-  filledPreview: React.ReactNode; form: React.ReactNode;
-  onSave: () => void; saving: boolean;
-}
-function ProCard({ title, unlockLabel, isFilled, filledPreview, form, onSave, saving }: ProCardProps) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-5 space-y-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-white font-medium text-sm">{title}</h3>
-          {!isFilled && <p className="text-white/30 text-xs mt-0.5">{unlockLabel}</p>}
-        </div>
-        {isFilled ? (
-          <button onClick={() => setOpen(o => !o)} className="text-white/30 hover:text-white/60 transition-colors">
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-        ) : (
-          <button onClick={() => setOpen(o => !o)} className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition-colors">
-            {open ? "Cancel" : "Complete"} <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
-          </button>
-        )}
-      </div>
-      {isFilled && !open && <div className="text-sm text-white/50">{filledPreview}</div>}
-      <AnimatePresence>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
-            <div className="space-y-4 pt-2 border-t border-white/8">
-              {form}
-              <button onClick={() => { onSave(); setOpen(false); }} disabled={saving}
-                className="flex items-center gap-1.5 bg-white text-black text-xs font-semibold px-4 py-2 rounded-lg hover:bg-white/90 transition-colors disabled:opacity-50">
-                <Check className="w-3 h-3" /> {saving ? "Saving…" : "Save"}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 // ─── Startup Dashboard as a proper component ────────────────────────────────────
 const INDUSTRY_OPTIONS = ["Software & AI", "Fintech", "Healthtech", "Edtech", "D2C / Consumer", "SaaS", "Deeptech", "Climate", "Other"];
-const STAGE_OPTIONS = ["Idea / Pre-product", "MVP (no traction)", "Seed (MVP & Early traction)", "Early Revenue", "Growth", "Series A+"];
-const TEAM_SIZE_OPTIONS = ["Solo", "2–5", "6–10", "11–50", "50+"];
-const IS_REGISTERED_OPTIONS = ["Yes", "No", "In progress"];
+const STAGE_OPTIONS = [
+  "Pre-Seed (Ideation Stage)",
+  "Seed (MVP & Early traction)",
+  "Series A (Generating Revenue)",
+  "Series B/C/D (Expansion & Scaling)",
+  "MNC (Global)"
+];
+const TEAM_SIZE_OPTIONS = ["Solo", "2–10", "11–50", "51–500", "500–1000", "1000+"];
+const IS_REGISTERED_OPTIONS = ["Yes", "No"];
 
 function StartupDashboard({ profile, session, signOut, patchMutation, connections, greeting }: {
   profile: StartupProfile; session: any; signOut: () => void;
   patchMutation: any; connections: any[]; greeting: string;
 }) {
   const [editingCore, setEditingCore] = useState(false);
-  const score = matchScore(profile);
   const firstName = profile.full_name?.split(" ")[0] || "there";
 
   // Core profile edit state (pre-fill from profile)
@@ -152,9 +105,9 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
   const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
   const [location, setLocation] = useState(profile.location || "");
   const [industry, setIndustry] = useState<string[]>(Array.isArray(profile.industry) ? profile.industry : profile.industry ? [profile.industry] : []);
-  const [stage, setStage] = useState(profile.stage || "");
-  const [teamSize, setTeamSize] = useState(profile.team_size || "");
-  const [isRegistered, setIsRegistered] = useState(profile.is_registered || "");
+  const [stage, setStage] = useState<string>(profile.stage || "");
+  const [teamSize, setTeamSize] = useState<string>(profile.team_size || "");
+  const [isRegistered, setIsRegistered] = useState<string>(profile.is_registered || "");
   const [productDescription, setProductDescription] = useState(profile.product_description || "");
   const [problemSolved, setProblemSolved] = useState(profile.problem_solved || "");
   const [targetAudience, setTargetAudience] = useState(profile.target_audience || "");
@@ -162,22 +115,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
   const [monthlyRevenue, setMonthlyRevenue] = useState(profile.monthly_revenue || "");
   const [tractionHighlights, setTractionHighlights] = useState(profile.traction_highlights || "");
 
-  // Progressive profiling state
-  const [missingRoles, setMissingRoles] = useState<string[]>([]);
-  const [hiringUrgency, setHiringUrgency] = useState("");
-  const [partnershipWhy, setPartnershipWhy] = useState<string[]>([]);
-  const [idealPartnerType, setIdealPartnerType] = useState("");
-  const [partnershipMaturity, setPartnershipMaturity] = useState("");
-  const [roundType, setRoundType] = useState("");
-  const [investorWarmth, setInvestorWarmth] = useState<string[]>([]);
-  const [geography, setGeography] = useState("");
-  const [speedPreference, setSpeedPreference] = useState("");
-  const [riskAppetite, setRiskAppetite] = useState("");
-  const [existingBackers, setExistingBackers] = useState("");
-  const [notableCustomers, setNotableCustomers] = useState("");
-  const [deckLink, setDeckLink] = useState("");
-  const [websiteExtra, setWebsiteExtra] = useState("");
-  const [linkedinUrlExtra, setLinkedinUrlExtra] = useState("");
 
   function saveCore() {
     patchMutation.mutate({
@@ -362,20 +299,20 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
 
                   <div className="space-y-1.5">
                     <p className="text-xs text-white/35 uppercase tracking-wider">Industry</p>
-                    <PickMany options={INDUSTRY_OPTIONS} value={industry} onChange={setIndustry} />
+                    <PickMany options={INDUSTRY_OPTIONS} value={industry} onChange={(v) => setIndustry(v)} />
                   </div>
                   <div className="space-y-1.5">
                     <p className="text-xs text-white/35 uppercase tracking-wider">Stage</p>
-                    <PickOne options={STAGE_OPTIONS} value={stage} onChange={setStage} />
+                    <PickOne options={STAGE_OPTIONS} value={stage} onChange={(v) => setStage(v)} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <p className="text-xs text-white/35 uppercase tracking-wider">Team Size</p>
-                      <PickOne options={TEAM_SIZE_OPTIONS} value={teamSize} onChange={setTeamSize} />
+                      <PickOne options={TEAM_SIZE_OPTIONS} value={teamSize} onChange={(v) => setTeamSize(v)} />
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-xs text-white/35 uppercase tracking-wider">Registered Company?</p>
-                      <PickOne options={IS_REGISTERED_OPTIONS} value={isRegistered} onChange={setIsRegistered} />
+                      <PickOne options={IS_REGISTERED_OPTIONS} value={isRegistered} onChange={(v) => setIsRegistered(v)} />
                     </div>
                   </div>
 
@@ -404,142 +341,12 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
             </AnimatePresence>
           </div>
 
-          {/* ── Match Readiness ─────────────────────────────────────────────────── */}
-          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-4">
-            <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">Match Readiness</h2>
-            <div className="text-5xl font-bold tabular-nums">{score}%</div>
-            <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
-              <motion.div className="h-full bg-red-500 rounded-full" initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} />
-            </div>
-            {score < 80 && <p className="text-xs text-white/35">Complete the sections below to improve match quality →</p>}
-            {score >= 80 && <p className="text-xs text-white/35">Your profile is highly optimized for matching.</p>}
-            <div className="pt-2 border-t border-white/6 space-y-1 text-xs text-white/35">
-              <p>Onboarding complete ✓</p>
-              {profile.team_size && <p>Team signals ✓</p>}
-              {profile.partnership_maturity && <p>Partnership readiness ✓</p>}
-              {profile.round_type && <p>Fundraising intel ✓</p>}
-              {profile.geography && <p>Constraints ✓</p>}
-              {profile.linkedin_url && <p>Credibility ✓</p>}
-            </div>
+
+          {/* ── Matches ──────────────────────────────────────────────────────── */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
+            <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
           </div>
-
-          {/* ── Progressive ProCards ────────────────────────────────────────────── */}
-          <ProCard title="Team Signals" unlockLabel="Improve talent matching" isFilled={!!profile.team_size}
-            filledPreview={<div className="space-y-1">
-              {profile.team_size && <p>Size: {profile.team_size}</p>}
-              {profile.missing_roles?.length ? <p>Missing: {profile.missing_roles.join(", ")}</p> : null}
-              {profile.hiring_urgency && <p>Urgency: {profile.hiring_urgency}</p>}
-            </div>}
-            form={<div className="space-y-4">
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Team size</p>
-                <PickOne options={["Solo", "2-5", "6-15", "15+"]} value={teamSize || profile.team_size || ""} onChange={setTeamSize} /></div>
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Missing roles</p>
-                <PickMany options={["Engineering", "Design", "Sales", "Marketing", "Operations", "Finance"]}
-                  value={missingRoles.length ? missingRoles : profile.missing_roles || []} onChange={setMissingRoles} /></div>
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Hiring urgency</p>
-                <PickOne options={["Exploring", "Active", "Critical"]} value={hiringUrgency || profile.hiring_urgency || ""} onChange={setHiringUrgency} /></div>
-            </div>}
-            onSave={() => patchMutation.mutate({ team_size: (teamSize || profile.team_size || undefined) as any, missing_roles: missingRoles.length ? missingRoles : profile.missing_roles || undefined, hiring_urgency: (hiringUrgency || profile.hiring_urgency || undefined) as any })}
-            saving={patchMutation.isPending} />
-
-          <ProCard title="Partnership Readiness" unlockLabel="Improve partner matching" isFilled={!!profile.partnership_maturity}
-            filledPreview={<div className="space-y-1">
-              {profile.partnership_why?.length ? <p>Why: {profile.partnership_why.join(", ")}</p> : null}
-              {profile.ideal_partner_type && <p>Type: {profile.ideal_partner_type}</p>}
-              {profile.partnership_maturity && <p>Maturity: {profile.partnership_maturity}</p>}
-            </div>}
-            form={<div className="space-y-4">
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Why partnerships?</p>
-                <PickMany options={["Distribution", "Tech", "Credibility", "Sales", "Other"]}
-                  value={partnershipWhy.length ? partnershipWhy : profile.partnership_why || []} onChange={setPartnershipWhy} /></div>
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Ideal partner type</p>
-                <PickOne options={["Startup", "Enterprise", "Agency", "Creator", "Other"]} value={idealPartnerType || profile.ideal_partner_type || ""} onChange={setIdealPartnerType} /></div>
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Maturity</p>
-                <PickOne options={["Exploring", "Actively closing", "Proven channel"]} value={partnershipMaturity || profile.partnership_maturity || ""} onChange={setPartnershipMaturity} /></div>
-            </div>}
-            onSave={() => patchMutation.mutate({ partnership_why: partnershipWhy.length ? partnershipWhy : profile.partnership_why || undefined, ideal_partner_type: idealPartnerType || profile.ideal_partner_type || undefined, partnership_maturity: partnershipMaturity || profile.partnership_maturity || undefined })}
-            saving={patchMutation.isPending} />
-
-          <ProCard title="Fundraising Intel" unlockLabel="Improve investor matching" isFilled={!!profile.round_type}
-            filledPreview={<div className="space-y-1">
-              {profile.round_type && <p>Round: {profile.round_type}</p>}
-              {profile.investor_warmth?.length ? <p>Targets: {profile.investor_warmth.join(", ")}</p> : null}
-            </div>}
-            form={<div className="space-y-4">
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Round type</p>
-                <PickOne options={["Pre-seed", "Seed", "Angel", "Strategic", "Other"]} value={roundType || profile.round_type || ""} onChange={setRoundType} /></div>
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Investor types</p>
-                <PickMany options={["Angels", "VCs", "Strategic investors", "Operators"]}
-                  value={investorWarmth.length ? investorWarmth : profile.investor_warmth || []} onChange={setInvestorWarmth} /></div>
-            </div>}
-            onSave={() => patchMutation.mutate({ round_type: roundType || profile.round_type || undefined, investor_warmth: investorWarmth.length ? investorWarmth : profile.investor_warmth || undefined })}
-            saving={patchMutation.isPending} />
-
-          <ProCard title="Constraints" unlockLabel="Improve match precision" isFilled={!!profile.geography}
-            filledPreview={<div className="space-y-1">
-              {profile.geography && <p>Geography: {profile.geography}</p>}
-              {profile.speed_preference && <p>Speed: {profile.speed_preference}</p>}
-              {profile.risk_appetite && <p>Risk: {profile.risk_appetite}</p>}
-            </div>}
-            form={<div className="space-y-4">
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Geography focus</p>
-                <PickOne options={["Global", "India", "Southeast Asia", "US", "Europe"]} value={geography || profile.geography || ""} onChange={setGeography} /></div>
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Intro preference</p>
-                <PickOne options={["Fast intros", "Curated slow intros"]} value={speedPreference || profile.speed_preference || ""} onChange={setSpeedPreference} /></div>
-              <div className="space-y-1.5"><p className="text-xs text-white/35 uppercase tracking-wider">Risk appetite</p>
-                <PickOne options={["Low", "Medium", "High"]} value={riskAppetite || profile.risk_appetite || ""} onChange={setRiskAppetite} /></div>
-            </div>}
-            onSave={() => patchMutation.mutate({ geography: geography || profile.geography || undefined, speed_preference: speedPreference || profile.speed_preference || undefined, risk_appetite: riskAppetite || profile.risk_appetite || undefined })}
-            saving={patchMutation.isPending} />
-
-          <ProCard title="Credibility" unlockLabel="Build trust with matches" isFilled={!!profile.linkedin_url || !!profile.deck_link}
-            filledPreview={<div className="space-y-1">
-              {profile.existing_backers && <p>Backers: {profile.existing_backers}</p>}
-              {profile.notable_customers && <p>Customers: {profile.notable_customers}</p>}
-              {profile.website && <p>Website: {profile.website}</p>}
-            </div>}
-            form={<div className="space-y-3">
-              <TextInput label="Existing backers" value={existingBackers || profile.existing_backers || ""} onChange={setExistingBackers} placeholder="YC W24, Angel list" />
-              <TextInput label="Notable customers" value={notableCustomers || profile.notable_customers || ""} onChange={setNotableCustomers} placeholder="HDFC, Swiggy, OYO" />
-              <TextInput label="Deck link" value={deckLink || profile.deck_link || ""} onChange={setDeckLink} placeholder="https://docsend.com/..." />
-              <TextInput label="Website" value={websiteExtra || profile.website || ""} onChange={setWebsiteExtra} placeholder="https://yourco.com" />
-              <TextInput label="LinkedIn URL" value={linkedinUrlExtra || profile.linkedin_url || ""} onChange={setLinkedinUrlExtra} placeholder="https://linkedin.com/in/..." />
-            </div>}
-            onSave={() => patchMutation.mutate({ existing_backers: existingBackers || profile.existing_backers || undefined, notable_customers: notableCustomers || profile.notable_customers || undefined, deck_link: deckLink || profile.deck_link || undefined, website: websiteExtra || profile.website || undefined, linkedin_url: linkedinUrlExtra || profile.linkedin_url || undefined })}
-            saving={patchMutation.isPending} />
-
-          {/* ── Activity ──────────────────────────────────────────────────────── */}
-          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
-              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">
-                Investor Interest {connections && connections.length > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold">{connections.length}</span>
-                )}
-              </h2>
-              {(!connections || connections.length === 0) ? (
-                <p className="text-white/25 text-sm">Investor interest requests will appear here once your profile is approved.</p>
-              ) : (
-                <div className="space-y-3">
-                  {connections.map((c: any) => (
-                    <div key={c.id} className="border border-white/8 rounded-xl p-4 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-white/80 text-sm font-medium">{c.investor?.name ?? "Investor"}</p>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/20 capitalize">{c.status}</span>
-                      </div>
-                      {c.investor?.firm_name && <p className="text-white/40 text-xs">{c.investor.firm_name} · {c.investor.investor_type} · {c.investor.check_size}</p>}
-                      {c.message && <p className="text-white/50 text-xs italic">"{c.message}"</p>}
-                      <p className="text-white/25 text-xs">Our team will facilitate this intro.</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
-              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
-              <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
@@ -695,6 +502,12 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+
+          {/* ── Matches ──────────────────────────────────────────────────────── */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
+            <p className="text-white/25 text-sm">Coming soon — we&apos;re curating based on your profile.</p>
+          </div>
         </div>
       </div>
     );
@@ -747,6 +560,12 @@ export default function Dashboard() {
                 <p className="text-white/70">{partnerProfile.email}</p>
               </div>
             </div>
+          </div>
+
+          {/* ── Matches ──────────────────────────────────────────────────────── */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
+            <p className="text-white/25 text-sm">Coming soon — we&apos;re curating based on your profile.</p>
           </div>
         </div>
       </div>
