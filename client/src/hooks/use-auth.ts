@@ -42,6 +42,54 @@ export function useAuth() {
     window.location.href = "/api/auth/google";
   };
 
+  const login = async (data: any) => {
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const user = await res.json();
+        setSession({ user });
+        setUser(user);
+        return { success: true };
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Login failed");
+        return { success: false, message: errorData.message };
+      }
+    } catch (err: any) {
+      setError(err.message);
+      return { success: false, message: err.message };
+    }
+  };
+
+  const register = async (data: any) => {
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const user = await res.json();
+        setSession({ user });
+        setUser(user);
+        return { success: true };
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Registration failed");
+        return { success: false, message: errorData.message };
+      }
+    } catch (err: any) {
+      setError(err.message);
+      return { success: false, message: err.message };
+    }
+  };
+
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setSession(null);
@@ -49,6 +97,6 @@ export function useAuth() {
     window.location.href = "/";
   };
 
-  return { session, user, loading, error, refreshSession, loginWithGoogle, logout };
+  return { session, user, loading, error, refreshSession, loginWithGoogle, logout, login, register };
 }
 

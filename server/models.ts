@@ -104,6 +104,7 @@ export const IndividualProfile = mongoose.model("IndividualProfile", IndividualP
 const UserSchema = new Schema({
     googleId: { type: String, unique: true },
     email: { type: String, required: true, unique: true },
+    password: { type: String },
     displayName: String,
     avatarUrl: String,
     role: { type: String, default: "user", enum: ["user", "admin"] },
