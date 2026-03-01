@@ -3171,6 +3171,15 @@ async function registerRoutes(httpServer2, app3) {
       return res.status(500).json({ message: err.message });
     }
   });
+  app3.patch("/api/profile", ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.googleId || req.user.id;
+      const data = await storage.patchProfile(userId, req.body);
+      return res.json(data);
+    } catch (err) {
+      return res.status(500).json({ message: err.message });
+    }
+  });
   app3.get("/api/admin", ensureAdmin, async (req, res) => {
     try {
       const type = req.query.type;

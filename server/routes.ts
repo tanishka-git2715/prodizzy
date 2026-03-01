@@ -75,6 +75,18 @@ export async function registerRoutes(
     }
   });
 
+  // Patch (partial update) the current user's profile
+  app.patch("/api/profile", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.googleId || req.user.id;
+      const data = await storage.patchProfile(userId, req.body);
+      return res.json(data);
+    } catch (err) {
+      return res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+
   // Admin Routes
   app.get("/api/admin", ensureAdmin, async (req, res) => {
     try {
