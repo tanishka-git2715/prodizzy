@@ -644,7 +644,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
-            <p className="text-white/25 text-sm">Coming soon — we're curating based on your skills.</p>
+            <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
           </div>
         </div>
       </div>
@@ -969,7 +969,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
 
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
-            <p className="text-white/25 text-sm">Coming soon — we're curating scaleups that need your services.</p>
+            <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
           </div>
         </div>
       </div>

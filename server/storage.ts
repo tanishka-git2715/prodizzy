@@ -22,7 +22,7 @@ export interface IStorage {
   getAllUsers(): Promise<any[]>;
   getAllWaitlistEntries(): Promise<any[]>;
   getUserByGoogleId(googleId: string): Promise<any | undefined>;
-
+  deleteProfile(type: string, id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -122,6 +122,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByGoogleId(googleId: string): Promise<any | undefined> {
     return await User.findOne({ googleId });
+  }
+
+  async deleteProfile(type: string, id: string): Promise<void> {
+    const Model = this.getModelByType(type);
+    await (Model as any).findByIdAndDelete(id);
   }
 }
 

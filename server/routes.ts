@@ -114,6 +114,20 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/admin", ensureAdmin, async (req, res) => {
+    try {
+      const id = req.query.id as string;
+      const type = req.query.type as string;
+
+      if (!id || !type) return res.status(400).json({ message: "ID and Type are required" });
+
+      await storage.deleteProfile(type, id);
+      res.json({ message: "Profile deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/admin/users", ensureAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();

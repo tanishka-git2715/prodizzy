@@ -3,11 +3,11 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, Check, X, ChevronDown, ChevronUp } from "lucide-react";
+import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
 
 type ProfileType = "startup" | "partner" | "investor" | "individual";
-type AdminTab = ProfileType | "users" | "waitlist";
+type AdminTab = ProfileType | "users";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -29,6 +29,20 @@ function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; 
     }).then(r => r.json()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
+  });
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this profile?")) {
+      deleteMutation.mutate();
+    }
+  };
 
   return (
     <div className={`border rounded-xl transition-colors ${profile.approved ? "border-green-500/20 bg-green-500/5" : "border-white/8 bg-white/[0.02]"}`}>
@@ -61,6 +75,10 @@ function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; 
               <X className="w-3 h-3" /> Revoke
             </button>
           )}
+          <button onClick={handleDelete} disabled={deleteMutation.isPending}
+            className="flex items-center gap-1.5 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50">
+            <Trash2 className="w-3 h-3" /> Delete
+          </button>
           <button onClick={() => setExpanded(e => !e)} className="text-white/30 hover:text-white/60 transition-colors p-1">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -146,22 +164,6 @@ function UserRow({ user }: { user: any }) {
   );
 }
 
-function WaitlistRow({ entry }: { entry: any }) {
-  return (
-    <div className="border border-white/8 bg-white/[0.02] rounded-xl px-5 py-4 flex items-center gap-4">
-      <div className="w-9 h-9 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
-        <span className="text-violet-400 text-xs font-bold">{entry.name?.charAt(0) || "?"}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-white font-medium text-sm">{entry.name}</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-tight border bg-violet-500/10 text-violet-400 border-violet-500/20">{entry.role}</span>
-        </div>
-        <p className="text-white/35 text-xs mt-0.5 truncate">{entry.email} · Joined {new Date(entry.createdAt).toLocaleDateString()}</p>
-      </div>
-    </div>
-  );
-}
 
 function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; profileType: ProfileType }) {
   const [expanded, setExpanded] = useState(false);
@@ -175,6 +177,20 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
     }).then(r => r.json()),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
+  });
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this profile?")) {
+      deleteMutation.mutate();
+    }
+  };
 
   return (
     <div className={`border rounded-xl transition-colors ${profile.approved ? "border-green-500/20 bg-green-500/5" : "border-white/8 bg-white/[0.02]"}`}>
@@ -203,6 +219,10 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
               <X className="w-3 h-3" /> Revoke
             </button>
           )}
+          <button onClick={handleDelete} disabled={deleteMutation.isPending}
+            className="flex items-center gap-1.5 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50">
+            <Trash2 className="w-3 h-3" /> Delete
+          </button>
           <button onClick={() => setExpanded(e => !e)} className="text-white/30 hover:text-white/60 transition-colors p-1">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -216,7 +236,7 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
             <div className="px-5 pb-5 border-t border-white/6 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Services</p>
-                <p className="text-white/65">{profile.services_offered?.join(", ") || "—"}</p>
+                <p className="text-white/65">{profile.services_offered || "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Industries & Stages</p>
@@ -264,6 +284,20 @@ function InvestorProfileRow({ profile, profileType }: { profile: any; profileTyp
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
+  });
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this profile?")) {
+      deleteMutation.mutate();
+    }
+  };
+
   return (
     <div className={`border rounded-xl transition-colors ${profile.approved ? "border-green-500/20 bg-green-500/5" : "border-white/8 bg-white/[0.02]"}`}>
       <div className="px-5 py-4 flex items-center gap-4">
@@ -292,6 +326,10 @@ function InvestorProfileRow({ profile, profileType }: { profile: any; profileTyp
               <X className="w-3 h-3" /> Revoke
             </button>
           )}
+          <button onClick={handleDelete} disabled={deleteMutation.isPending}
+            className="flex items-center gap-1.5 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50">
+            <Trash2 className="w-3 h-3" /> Delete
+          </button>
           <button onClick={() => setExpanded(e => !e)} className="text-white/30 hover:text-white/60 transition-colors p-1">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -344,6 +382,20 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
+  });
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this profile?")) {
+      deleteMutation.mutate();
+    }
+  };
+
   return (
     <div className={`border rounded-xl transition-colors ${profile.approved ? "border-green-500/20 bg-green-500/5" : "border-white/8 bg-white/[0.02]"}`}>
       <div className="px-5 py-4 flex items-center gap-4">
@@ -371,6 +423,10 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
               <X className="w-3 h-3" /> Revoke
             </button>
           )}
+          <button onClick={handleDelete} disabled={deleteMutation.isPending}
+            className="flex items-center gap-1.5 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50">
+            <Trash2 className="w-3 h-3" /> Delete
+          </button>
           <button onClick={() => setExpanded(e => !e)} className="text-white/30 hover:text-white/60 transition-colors p-1">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -445,20 +501,8 @@ export default function Admin() {
     retry: false,
   });
 
-  const { data: waitlist, isLoading: waitlistLoading, error: waitlistError } = useQuery<any[]>({
-    queryKey: ["admin-waitlist"],
-    queryFn: async () => {
-      const r = await fetch(`/api/admin/waitlist`, { headers: authHeaders() });
-      if (r.status === 403) throw new Error("forbidden");
-      if (!r.ok) throw new Error("Failed to load");
-      return r.json();
-    },
-    enabled: !!session && activeTab === "waitlist",
-    retry: false,
-  });
-
-  const isLoading = activeTab === "users" ? usersLoading : activeTab === "waitlist" ? waitlistLoading : profilesLoading;
-  const error = activeTab === "users" ? usersError : activeTab === "waitlist" ? waitlistError : profilesError;
+  const isLoading = activeTab === "users" ? usersLoading : profilesLoading;
+  const error = activeTab === "users" ? usersError : profilesError;
 
   async function signOut() {
     await logout();
@@ -499,7 +543,6 @@ export default function Admin() {
             { type: "investor" as AdminTab, label: "Investors" },
             { type: "individual" as AdminTab, label: "Individuals" },
             { type: "users" as AdminTab, label: "All Users" },
-            { type: "waitlist" as AdminTab, label: "Waitlist" },
           ].map(tab => (
             <button
               key={tab.type}
@@ -547,19 +590,9 @@ export default function Admin() {
           </div>
         )}
 
-        {/* Waitlist */}
-        {activeTab === "waitlist" && waitlist && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Waitlist Signups ({waitlist.length})</h2>
-            <div className="grid grid-cols-1 gap-3">
-              {waitlist.map((e: any) => <WaitlistRow key={e._id} entry={e} />)}
-            </div>
-            {waitlist.length === 0 && <div className="text-center py-12 text-white/30">No waitlist entries yet.</div>}
-          </div>
-        )}
 
         {/* Pending */}
-        {activeTab !== "users" && activeTab !== "waitlist" && pending.length > 0 && (
+        {activeTab !== "users" && pending.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
             {pending.map(p => {
@@ -573,7 +606,7 @@ export default function Admin() {
         )}
 
         {/* Approved */}
-        {activeTab !== "users" && activeTab !== "waitlist" && approved.length > 0 && (
+        {activeTab !== "users" && approved.length > 0 && (
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Approved ({approved.length})</h2>
             {approved.map(p => {
