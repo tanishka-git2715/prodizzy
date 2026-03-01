@@ -213,6 +213,9 @@ var DatabaseStorage = class {
   async getAllUsers() {
     return await User.find({}).sort({ createdAt: -1 });
   }
+  async getAllWaitlistEntries() {
+    return await Waitlist.find({}).sort({ createdAt: -1 });
+  }
   async getUserByGoogleId(googleId) {
     return await User.findOne({ googleId });
   }
@@ -3194,6 +3197,14 @@ async function registerRoutes(httpServer2, app3) {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app3.get("/api/admin/waitlist", ensureAdmin, async (req, res) => {
+    try {
+      const entries = await storage.getAllWaitlistEntries();
+      res.json(entries);
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

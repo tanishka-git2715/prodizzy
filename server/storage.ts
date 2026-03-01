@@ -20,7 +20,9 @@ export interface IStorage {
   getAllProfiles(type: string): Promise<any[]>;
   updateProfileApproval(type: string, userIdOrId: string, approved: boolean): Promise<any>;
   getAllUsers(): Promise<any[]>;
+  getAllWaitlistEntries(): Promise<any[]>;
   getUserByGoogleId(googleId: string): Promise<any | undefined>;
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -103,6 +105,10 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<any[]> {
     return await User.find({}).sort({ createdAt: -1 });
+  }
+
+  async getAllWaitlistEntries(): Promise<any[]> {
+    return await Waitlist.find({}).sort({ createdAt: -1 });
   }
 
   async getUserByGoogleId(googleId: string): Promise<any | undefined> {

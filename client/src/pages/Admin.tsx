@@ -7,7 +7,7 @@ import { LogOut, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
 
 type ProfileType = "startup" | "partner" | "investor" | "individual";
-type AdminTab = ProfileType | "users";
+type AdminTab = ProfileType | "users" | "waitlist";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -141,6 +141,23 @@ function UserRow({ user }: { user: any }) {
       </div>
       <div className="text-xs text-white/20 tabular-nums">
         ID: {user.googleId || user._id}
+      </div>
+    </div>
+  );
+}
+
+function WaitlistRow({ entry }: { entry: any }) {
+  return (
+    <div className="border border-white/8 bg-white/[0.02] rounded-xl px-5 py-4 flex items-center gap-4">
+      <div className="w-9 h-9 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+        <span className="text-violet-400 text-xs font-bold">{entry.name?.charAt(0) || "?"}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-white font-medium text-sm">{entry.name}</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-tight border bg-violet-500/10 text-violet-400 border-violet-500/20">{entry.role}</span>
+        </div>
+        <p className="text-white/35 text-xs mt-0.5 truncate">{entry.email} · Joined {new Date(entry.createdAt).toLocaleDateString()}</p>
       </div>
     </div>
   );
@@ -428,8 +445,20 @@ export default function Admin() {
     retry: false,
   });
 
-  const isLoading = activeTab === "users" ? usersLoading : profilesLoading;
-  const error = activeTab === "users" ? usersError : profilesError;
+  const { data: waitlist, isLoading: waitlistLoading, error: waitlistError } = useQuery<any[]>({
+    queryKey: ["admin-waitlist"],
+    queryFn: async () => {
+      const r = await fetch(`/api/admin/waitlist`, { headers: authHeaders() });
+      if (r.status === 403) throw new Error("forbidden");
+      if (!r.ok) throw new Error("Failed to load");
+      return r.json();
+    },
+    enabled: !!session && activeTab === "waitlist",
+    retry: false,
+  });
+
+  const isLoading = activeTab === "users" ? usersLoading : activeTab === "waitlist" ? waitlistLoading : profilesLoading;
+  const error = activeTab === "users" ? usersError : activeTab === "waitlist" ? waitlistError : profilesError;
 
   async function signOut() {
     await logout();
@@ -470,6 +499,7 @@ export default function Admin() {
             { type: "investor" as AdminTab, label: "Investors" },
             { type: "individual" as AdminTab, label: "Individuals" },
             { type: "users" as AdminTab, label: "All Users" },
+            { type: "waitlist" as AdminTab, label: "Waitlist" },
           ].map(tab => (
             <button
               key={tab.type}
@@ -512,8 +542,19 @@ export default function Admin() {
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Registered Users ({users.length})</h2>
             <div className="grid grid-cols-1 gap-3">
-              {users.map(u => <UserRow key={u.id || u.googleId} user={u} />)}
+              {users.map(u => <UserRow key={u.id || u.googleId || u._id} user={u} />)}
             </div>
+          </div>
+        )}
+
+        {/* Waitlist */}
+        {activeTab === "waitlist" && waitlist && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Waitlist Signups ({waitlist.length})</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {waitlist.map((e: any) => <WaitlistRow key={e._id} entry={e} />)}
+            </div>
+            {waitlist.length === 0 && <div className="text-center py-12 text-white/30">No waitlist entries yet.</div>}
           </div>
         )}
 

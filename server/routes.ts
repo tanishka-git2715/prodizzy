@@ -111,6 +111,16 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/admin/waitlist", ensureAdmin, async (req, res) => {
+    try {
+      const entries = await storage.getAllWaitlistEntries();
+      res.json(entries);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+
   return httpServer;
 }
 
