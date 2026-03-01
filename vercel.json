@@ -2,6 +2,11 @@
   "buildCommand": "npm install --include=dev && npm run build:client",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "server/**,shared/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
