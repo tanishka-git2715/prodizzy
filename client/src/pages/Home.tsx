@@ -158,26 +158,26 @@ export default function Home() {
     }
   };
 
-  // Auto-show role selection for new authenticated users without profiles
+  // 1. Instant navigation for pending roles after login (does not wait for profileStatus)
   useEffect(() => {
-    if (!session || !profileStatus) return;
+    if (!session || !pendingRole || showAuthModal) return;
 
-    // Handle pending role navigation after login
-    if (pendingRole && !showAuthModal) {
-      if (pendingRole === "intent_join") setShowRoleModal(true);
-      else if (pendingRole === "startup") setLocation("/join-startup");
-      else if (pendingRole === "partner") setLocation("/partner-onboard");
-      else if (pendingRole === "individual") setLocation("/individual-onboard");
-      setPendingRole(null);
-      return;
-    }
+    if (pendingRole === "intent_join") setShowRoleModal(true);
+    else if (pendingRole === "startup") setLocation("/join-startup");
+    else if (pendingRole === "partner") setLocation("/partner-onboard");
+    else if (pendingRole === "individual") setLocation("/individual-onboard");
 
-    // If user is authenticated but has no profile, show role selection automatically
-    // Only show if user hasn't manually dismissed it
-    if (profileStatus.needsOnboarding && !showRoleModal && !showAuthModal && !roleModalDismissed) {
+    setPendingRole(null);
+  }, [session, pendingRole, showAuthModal, setLocation]);
+
+  // 2. Background check: show role modal if user is new and hasn't chosen a role yet
+  useEffect(() => {
+    if (!session || !profileStatus || showAuthModal || showRoleModal || roleModalDismissed || pendingRole) return;
+
+    if (profileStatus.needsOnboarding) {
       setShowRoleModal(true);
     }
-  }, [session, profileStatus, showRoleModal, showAuthModal, roleModalDismissed, pendingRole, setLocation]);
+  }, [session, profileStatus, showAuthModal, showRoleModal, roleModalDismissed, pendingRole]);
 
   const handleGoogleLogin = () => {
     loginWithGoogle();

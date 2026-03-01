@@ -230,7 +230,7 @@ export default function IndividualOnboard() {
 
   // If already logged in with a completed profile, send to dashboard
   const { data: existingProfile } = useQuery({
-    queryKey: ["individual-profile"],
+    queryKey: ["profile"],
     queryFn: async () => {
       const r = await fetch("/api/profile", {
         headers: { "Content-Type": "application/json" },
@@ -241,6 +241,7 @@ export default function IndividualOnboard() {
     },
     enabled: !!session,
   });
+
   useEffect(() => {
     if (existingProfile?.onboarding_completed) {
       setLocation("/dashboard");
@@ -305,28 +306,8 @@ export default function IndividualOnboard() {
     }
 
     const savedProfile = await res.json();
-    console.log("Individual profile saved successfully:", savedProfile);
-
-    // Verify profile was saved successfully before redirecting
-    const verifyRes = await fetch("/api/profile", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!verifyRes.ok) {
-      const verifyBody = await verifyRes.json().catch(() => ({ message: "Unknown" }));
-      console.error("Profile verification failed:", verifyRes.status, verifyBody);
-      setError(`Verification failed (${verifyRes.status}): ${verifyBody.message}. Try signing in again.`);
-      setSubmitting(false);
-      return;
-    }
-
-    const verifiedProfile = await verifyRes.json();
-    console.log("Individual profile verified:", verifiedProfile);
     // Seed the profile cache so Dashboard sees the profile immediately
-    qc.setQueryData(["individual-profile"], verifiedProfile);
+    qc.setQueryData(["profile"], savedProfile);
     setLocation("/dashboard");
   }
 

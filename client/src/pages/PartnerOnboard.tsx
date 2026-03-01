@@ -237,7 +237,7 @@ export default function PartnerOnboard() {
 
   // If already logged in with a completed profile, send to dashboard
   const { data: existingProfile } = useQuery({
-    queryKey: ["partner-profile"],
+    queryKey: ["profile"],
     queryFn: async () => {
       const r = await fetch("/api/profile", {
         headers: { "Content-Type": "application/json" },
@@ -320,28 +320,8 @@ export default function PartnerOnboard() {
     }
 
     const savedProfile = await res.json();
-    console.log("Partner profile saved successfully:", savedProfile);
-
-    // Verify partner profile was saved before redirecting
-    const verifyRes = await fetch("/api/profile", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!verifyRes.ok) {
-      const verifyBody = await verifyRes.json().catch(() => ({ message: "Unknown" }));
-      console.error("Profile verification failed:", verifyRes.status, verifyBody);
-      setError(`Verification failed (${verifyRes.status}): ${verifyBody.message}. Try signing in again.`);
-      setSubmitting(false);
-      return;
-    }
-
-    const verifiedProfile = await verifyRes.json();
-    console.log("Partner profile verified:", verifiedProfile);
     // Seed the profile cache so Dashboard sees the profile immediately
-    qc.setQueryData(["partner-profile"], verifiedProfile);
+    qc.setQueryData(["profile"], savedProfile);
     setLocation("/dashboard");
   }
 

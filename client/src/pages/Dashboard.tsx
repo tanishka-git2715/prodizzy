@@ -1024,7 +1024,7 @@ export default function Dashboard() {
     setLocation("/");
   }
 
-  if (authLoading || isLoading || !isFetched) {
+  if (authLoading || (isLoading && !profile)) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
