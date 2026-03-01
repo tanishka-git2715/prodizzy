@@ -27,9 +27,6 @@ app.use(express.urlencoded({ extended: false }));
 // Allows express-session secure cookies and passport's correct callbackUrl protocol (HTTPS)
 app.set("trust proxy", 1);
 
-// Setup Passport and Session
-setupAuth(app);
-
 export function log(message: string, source = "express") {
     const formattedTime = new Date().toLocaleTimeString("en-US", {
         hour: "numeric",
@@ -67,8 +64,11 @@ app.use((req, res, next) => {
 });
 
 export async function setupApp() {
-    // Connect to MongoDB
+    // Connect to MongoDB first
     await connectDB();
+
+    // Setup Passport and Session AFTER DB is connected (inside async fn, not at module level)
+    setupAuth(app);
 
     await registerRoutes(httpServer, app);
 
