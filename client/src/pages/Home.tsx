@@ -35,7 +35,7 @@ export default function Home() {
   });
   const [authError, setAuthError] = useState("");
   const [authMode, setAuthMode] = useState<"signup" | "signin">("signup");
-  const [pendingRole, setPendingRole] = useState<"startup" | "partner" | "individual" | null>(null);
+  const [pendingRole, setPendingRole] = useState<"startup" | "partner" | "individual" | "intent_join" | null>(null);
 
   // Smooth typing animation for hero subtitle
   const fullText = "Stop relying on random connections. Get matched with the right people for hiring, partnerships, growth, and fundraising.";
@@ -143,6 +143,7 @@ export default function Home() {
     } else if (session) {
       setShowRoleModal(true);
     } else {
+      setPendingRole("intent_join");
       setShowAuthModal(true);
     }
   };
@@ -153,7 +154,8 @@ export default function Home() {
 
     // Handle pending role navigation after login
     if (pendingRole && !showAuthModal) {
-      if (pendingRole === "startup") setLocation("/join-startup");
+      if (pendingRole === "intent_join") setShowRoleModal(true);
+      else if (pendingRole === "startup") setLocation("/join-startup");
       else if (pendingRole === "partner") setLocation("/partner-onboard");
       else if (pendingRole === "individual") setLocation("/individual-onboard");
       setPendingRole(null);
