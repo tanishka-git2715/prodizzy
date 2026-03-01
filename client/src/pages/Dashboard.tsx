@@ -390,7 +390,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const [skills, setSkills] = useState<string[]>(profile.skills || []);
   const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
   const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
-  const [lookingFor, setLookingFor] = useState<string[]>(profile.looking_for || []);
+  const [lookingFor, setLookingFor] = useState(profile.looking_for?.[0] || "");
   const [preferredRoles, setPreferredRoles] = useState(profile.preferred_roles || "");
   const [preferredIndustries, setPreferredIndustries] = useState<string[]>(profile.preferred_industries?.split(", ") || []);
   const [availability, setAvailability] = useState(profile.availability || "");
@@ -421,7 +421,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       profile_type: profileType,
       preferred_roles: preferredRoles,
       experience_level: experienceLevel,
-      looking_for: lookingFor,
+      looking_for: lookingFor ? [lookingFor] : [],
       availability,
       work_mode: workMode,
       expected_pay: expectedPay,
@@ -543,9 +543,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                           <div>
                             <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
                             <div className="flex flex-wrap gap-1.5">
-                              {profile.looking_for?.map(item => (
-                                <Tag key={item} label={item} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
-                              ))}
+                              {profile.looking_for && profile.looking_for.length > 0 && (
+                                <Tag label={profile.looking_for[0]} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
+                              )}
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
@@ -611,7 +611,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                     <div className="space-y-4">
                       <div className="space-y-1.5">
                         <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
-                        <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
+                        <PickOne options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
@@ -674,7 +674,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       ? profile.services_offered.join(", ")
       : (profile.services_offered as string || "")
   );
-  const [industries, setIndustries] = useState<string[]>(profile.industries_served || []);
   const [stages, setStages] = useState<string[]>(profile.stages_served || []);
   const [pricingModel, setPricingModel] = useState(profile.pricing_model || "");
   const [averageDealSize, setAverageDealSize] = useState(profile.average_deal_size || "");
@@ -683,26 +682,13 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
   const [workMode, setWorkMode] = useState(profile.work_mode || "");
   const [portfolioLinks, setPortfolioLinks] = useState(profile.portfolio_links || "");
   const [certifications, setCertifications] = useState(profile.certifications || "");
-  const [lookingFor, setLookingFor] = useState<string[]>(profile.looking_for || []);
+  const [lookingFor, setLookingFor] = useState(profile.looking_for?.[0] || "");
   const [monthlyCapacity, setMonthlyCapacity] = useState(profile.monthly_capacity || "");
   const [preferredBudgetRange, setPreferredBudgetRange] = useState(profile.preferred_budget_range || "");
 
   const PARTNER_TYPES = ["Agency", "Investor", "Service Provider", "Institutional Firm"];
   const PRICING_MODELS = ["Fixed", "Hourly", "Commission", "Retainer"];
   const TEAM_SIZE_OPTIONS = ["Solo", "2-10", "11-50", "51-200", "200+"];
-  const INDUSTRY_OPTIONS = [
-    "Software & AI",
-    "E-commerce & Retail",
-    "Finance & Payments",
-    "Healthcare & Wellness",
-    "Education & Training",
-    "Food & Beverage",
-    "Transportation & Delivery",
-    "Real Estate & Construction",
-    "Marketing & Advertising",
-    "Energy & Sustainability",
-    "Any"
-  ];
   const STAGE_OPTIONS = ["Pre-Seed", "Seed", "Series A", "Expansion", "MNC"];
   const LOOKING_FOR_OPTIONS = ["Clients", "Deal flow", "Partnerships"];
 
@@ -717,7 +703,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       linkedin_url: linkedinUrl,
       partner_type: partnerType,
       services_offered: services,
-      industries_served: industries,
       stages_served: stages,
       pricing_model: pricingModel,
       average_deal_size: averageDealSize,
@@ -726,7 +711,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       work_mode: workMode,
       portfolio_links: portfolioLinks,
       certifications: certifications,
-      looking_for: lookingFor,
+      looking_for: lookingFor ? [lookingFor] : [],
       monthly_capacity: monthlyCapacity,
       preferred_budget_range: preferredBudgetRange
     });
@@ -817,12 +802,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                             <p className="text-[10px] text-white/20 uppercase mb-1.5">Services Offered</p>
                             <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{profile.services_offered || "Not specified"}</p>
                           </div>
-                          <div>
-                            <p className="text-[10px] text-white/20 uppercase mb-1.5">Industries Served</p>
-                            <div className="flex flex-wrap gap-2">
-                              {profile.industries_served?.map(i => <Tag key={i} label={i} />)}
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -874,7 +853,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                         <div className="mt-3">
                           <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
                           <div className="flex flex-wrap gap-2">
-                            {profile.looking_for?.map(item => <Tag key={item} label={item} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />)}
+                            {profile.looking_for && profile.looking_for.length > 0 && <Tag label={profile.looking_for[0]} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />}
                           </div>
                         </div>
                       </div>
@@ -928,11 +907,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
 
                       <TextArea label="What services do you offer?" value={services} onChange={setServices} placeholder="Describe the specific services and value you provide..." />
 
-                      <div className="space-y-1.5">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Industries Worked With</p>
-                        <PickMany options={INDUSTRY_OPTIONS} value={industries} onChange={v => setIndustries(v)} />
-                      </div>
-
                       <FormField label="Portfolio Links" value={portfolioLinks} onChange={setPortfolioLinks} placeholder="https://..." />
                     </div>
 
@@ -940,7 +914,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                       <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Requirements</h3>
                       <div className="space-y-1.5">
                         <p className="text-xs text-white/35 uppercase tracking-wider">What are you looking for?</p>
-                        <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={v => setLookingFor(v)} />
+                        <PickOne options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">

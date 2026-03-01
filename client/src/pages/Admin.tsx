@@ -239,11 +239,9 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
                 <p className="text-white/65">{profile.services_offered || "—"}</p>
               </div>
               <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Industries & Stages</p>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Stages Served</p>
                 <p className="text-white/65">
-                  Industries: {profile.industries_served?.join(", ") || "—"}
-                  <br />
-                  Stages: {profile.stages_served?.join(", ") || "—"}
+                  {profile.stages_served?.join(", ") || "—"}
                 </p>
               </div>
               <div>
@@ -347,7 +345,7 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
               </div>
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Looking for</p>
-                <p className="text-white/65">{profile.looking_for?.join(", ") || "—"}</p>
+                <p className="text-white/65">{profile.looking_for || "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Availability</p>

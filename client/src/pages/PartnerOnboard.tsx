@@ -219,7 +219,6 @@ export default function PartnerOnboard() {
   // Step 2-3: Profile & Requirements
   const [partnerType, setPartnerType] = useState("");
   const [servicesOffered, setServicesOffered] = useState("");
-  const [industriesServed, setIndustriesServed] = useState<string[]>([]);
   const [stagesServed, setStagesServed] = useState<string[]>([]);
   const [pricingModel, setPricingModel] = useState("");
   const [averageDealSize, setAverageDealSize] = useState("");
@@ -230,7 +229,7 @@ export default function PartnerOnboard() {
   const [certifications, setCertifications] = useState("");
 
   // Step 6: Intent + Account
-  const [lookingFor, setLookingFor] = useState<string[]>([]);
+  const [lookingFor, setLookingFor] = useState("");
   const [monthlyCapacity, setMonthlyCapacity] = useState("");
   const [preferredBudgetRange, setPreferredBudgetRange] = useState("");
   const [password, setPassword] = useState("");
@@ -266,8 +265,8 @@ export default function PartnerOnboard() {
   function canProceed() {
     switch (step) {
       case 0: return companyName.trim() && role.trim() && fullName.trim() && email.trim();
-      case 1: return partnerType && servicesOffered.trim() && teamSize && yearsExperience.trim() && workMode && industriesServed.length > 0;
-      case 2: return lookingFor.length > 0 && pricingModel;
+      case 1: return partnerType && servicesOffered.trim() && teamSize && yearsExperience.trim() && workMode;
+      case 2: return lookingFor && pricingModel;
       default: return true;
     }
   }
@@ -297,7 +296,6 @@ export default function PartnerOnboard() {
         linkedin_url: linkedinUrl || undefined,
         partner_type: partnerType,
         services_offered: servicesOffered,
-        industries_served: industriesServed,
         stages_served: stagesServed,
         pricing_model: pricingModel,
         average_deal_size: averageDealSize || undefined,
@@ -371,25 +369,6 @@ export default function PartnerOnboard() {
           onChange={setWorkMode}
         />
 
-        <MultiSelectDropdown
-          label="Industries you work with"
-          options={[
-            "Software & AI",
-            "E-commerce & Retail",
-            "Finance & Payments",
-            "Healthcare & Wellness",
-            "Education & Training",
-            "Food & Beverage",
-            "Transportation & Delivery",
-            "Real Estate & Construction",
-            "Marketing & Advertising",
-            "Energy & Sustainability",
-            "Any"
-          ]}
-          selected={industriesServed}
-          onToggle={v => setIndustriesServed(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
-        />
-
         <Field label="Portfolio links (optional)" value={portfolioLinks} onChange={setPortfolioLinks} placeholder="https://..." />
       </div>
     </div>,
@@ -397,11 +376,11 @@ export default function PartnerOnboard() {
     <div key="2" className="space-y-6">
       <StepHeader step={2} title="Requirements" />
       <div className="space-y-4">
-        <MultiSelectDropdown
+        <Dropdown
           label="What are you looking for?"
           options={["Clients", "Deal flow", "Partnerships"]}
-          selected={lookingFor}
-          onToggle={v => setLookingFor(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
+          value={lookingFor}
+          onChange={setLookingFor}
         />
 
         <Dropdown

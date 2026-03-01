@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 
 interface AuthFormProps {
     onSuccess?: () => void;
@@ -10,45 +9,8 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: AuthFormProps) {
-    const { loginWithGoogle, login, register } = useAuth();
-    const { toast } = useToast();
+    const { loginWithGoogle } = useAuth();
     const [activeTab, setActiveTab] = useState<"signup" | "signin">(initialTab);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        try {
-            const result = activeTab === "signup"
-                ? await register({ email, password })
-                : await login({ email, password });
-
-            if (result.success) {
-                toast({
-                    title: activeTab === "signup" ? "Account created" : "Welcome back",
-                    description: activeTab === "signup" ? "Your account has been successfully created." : "You have successfully signed in.",
-                });
-                if (onSuccess) onSuccess();
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Authentication Error",
-                    description: result.message || "Something went wrong. Please try again.",
-                });
-            }
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: error.message || "An unexpected error occurred.",
-            });
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     return (
         <div className="w-full">
@@ -95,7 +57,7 @@ export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: Auth
                     }
                     loginWithGoogle();
                 }}
-                className="w-full bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mb-8 shadow-sm"
+                className="w-full bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mb-0 shadow-sm"
             >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -105,54 +67,6 @@ export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: Auth
                 </svg>
                 Continue with Google
             </button>
-
-            <div className="relative mb-8">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-white/5"></span>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-[#0D0E0F] px-4 text-white/20 tracking-widest font-medium">
-                        or {activeTab === "signup" ? "sign up" : "sign in"} with email
-                    </span>
-                </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                    <label htmlFor="email" className="block text-white/40 text-[10px] font-bold uppercase tracking-widest ml-1">Email</label>
-                    <input
-                        id="email"
-                        type="email"
-                        placeholder="you@startup.com"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white placeholder:text-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all outline-none text-sm"
-                    />
-                </div>
-
-                <div className="space-y-2">
-                    <label htmlFor="password" className="block text-white/40 text-[10px] font-bold uppercase tracking-widest ml-1">Password</label>
-                    <input
-                        id="password"
-                        type="password"
-                        placeholder="Min 6 characters"
-                        required
-                        minLength={6}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white placeholder:text-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all outline-none text-sm"
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-white text-black font-bold py-3 rounded-xl text-sm hover:bg-white/90 active:scale-[0.98] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-                >
-                    {isSubmitting ? "Processing..." : activeTab === "signup" ? "Create Account" : "Sign In"}
-                </button>
-            </form>
         </div>
     );
 }

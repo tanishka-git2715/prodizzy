@@ -218,7 +218,7 @@ export default function IndividualOnboard() {
   const [profileType, setProfileType] = useState("");
   const [preferredRoles, setPreferredRoles] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("");
-  const [lookingFor, setLookingFor] = useState<string[]>([]);
+  const [lookingFor, setLookingFor] = useState("");
   const [availability, setAvailability] = useState("");
   const [workMode, setWorkMode] = useState("");
   const [userLocation, setUserLocation] = useState("");
@@ -261,7 +261,7 @@ export default function IndividualOnboard() {
     switch (step) {
       case 0: return fullName.trim() && email.trim();
       case 1: return profileType && preferredRoles.trim() && experienceLevel;
-      case 2: return lookingFor.length > 0 && availability && workMode && userLocation;
+      case 2: return lookingFor && availability && workMode && userLocation;
       default: return true;
     }
   }
@@ -350,11 +350,11 @@ export default function IndividualOnboard() {
     <div key="2" className="space-y-6">
       <StepHeader step={2} title="Requirements" />
       <div className="space-y-4">
-        <MultiSelectDropdown
+        <Dropdown
           label="Looking for"
           options={["Job", "Internship", "Freelance", "Collaboration"]}
-          selected={lookingFor}
-          onToggle={v => setLookingFor(p => p.includes(v) ? p.filter(x => x !== v) : [...p, v])}
+          value={lookingFor}
+          onChange={setLookingFor}
         />
         <Dropdown
           label="Availability"
