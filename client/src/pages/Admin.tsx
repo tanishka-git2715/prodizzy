@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
 
-type ProfileType = "startup" | "partner" | "investor" | "individual";
+type ProfileType = "startup" | "partner" | "individual";
 type AdminTab = ProfileType | "users";
 
 function authHeaders() {
@@ -271,103 +271,6 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
   );
 }
 
-function InvestorProfileRow({ profile, profileType }: { profile: any; profileType: ProfileType }) {
-  const [expanded, setExpanded] = useState(false);
-  const qc = useQueryClient();
-
-  const approveMutation = useMutation({
-    mutationFn: (approved: boolean) => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
-      method: "PATCH",
-      headers: authHeaders(),
-      body: JSON.stringify({ approved }),
-    }).then(r => r.json()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => fetch(`/api/admin?id=${profile.id}&type=${profileType}`, {
-      method: "DELETE",
-      headers: authHeaders(),
-    }).then(r => r.json()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
-  });
-
-  const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this profile?")) {
-      deleteMutation.mutate();
-    }
-  };
-
-  return (
-    <div className={`border rounded-xl transition-colors ${profile.approved ? "border-green-500/20 bg-green-500/5" : "border-white/8 bg-white/[0.02]"}`}>
-      <div className="px-5 py-4 flex items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-white font-medium text-sm">{profile.full_name || profile.name}</span>
-            <Tag label={profile.investor_type} />
-            <Tag label={profile.check_size} />
-            {profile.approved
-              ? <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/15 text-green-400 border border-green-500/20">Approved</span>
-              : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Pending</span>
-            }
-          </div>
-          <p className="text-white/35 text-xs mt-0.5 truncate">{profile.firm_name ? `${profile.firm_name} · ` : ""}{profile.email}</p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          {!profile.approved ? (
-            <button onClick={() => approveMutation.mutate(true)} disabled={approveMutation.isPending}
-              className="flex items-center gap-1 bg-green-500/15 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-green-500/25 transition-colors disabled:opacity-50">
-              <Check className="w-3 h-3" /> Approve
-            </button>
-          ) : (
-            <button onClick={() => approveMutation.mutate(false)} disabled={approveMutation.isPending}
-              className="flex items-center gap-1 bg-red-500/15 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-red-500/25 transition-colors disabled:opacity-50">
-              <X className="w-3 h-3" /> Revoke
-            </button>
-          )}
-          <button onClick={handleDelete} disabled={deleteMutation.isPending}
-            className="flex items-center gap-1.5 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50">
-            <Trash2 className="w-3 h-3" /> Delete
-          </button>
-          <button onClick={() => setExpanded(e => !e)} className="text-white/30 hover:text-white/60 transition-colors p-1">
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }} className="overflow-hidden">
-            <div className="px-5 pb-5 border-t border-white/6 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Thesis</p>
-                <p className="text-white/65 leading-relaxed">{profile.thesis || "No thesis provided"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Sectors & Stages</p>
-                <p className="text-white/65">
-                  Sectors: {profile.sectors?.join(", ") || "—"}
-                  <br />
-                  Stages: {profile.stages?.join(", ") || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Geography</p>
-                <p className="text-white/65">{profile.geography || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Contact</p>
-                <p className="text-white/65">{profile.email}</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function IndividualProfileRow({ profile, profileType }: { profile: IndividualProfile; profileType: ProfileType }) {
   const [expanded, setExpanded] = useState(false);
@@ -540,7 +443,6 @@ export default function Admin() {
           {[
             { type: "startup" as AdminTab, label: "Startups" },
             { type: "partner" as AdminTab, label: "Partners" },
-            { type: "investor" as AdminTab, label: "Investors" },
             { type: "individual" as AdminTab, label: "Individuals" },
             { type: "users" as AdminTab, label: "All Users" },
           ].map(tab => (
@@ -560,12 +462,14 @@ export default function Admin() {
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: "Total Users", value: users?.length ?? (activeTab === "users" ? "..." : "—") },
-            { label: "Filtered profiles", value: profiles?.length ?? (activeTab !== "users" ? "..." : "—") },
-            { label: "Pending approval", value: pending.length || (activeTab !== "users" ? "0" : "—") },
-            { label: "Approved", value: approved.length || (activeTab !== "users" ? "0" : "—") },
+            {
+              label: activeTab === "users" ? "Total Users" : `Total ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}s`,
+              value: activeTab === "users" ? (users?.length ?? "...") : (profiles?.length ?? "...")
+            },
+            { label: "Pending approval", value: activeTab === "users" ? "—" : (pending.length || "0") },
+            { label: "Approved", value: activeTab === "users" ? "—" : (approved.length || "0") },
           ].map(s => (
             <div key={s.label} className="bg-white/[0.03] border border-white/8 rounded-xl p-4">
               <div className="text-2xl font-bold tabular-nums">{s.value}</div>
@@ -599,7 +503,6 @@ export default function Admin() {
               const pt = activeTab as ProfileType;
               if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
               if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
-              if (activeTab === "investor") return <InvestorProfileRow key={p.id} profile={p} profileType={pt} />;
               return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
             })}
           </div>
@@ -613,7 +516,6 @@ export default function Admin() {
               const pt = activeTab as ProfileType;
               if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
               if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
-              if (activeTab === "investor") return <InvestorProfileRow key={p.id} profile={p} profileType={pt} />;
               return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
             })}
           </div>

@@ -21,7 +21,6 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/join-startup" component={Onboard} />
-      <Route path="/investor-onboard" component={InvestorOnboard} />
       <Route path="/partner-onboard" component={PartnerOnboard} />
       <Route path="/individual-onboard" component={IndividualOnboard} />
       <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
