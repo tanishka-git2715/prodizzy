@@ -134,22 +134,23 @@ export default function Home() {
     return false;
   });
 
-  // Consolidated Redirection Logic: Processes intent AFTER sign-in
+  // 1. PRIORITY: Redirect returning users to dashboard immediately
   useEffect(() => {
-    // Wait for session and profile status to be fully resolved
-    if (!session || showAuthModal || loadingProfile || !profileStatus) return;
-
-    // 1. Returning User: Always send to dashboard if profile is done
-    if (profileStatus.hasCompletedProfile) {
+    // If we have a session and the profile check is done
+    if (session && profileStatus?.hasCompletedProfile) {
       if (location === "/") {
         setLocation("/dashboard");
       }
+      // Cleanup any pending intents for returning users
       if (pendingRole) setPendingRole(null);
-      return;
     }
+  }, [session, profileStatus, location, setLocation, pendingRole]);
 
-    // 2. New User with specific intent - ONLY if they just successfully passed Auth or were already authed?
-    // User wants Sign In box *everytime*, so we only proceed if they clicked success in the modal.
+  // 2. Intent Processing: Handles role-selection or specific form redirects for NEW users
+  useEffect(() => {
+    // This part IS gated by the auth modal being closed and loading being finished
+    if (!session || showAuthModal || loadingProfile || !profileStatus || profileStatus.hasCompletedProfile) return;
+
     if (pendingRole && authSuccess) {
       if (pendingRole === "intent_join") {
         setShowRoleModal(true);
