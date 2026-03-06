@@ -137,3 +137,38 @@ const UserSchema = new Schema({
 });
 
 export const User = mongoose.model("User", UserSchema);
+
+// Connection Model for Investor-Startup Matching
+const ConnectionSchema = new Schema({
+    startup_id: { type: Schema.Types.ObjectId, ref: 'StartupProfile', required: true },
+    investor_id: { type: Schema.Types.ObjectId, ref: 'InvestorProfile', required: true },
+    message: { type: String },
+    status: {
+        type: String,
+        enum: ['pending', 'accepted', 'declined'],
+        default: 'pending'
+    },
+    startup_accepted: { type: Boolean, default: false },
+    investor_accepted: { type: Boolean, default: false },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now },
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+
+// Indexes for performance
+ConnectionSchema.index({ startup_id: 1, investor_id: 1 }, { unique: true }); // Prevent duplicates
+ConnectionSchema.index({ investor_id: 1, status: 1 }); // Fast investor connection lookups
+ConnectionSchema.index({ startup_id: 1, status: 1 }); // Fast startup connection lookups
+ConnectionSchema.index({ created_at: -1 }); // Sort by recency
+
+export const Connection = mongoose.model("Connection", ConnectionSchema);
+
+// Performance indexes for existing models
+StartupProfileSchema.index({ approved: 1 });
+StartupProfileSchema.index({ 'intent_fundraising.capital_amount': 1 });
+StartupProfileSchema.index({ industry: 1 });
+StartupProfileSchema.index({ stage: 1 });
+StartupProfileSchema.index({ location: 'text' }); // Text search for location
+
+InvestorProfileSchema.index({ user_id: 1 });
+InvestorProfileSchema.index({ sectors: 1 });
+InvestorProfileSchema.index({ stages: 1 });

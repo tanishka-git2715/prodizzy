@@ -45,6 +45,32 @@ export const api = {
       input: updateProfileSchema,
     },
   },
+  discover: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/discover' as const,
+    },
+  },
+  connections: {
+    create: {
+      method: 'POST' as const,
+      path: '/api/connections' as const,
+    },
+    list: {
+      method: 'GET' as const,
+      path: '/api/connections' as const,
+    },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/connections/:id' as const,
+    },
+  },
+  matches: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/matches' as const,
+    },
+  },
 };
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {

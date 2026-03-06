@@ -146,6 +146,120 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== Matchmaking Endpoints ====================
+
+  // GET /api/discover - Investor browse startups
+  app.get("/api/discover", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.googleId || req.user.id;
+
+      // Verify user has investor profile
+      const profile = await storage.getProfileByUserId(userId);
+      if (!profile || profile.type !== 'investor') {
+        return res.status(403).json({ message: "Investor profile required" });
+      }
+
+      const filters = {
+        industry: req.query.industry as string,
+        stage: req.query.stage as string,
+        location: req.query.location as string,
+      };
+
+      const startups = await storage.getApprovedStartupsForInvestor(filters);
+      res.json(startups);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // POST /api/connections - Investor expresses interest
+  app.post("/api/connections", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.googleId || req.user.id;
+      const { startup_id, message } = req.body;
+
+      if (!startup_id) {
+        return res.status(400).json({ message: "startup_id is required" });
+      }
+
+      // Verify user has investor profile
+      const profile = await storage.getProfileByUserId(userId);
+      if (!profile || profile.type !== 'investor') {
+        return res.status(403).json({ message: "Investor profile required" });
+      }
+
+      const connection = await storage.createConnection(userId, startup_id, message);
+      res.status(201).json(connection);
+    } catch (error: any) {
+      if (error.message === "Connection already exists") {
+        return res.status(409).json({ message: error.message });
+      }
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // GET /api/connections - Get user's connections
+  app.get("/api/connections", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.googleId || req.user.id;
+      const profile = await storage.getProfileByUserId(userId);
+
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+
+      let connections;
+      if (profile.type === 'investor') {
+        connections = await storage.getConnectionsByInvestor(userId);
+      } else if (profile.type === 'startup') {
+        connections = await storage.getConnectionsByStartup(userId);
+      } else {
+        return res.status(403).json({ message: "Only investors and startups can view connections" });
+      }
+
+      res.json(connections);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // PATCH /api/connections/:id - Accept/decline connection
+  app.patch("/api/connections/:id", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.googleId || req.user.id;
+      const connectionId = req.params.id;
+      const { status } = req.body;
+
+      if (!['accepted', 'declined'].includes(status)) {
+        return res.status(400).json({ message: "Status must be 'accepted' or 'declined'" });
+      }
+
+      const connection = await storage.updateConnectionStatus(connectionId, userId, status);
+      res.json(connection);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // GET /api/matches - Get recommended matches for investor
+  app.get("/api/matches", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.googleId || req.user.id;
+      const profile = await storage.getProfileByUserId(userId);
+
+      if (!profile || profile.type !== 'investor') {
+        return res.status(403).json({ message: "Investor profile required" });
+      }
+
+      const limit = parseInt(req.query.limit as string) || 20;
+      const matches = await storage.getMatchesForInvestor(userId, limit);
+
+      res.json(matches);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
 
   return httpServer;
 }
