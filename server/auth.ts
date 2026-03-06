@@ -7,12 +7,18 @@ import { Express } from "express";
 import bcrypt from "bcryptjs";
 import connectMongo from "connect-mongo";
 
-// We can use the imported connectMongo directly since it provides a valid ES module export in newer versions.
-const MongoStore = connectMongo;
+// connectMongo might be a module object with a default property depending on tsx/esbuild translation.
+const MongoStore: any = (connectMongo as any).default || connectMongo;
+
+import mongoose from "mongoose";
+
+// ... [rest of imports unchanged] ...
 
 export function setupAuth(app: Express) {
     const sessionSecret = process.env.SESSION_SECRET || "prodizzy_default_secret";
-    const mongoUrl = process.env.MONGODB_URI || "mongodb://localhost:27017/prodizzy";
+
+    // We reuse the existing mongoose connection from db.ts for the session store
+    const clientPromise = mongoose.connection.asPromise().then((conn) => conn.getClient());
 
     app.use(
         session({
@@ -20,7 +26,8 @@ export function setupAuth(app: Express) {
             resave: false,
             saveUninitialized: false,
             store: MongoStore.create({
-                mongoUrl: mongoUrl,
+                clientPromise: clientPromise,
+                dbName: "test", // Or specify the DB name if different from URI
                 ttl: 14 * 24 * 60 * 60, // 14 days
             }),
             cookie: {
