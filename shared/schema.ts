@@ -295,7 +295,7 @@ export type IndividualProfile = InsertIndividual & {
 // =============================================
 
 export const insertConnectionSchema = z.object({
-  startup_id: z.string().uuid(),
+  startup_id: z.string(),
   message: z.string().optional(),
 });
 
@@ -307,8 +307,30 @@ export type ConnectionRequest = {
   investor_id: string;
   message: string | null;
   status: "pending" | "accepted" | "declined";
+  startup_accepted: boolean;
+  investor_accepted: boolean;
   created_at: string;
+  updated_at: string;
   // joined fields
-  investor?: Pick<InvestorProfile, "full_name" | "firm_name" | "investor_type" | "check_size">;
-  startup?: Pick<StartupProfile, "company_name" | "industry" | "stage">;
+  investor?: {
+    full_name?: string;
+    firm_name?: string;
+    investor_type?: string;
+    check_size?: string;
+    email?: string; // Only when accepted
+  };
+  startup?: {
+    company_name?: string;
+    industry?: string | string[];
+    stage?: string;
+    email?: string; // Only when accepted
+    full_name?: string; // Only when accepted
+    linkedin_url?: string; // Only when accepted
+    website?: string; // Only when accepted
+  };
+};
+
+// Matched startup type with scoring
+export type MatchedStartup = PublicStartupProfile & {
+  match_score: number;
 };

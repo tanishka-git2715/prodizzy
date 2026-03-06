@@ -94,9 +94,10 @@ const STAGE_OPTIONS = [
 const TEAM_SIZE_OPTIONS = ["Solo", "2–10", "11–50", "51–500", "500–1000", "1000+"];
 const IS_REGISTERED_OPTIONS = ["Yes", "No"];
 
-function StartupDashboard({ profile, session, signOut, patchMutation, connections, greeting }: {
+function StartupDashboard({ profile, session, signOut, patchMutation, connections, greeting, acceptMutation, declineMutation }: {
   profile: StartupProfile; session: any; signOut: () => void;
   patchMutation: any; connections: any[]; greeting: string;
+  acceptMutation: any; declineMutation: any;
 }) {
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
@@ -361,10 +362,65 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
           </div>
 
 
-          {/* ── Matches ──────────────────────────────────────────────────────── */}
+          {/* ── Connection Requests ──────────────────────────────────────────────────────── */}
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
-            <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Connection Requests</h2>
+            {connections && connections.length > 0 ? (
+              <div className="space-y-4">
+                {connections.map((conn: any) => (
+                  <div key={conn.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-white font-medium">{conn.investor?.firm_name || "Investor"}</h3>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
+                            conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                            'bg-yellow-500/15 text-yellow-400'
+                          }`}>
+                            {conn.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-white/50 mb-1">{conn.investor?.investor_type} • {conn.investor?.check_size}</p>
+                        {conn.message && (
+                          <p className="text-sm text-white/70 italic mt-2">"{conn.message}"</p>
+                        )}
+                        {conn.status === 'accepted' && conn.investor?.email && (
+                          <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                            <p className="text-xs text-green-400 font-medium mb-1">Contact Information:</p>
+                            <p className="text-sm text-white/90">{conn.investor.email}</p>
+                            {conn.investor.full_name && <p className="text-sm text-white/70">{conn.investor.full_name}</p>}
+                          </div>
+                        )}
+                      </div>
+                      {conn.status === 'pending' && !conn.startup_accepted && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => acceptMutation.mutate(conn.id)}
+                            disabled={acceptMutation.isPending}
+                            className="px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 text-sm rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => declineMutation.mutate(conn.id)}
+                            disabled={declineMutation.isPending}
+                            className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
+                      {conn.status === 'pending' && conn.startup_accepted && (
+                        <div className="text-sm text-white/50">Waiting for investor...</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-white/25 text-sm">No connection requests yet.</p>
+            )}
           </div>
         </div>
       </div>
@@ -653,10 +709,12 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 }
 
 // ─── Partner Dashboard component ─────────────────────────────────────────────
-function PartnerDashboard({ profile, session, signOut, patchMutation, connections, greeting }: {
+function PartnerDashboard({ profile, session, signOut, patchMutation, connections, greeting, showInvestorSection, investorMatches, investorConnections }: {
   profile: PartnerProfile; session: any; signOut: () => void;
   patchMutation: any; connections: any[]; greeting: string;
+  showInvestorSection?: boolean; investorMatches?: any[]; investorConnections?: any[];
 }) {
+  const [, setLocation] = useLocation();
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
 
@@ -945,6 +1003,72 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
             <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
           </div>
+
+          {/* Investor section: only for approved partner-investors, added below original dashboard */}
+          {showInvestorSection && (
+            <div className="space-y-6 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Browse startups</h2>
+                <button
+                  onClick={() => setLocation('/discover')}
+                  className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+                >
+                  Discover Startups
+                </button>
+              </div>
+
+              <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">My Connections</h2>
+                {investorConnections && investorConnections.length > 0 ? (
+                  <div className="space-y-4">
+                    {investorConnections.map((conn: any) => (
+                      <div key={conn.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-white font-medium">{conn.startup?.company_name}</h3>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
+                                conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                                'bg-yellow-500/15 text-yellow-400'
+                              }`}>
+                                {conn.status}
+                              </span>
+                            </div>
+                            <div className="flex gap-2 mb-2">
+                              {conn.startup?.industry && <Tag label={Array.isArray(conn.startup.industry) ? conn.startup.industry[0] : conn.startup.industry} />}
+                              {conn.startup?.stage && <Tag label={conn.startup.stage} />}
+                            </div>
+                            {conn.status === 'accepted' && conn.startup?.email && (
+                              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                <p className="text-xs text-green-400 font-medium mb-1">Contact:</p>
+                                <p className="text-sm text-white/90">{conn.startup.email}</p>
+                                {conn.startup.linkedin_url && (
+                                  <a href={conn.startup.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline flex items-center gap-1 mt-1">
+                                    <Linkedin className="w-3 h-3" /> LinkedIn
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-white/25 text-sm mb-4">No connections yet.</p>
+                    <button
+                      onClick={() => setLocation('/discover')}
+                      className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+                    >
+                      Browse Startups
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -952,21 +1076,143 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
 }
 
 
+// ─── Investor Dashboard component ────────────────────────────────────────────
+function InvestorDashboard({ profile, session, signOut, connections, matches, greeting }: {
+  profile: any; session: any; signOut: () => void;
+  connections: any[]; matches: any[]; greeting: string;
+}) {
+  const [, setLocation] = useLocation();
+  const firstName = profile.full_name?.split(" ")[0] || "there";
+
+  return (
+    <div className="min-h-screen bg-black">
+      {/* Sticky Navigation */}
+      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-white/5">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <h1 className="text-xl font-bold text-white tracking-tight">Prodizzy</h1>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLocation('/discover')}
+              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+            >
+              Discover Startups
+            </button>
+            <button onClick={signOut} className="text-white/50 hover:text-white/80 text-sm flex items-center gap-2 transition-colors">
+              <LogOut className="w-4 h-4" />
+              <span>Sign out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="space-y-8">
+          {/* Greeting */}
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">{greeting}, {firstName} 👋</h1>
+            <p className="text-white/50">Here are your recommended startup matches</p>
+          </div>
+
+          {/* Profile Card */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-semibold text-white mb-1">{profile.firm_name || profile.full_name}</h2>
+                <p className="text-white/50 text-sm">{profile.investor_type} • {profile.check_size}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <p className="text-xs text-white/35 uppercase tracking-wider mb-1">Sectors</p>
+                <div className="flex flex-wrap gap-2">
+                  {profile.sectors?.map((s: string) => <Tag key={s} label={s} />)}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-white/35 uppercase tracking-wider mb-1">Stages</p>
+                <div className="flex flex-wrap gap-2">
+                  {profile.stages?.map((s: string) => <Tag key={s} label={s} />)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* My Connections */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">My Connections</h2>
+            {connections && connections.length > 0 ? (
+              <div className="space-y-4">
+                {connections.map((conn: any) => (
+                  <div key={conn.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-white font-medium">{conn.startup?.company_name}</h3>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
+                            conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                            'bg-yellow-500/15 text-yellow-400'
+                          }`}>
+                            {conn.status}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 mb-2">
+                          {conn.startup?.industry && <Tag label={Array.isArray(conn.startup.industry) ? conn.startup.industry[0] : conn.startup.industry} />}
+                          {conn.startup?.stage && <Tag label={conn.startup.stage} />}
+                        </div>
+                        {conn.message && (
+                          <p className="text-sm text-white/70 italic mt-2">Your message: "{conn.message}"</p>
+                        )}
+                        {conn.status === 'accepted' && conn.startup?.email && (
+                          <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                            <p className="text-xs text-green-400 font-medium mb-1">Contact Information:</p>
+                            <p className="text-sm text-white/90">{conn.startup.email}</p>
+                            {conn.startup.full_name && <p className="text-sm text-white/70">{conn.startup.full_name}</p>}
+                            {conn.startup.linkedin_url && (
+                              <a href={conn.startup.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline flex items-center gap-1 mt-1">
+                                <Linkedin className="w-3 h-3" />
+                                LinkedIn
+                              </a>
+                            )}
+                            {conn.startup.website && (
+                              <a href={conn.startup.website} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline flex items-center gap-1 mt-1">
+                                <Globe className="w-3 h-3" />
+                                Website
+                              </a>
+                            )}
+                          </div>
+                        )}
+                        {conn.status === 'pending' && (
+                          <p className="text-sm text-white/50 mt-2">Waiting for startup to respond...</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-white/25 text-sm mb-4">No connections yet.</p>
+                <button
+                  onClick={() => setLocation('/discover')}
+                  className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+                >
+                  Browse Startups
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Dashboard ──────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { session, loading: authLoading, logout } = useAuth();
   const [, setLocation] = useLocation();
   const qc = useQueryClient();
-
-  const { data: connections } = useQuery<any[]>({
-    queryKey: ["connections"],
-    queryFn: async () => {
-      const r = await fetch("/api/connections", { headers: authHeaders() });
-      if (!r.ok) return [];
-      return r.json();
-    },
-    enabled: !!session,
-  });
 
   const { data: profile, isLoading, isFetched } = useQuery<any | null>({
     queryKey: ["profile"],
@@ -980,6 +1226,16 @@ export default function Dashboard() {
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
+  const { data: connections } = useQuery<any[]>({
+    queryKey: ["connections"],
+    queryFn: async () => {
+      const r = await fetch("/api/connections", { headers: authHeaders() });
+      if (!r.ok) return [];
+      return r.json();
+    },
+    enabled: !!session && !!profile && (profile.type === "startup" || profile.type === "investor" || (profile.type === "partner" && profile.partner_type === "Investor" && profile.approved)),
+  });
+
   const patchMutation = useMutation({
     mutationFn: (patch: any) =>
       fetch("/api/profile", {
@@ -990,6 +1246,38 @@ export default function Dashboard() {
     onSuccess: (data: any) => {
       qc.invalidateQueries({ queryKey: ["profile"] });
     },
+  });
+
+  const acceptMutation = useMutation({
+    mutationFn: (connectionId: string) =>
+      fetch(`/api/connections/${connectionId}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: 'accepted' })
+      }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['connections'] })
+  });
+
+  const declineMutation = useMutation({
+    mutationFn: (connectionId: string) =>
+      fetch(`/api/connections/${connectionId}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: 'declined' })
+      }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['connections'] })
+  });
+
+  // Matches/connections for dedicated investors, or approved partner-investors only
+  const canSeeStartups = profile?.type === 'investor' || (profile?.type === 'partner' && profile?.partner_type === 'Investor' && profile?.approved);
+  const { data: matches } = useQuery({
+    queryKey: ['matches'],
+    queryFn: async () => {
+      const r = await fetch('/api/matches?limit=10', { headers: authHeaders() });
+      if (!r.ok) return [];
+      return r.json();
+    },
+    enabled: !!session && !!canSeeStartups
   });
 
   async function signOut() {
@@ -1015,15 +1303,34 @@ export default function Dashboard() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   if (profile.type === "startup") {
-    return <StartupDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
+    return <StartupDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} acceptMutation={acceptMutation} declineMutation={declineMutation} />;
+  }
+
+  // Dedicated investor profile: full Investor dashboard
+  if (profile.type === "investor") {
+    return <InvestorDashboard profile={profile} session={session} signOut={signOut} connections={connections ?? []} matches={matches ?? []} greeting={greeting} />;
   }
 
   if (profile.type === "individual") {
     return <IndividualDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
   }
 
+  // Partner: always show original Partner dashboard; add investor section below only for approved partner-investors
   if (profile.type === "partner") {
-    return <PartnerDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
+    const showInvestorSection = profile.partner_type === "Investor" && !!profile.approved;
+    return (
+      <PartnerDashboard
+        profile={profile}
+        session={session}
+        signOut={signOut}
+        patchMutation={patchMutation}
+        connections={connections ?? []}
+        greeting={greeting}
+        showInvestorSection={showInvestorSection}
+        investorMatches={showInvestorSection ? (matches ?? []) : undefined}
+        investorConnections={showInvestorSection ? (connections ?? []) : undefined}
+      />
+    );
   }
 
   return null;
