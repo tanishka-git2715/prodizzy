@@ -114,7 +114,7 @@ export async function registerRoutes(
       if (!type) return res.status(400).json({ message: "Profile type is required" });
 
       const data = await storage.upsertProfile(
-        req.user.googleId || req.user.id,
+        req.user._id?.toString() || req.user.id,
         req.user.email,
         profileData,
         type

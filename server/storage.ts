@@ -58,6 +58,16 @@ export class DatabaseStorage implements IStorage {
     return doc.toObject() as unknown as WaitlistResponse;
   }
 
+  private async getCanonicalUserId(userId: string): Promise<string> {
+    const user = await User.findOne({
+      $or: [
+        { _id: mongoose.isValidObjectId(userId) ? userId : new mongoose.Types.ObjectId() },
+        { googleId: userId }
+      ]
+    }).lean();
+    return user ? user._id.toString() : userId;
+  }
+
   private getModelByType(type: string) {
     switch (type) {
       case "startup": return StartupProfile;
@@ -69,8 +79,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProfileByUserId(userId: string): Promise<any | undefined> {
-    // 1. Try to get the user first to see if they have a cached profileType
-    const user = await User.findById(userId).lean();
+    // 1. Try to get the user first. Use findOne to avoid CastError if userId is a googleId
+    const user = await User.findOne({
+      $or: [
+        { _id: mongoose.isValidObjectId(userId) ? userId : new mongoose.Types.ObjectId() },
+        { googleId: userId }
+      ]
+    }).lean();
 
     if (user?.profileType) {
       const Model = this.getModelByType(user.profileType);
@@ -122,27 +137,38 @@ export class DatabaseStorage implements IStorage {
   async upsertProfile(userId: string, email: string, profile: any, type: string): Promise<any> {
     const Model = this.getModelByType(type);
 
+    const user = await User.findOne({
+      $or: [
+        { _id: mongoose.isValidObjectId(userId) ? userId : new mongoose.Types.ObjectId() },
+        { googleId: userId }
+      ]
+    }).lean();
+
+    if (!user) throw new Error("User not found");
+    const actualId = user._id.toString();
+
     // Update user's profileType and profile in parallel
     const [doc] = await Promise.all([
       (Model as any).findOneAndUpdate(
-        { user_id: userId },
-        { user_id: userId, email, ...profile, onboarding_completed: true },
+        { $or: [{ user_id: userId }, { user_id: user.googleId }] },
+        { user_id: actualId, email, ...profile, onboarding_completed: true },
         { upsert: true, new: true }
       ).lean(),
-      User.findByIdAndUpdate(userId, { profileType: type })
+      User.findByIdAndUpdate(actualId, { profileType: type })
     ]);
 
     return { ...doc, type: type };
   }
 
   async patchProfile(userId: string, patch: any): Promise<any> {
+    const actualId = await this.getCanonicalUserId(userId);
     // Find which profile the user has first
-    const profile = await this.getProfileByUserId(userId);
+    const profile = await this.getProfileByUserId(actualId);
     if (!profile) throw new Error("Profile not found");
 
     const Model = this.getModelByType(profile.type);
     const doc = await (Model as any).findOneAndUpdate(
-      { user_id: userId },
+      { user_id: profile.user_id }, // Use the ID already in the profile doc
       { $set: patch },
       { new: true }
     ).lean();
@@ -194,12 +220,18 @@ export class DatabaseStorage implements IStorage {
 
   /** Get existing InvestorProfile or create one from PartnerProfile when partner_type is "Investor" */
   async getOrCreateInvestorProfileForUser(userId: string): Promise<any> {
-    let investorProfile = await InvestorProfile.findOne({ user_id: userId });
+    const actualId = await this.getCanonicalUserId(userId);
+    let investorProfile = await InvestorProfile.findOne({
+      $or: [{ user_id: actualId }, { user_id: userId }]
+    });
     if (investorProfile) return investorProfile;
-    const partnerProfile = await PartnerProfile.findOne({ user_id: userId, partner_type: "Investor" });
+    const partnerProfile = await PartnerProfile.findOne({
+      $or: [{ user_id: actualId }, { user_id: userId }],
+      partner_type: "Investor"
+    });
     if (!partnerProfile) return null;
     investorProfile = await InvestorProfile.create({
-      user_id: userId,
+      user_id: actualId,
       email: partnerProfile.email,
       full_name: partnerProfile.full_name,
       firm_name: partnerProfile.company_name,
@@ -284,7 +316,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getConnectionsByStartup(startupUserId: string) {
-    const startupProfile = await StartupProfile.findOne({ user_id: startupUserId });
+    const actualId = await this.getCanonicalUserId(startupUserId);
+    const startupProfile = await StartupProfile.findOne({
+      $or: [{ user_id: actualId }, { user_id: startupUserId }]
+    });
     if (!startupProfile) return [];
 
     const connections = await Connection.find({ startup_id: startupProfile._id })
@@ -324,9 +359,10 @@ export class DatabaseStorage implements IStorage {
     const startup = connection.startup_id as any;
     const investor = connection.investor_id as any;
 
+    const actualId = await this.getCanonicalUserId(userId);
     // Determine if user is startup or investor
-    const isStartup = startup.user_id === userId;
-    const isInvestor = investor.user_id === userId;
+    const isStartup = startup.user_id === actualId || startup.user_id === userId;
+    const isInvestor = investor.user_id === actualId || investor.user_id === userId;
 
     if (!isStartup && !isInvestor) {
       throw new Error("Unauthorized to update this connection");
@@ -352,7 +388,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkExistingConnection(investorUserId: string, startupId: string) {
-    const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
+    const actualId = await this.getCanonicalUserId(investorUserId);
+    const investorProfile = await this.getOrCreateInvestorProfileForUser(actualId);
     if (!investorProfile) return null;
 
     return await Connection.findOne({
@@ -406,7 +443,8 @@ export class DatabaseStorage implements IStorage {
   // ==================== Matching Methods ====================
 
   async getMatchesForInvestor(investorUserId: string, limit: number = 20) {
-    const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
+    const actualId = await this.getCanonicalUserId(investorUserId);
+    const investorProfile = await this.getOrCreateInvestorProfileForUser(actualId);
     if (!investorProfile) return [];
 
     // Get approved startups (fundraising is optional)

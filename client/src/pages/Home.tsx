@@ -122,14 +122,47 @@ export default function Home() {
     enabled: !!session,
   });
 
-  // After Google (or any) sign-in, if user already has a completed profile, send
-  // them straight to the dashboard instead of leaving them on the hero.
+  // Unified Redirection Logic: Handles both returning users and new users with specific intents
   useEffect(() => {
-    if (!session || !profileStatus?.hasCompletedProfile) return;
-    if (location === "/") {
-      setLocation("/dashboard");
+    // Wait for session and profile status to be fully resolved
+    if (!session || showAuthModal || loadingProfile || !profileStatus) return;
+
+    // 1. Returning User: Always send to dashboard if profile is done
+    if (profileStatus.hasCompletedProfile) {
+      if (location === "/") {
+        setLocation("/dashboard");
+      }
+      // If we got here, clear any pending role to avoid unexpected modals/redirects later
+      if (pendingRole) setPendingRole(null);
+      return;
     }
-  }, [session, profileStatus, location, setLocation]);
+
+    // 2. New User with specific intent (clicked Join or a Role card before signing in)
+    if (pendingRole) {
+      if (pendingRole === "intent_join") {
+        setShowRoleModal(true);
+      } else if (pendingRole === "startup") {
+        setLocation("/join-startup");
+      } else if (pendingRole === "partner") {
+        setLocation("/partner-onboard");
+      } else if (pendingRole === "individual") {
+        setLocation("/individual-onboard");
+      }
+      setPendingRole(null);
+      return;
+    }
+
+    // 3. New User, no specific intent, but landed on Home while signed in
+    // This shows the role modal by default to guide them
+    if (profileStatus.needsOnboarding && !showRoleModal && !roleModalDismissed) {
+      setShowRoleModal(true);
+    }
+  }, [session, profileStatus, loadingProfile, pendingRole, showAuthModal, location, setLocation, roleModalDismissed, showRoleModal]);
+
+  const handleGoogleLogin = () => {
+    loginWithGoogle();
+  };
+
 
   // If user clicks "Join now": already signed in with completed profile → dashboard; else role modal or auth modal
   const handleJoinNow = () => {
@@ -144,31 +177,6 @@ export default function Home() {
       setPendingRole("intent_join");
       setShowAuthModal(true);
     }
-  };
-
-  // 1. Instant navigation for pending roles after login (does not wait for profileStatus)
-  useEffect(() => {
-    if (!session || !pendingRole || showAuthModal) return;
-
-    if (pendingRole === "intent_join") setShowRoleModal(true);
-    else if (pendingRole === "startup") setLocation("/join-startup");
-    else if (pendingRole === "partner") setLocation("/partner-onboard");
-    else if (pendingRole === "individual") setLocation("/individual-onboard");
-
-    setPendingRole(null);
-  }, [session, pendingRole, showAuthModal, setLocation]);
-
-  // 2. Background check: show role modal if user is new and hasn't chosen a role yet
-  useEffect(() => {
-    if (!session || !profileStatus || showAuthModal || showRoleModal || roleModalDismissed || pendingRole) return;
-
-    if (profileStatus.needsOnboarding) {
-      setShowRoleModal(true);
-    }
-  }, [session, profileStatus, showAuthModal, showRoleModal, roleModalDismissed, pendingRole]);
-
-  const handleGoogleLogin = () => {
-    loginWithGoogle();
   };
 
 
