@@ -1288,16 +1288,6 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const qc = useQueryClient();
 
-  const { data: connections } = useQuery<any[]>({
-    queryKey: ["connections"],
-    queryFn: async () => {
-      const r = await fetch("/api/connections", { headers: authHeaders() });
-      if (!r.ok) return [];
-      return r.json();
-    },
-    enabled: !!session && !!profile && (profile.type === "startup" || profile.type === "investor" || (profile.type === "partner" && profile.partner_type === "Investor" && profile.approved)),
-  });
-
   const { data: profile, isLoading, isFetched } = useQuery<any | null>({
     queryKey: ["profile"],
     queryFn: async () => {
@@ -1308,6 +1298,16 @@ export default function Dashboard() {
     },
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+
+  const { data: connections } = useQuery<any[]>({
+    queryKey: ["connections"],
+    queryFn: async () => {
+      const r = await fetch("/api/connections", { headers: authHeaders() });
+      if (!r.ok) return [];
+      return r.json();
+    },
+    enabled: !!session && !!profile && (profile.type === "startup" || profile.type === "investor" || (profile.type === "partner" && profile.partner_type === "Investor" && profile.approved)),
   });
 
   const patchMutation = useMutation({

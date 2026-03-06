@@ -102,32 +102,17 @@ export default function Home() {
     );
   };
 
-  // Check if signed-in user already has a completed profile (startup, partner, or individual)
+  // Check if signed-in user already has a completed profile (backend uses single /api/profile for all types)
   const { data: profileStatus } = useQuery({
     queryKey: ["profile-status", session?.user?.id],
     queryFn: async () => {
-      const [profileRes, partnerRes, individualRes] = await Promise.all([
-        fetch("/api/profile"),
-        fetch("/api/partner"),
-        fetch("/api/individual"),
-      ]);
-
-      // Check if user has ANY profile (even incomplete)
-      const hasAnyProfile = [profileRes, partnerRes, individualRes].some(r => r.ok && r.status !== 404);
-
-      // Check if user has completed onboarding
-      const getCompleted = async (r: Response) => {
-        if (!r.ok || r.status === 404) return false;
-        const data = await r.json();
-        return data?.onboarding_completed === true;
-      };
-      const [p, partner, individual] = await Promise.all([
-        getCompleted(profileRes),
-        getCompleted(partnerRes),
-        getCompleted(individualRes),
-      ]);
-      const hasCompletedProfile = !!(p || partner || individual);
-
+      const profileRes = await fetch("/api/profile");
+      const hasAnyProfile = profileRes.ok && profileRes.status !== 404;
+      let hasCompletedProfile = false;
+      if (hasAnyProfile) {
+        const data = await profileRes.json();
+        hasCompletedProfile = !!data?.onboarding_completed;
+      }
       return {
         hasProfile: hasAnyProfile,
         hasCompletedProfile,
