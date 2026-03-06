@@ -19,6 +19,14 @@ function ensureAdmin(req: Request, res: Response, next: any) {
   res.status(403).json({ message: "Forbidden" });
 }
 
+/** True if profile is a dedicated investor or a partner who selected "Investor" as partner type */
+function canActAsInvestor(profile: any): boolean {
+  return !!profile && (
+    profile.type === "investor" ||
+    (profile.type === "partner" && profile.partner_type === "Investor")
+  );
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -153,9 +161,8 @@ export async function registerRoutes(
     try {
       const userId = req.user.googleId || req.user.id;
 
-      // Verify user has investor profile
       const profile = await storage.getProfileByUserId(userId);
-      if (!profile || profile.type !== 'investor') {
+      if (!profile || !canActAsInvestor(profile)) {
         return res.status(403).json({ message: "Investor profile required" });
       }
 
@@ -182,9 +189,8 @@ export async function registerRoutes(
         return res.status(400).json({ message: "startup_id is required" });
       }
 
-      // Verify user has investor profile
       const profile = await storage.getProfileByUserId(userId);
-      if (!profile || profile.type !== 'investor') {
+      if (!profile || !canActAsInvestor(profile)) {
         return res.status(403).json({ message: "Investor profile required" });
       }
 
@@ -209,7 +215,7 @@ export async function registerRoutes(
       }
 
       let connections;
-      if (profile.type === 'investor') {
+      if (canActAsInvestor(profile)) {
         connections = await storage.getConnectionsByInvestor(userId);
       } else if (profile.type === 'startup') {
         connections = await storage.getConnectionsByStartup(userId);
@@ -247,7 +253,7 @@ export async function registerRoutes(
       const userId = req.user.googleId || req.user.id;
       const profile = await storage.getProfileByUserId(userId);
 
-      if (!profile || profile.type !== 'investor') {
+      if (!profile || !canActAsInvestor(profile)) {
         return res.status(403).json({ message: "Investor profile required" });
       }
 

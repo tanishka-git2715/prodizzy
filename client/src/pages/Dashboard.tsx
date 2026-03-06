@@ -1238,6 +1238,7 @@ export default function Dashboard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['connections'] })
   });
 
+  const isInvestorProfile = profile?.type === 'investor' || (profile?.type === 'partner' && profile?.partner_type === 'Investor');
   const { data: matches } = useQuery({
     queryKey: ['matches'],
     queryFn: async () => {
@@ -1245,7 +1246,7 @@ export default function Dashboard() {
       if (!r.ok) return [];
       return r.json();
     },
-    enabled: !!session && profile?.type === 'investor'
+    enabled: !!session && !!isInvestorProfile
   });
 
   async function signOut() {
@@ -1274,8 +1275,19 @@ export default function Dashboard() {
     return <StartupDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} acceptMutation={acceptMutation} declineMutation={declineMutation} />;
   }
 
-  if (profile.type === "investor") {
-    return <InvestorDashboard profile={profile} session={session} signOut={signOut} connections={connections ?? []} matches={matches ?? []} greeting={greeting} />;
+  // Show Investor dashboard for both dedicated investor profile and partner who selected "Investor" as partner type
+  if (profile.type === "investor" || (profile.type === "partner" && profile.partner_type === "Investor")) {
+    const investorProfileShape = profile.type === "investor"
+      ? profile
+      : {
+          ...profile,
+          firm_name: profile.company_name || profile.firm_name,
+          investor_type: profile.partner_type || "Investor",
+          check_size: profile.check_size || "Not specified",
+          sectors: profile.sectors ?? [],
+          stages: profile.stages ?? [],
+        };
+    return <InvestorDashboard profile={investorProfileShape} session={session} signOut={signOut} connections={connections ?? []} matches={matches ?? []} greeting={greeting} />;
   }
 
   if (profile.type === "individual") {

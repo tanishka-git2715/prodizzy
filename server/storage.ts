@@ -151,9 +151,30 @@ export class DatabaseStorage implements IStorage {
 
   // ==================== Connection Methods ====================
 
+  /** Get existing InvestorProfile or create one from PartnerProfile when partner_type is "Investor" */
+  async getOrCreateInvestorProfileForUser(userId: string): Promise<any> {
+    let investorProfile = await InvestorProfile.findOne({ user_id: userId });
+    if (investorProfile) return investorProfile;
+    const partnerProfile = await PartnerProfile.findOne({ user_id: userId, partner_type: "Investor" });
+    if (!partnerProfile) return null;
+    investorProfile = await InvestorProfile.create({
+      user_id: userId,
+      email: partnerProfile.email,
+      full_name: partnerProfile.full_name,
+      firm_name: partnerProfile.company_name,
+      investor_type: "Investor",
+      check_size: "<$50k",
+      sectors: [],
+      stages: [],
+      geography: "",
+      onboarding_completed: true,
+      approved: !!partnerProfile.approved,
+    });
+    return investorProfile;
+  }
+
   async createConnection(investorUserId: string, startupId: string, message?: string) {
-    // Get investor profile to find their MongoDB _id
-    const investorProfile = await InvestorProfile.findOne({ user_id: investorUserId });
+    const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
     if (!investorProfile) throw new Error("Investor profile not found");
 
     // Verify startup exists and is approved
@@ -189,7 +210,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getConnectionsByInvestor(investorUserId: string) {
-    const investorProfile = await InvestorProfile.findOne({ user_id: investorUserId });
+    const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
     if (!investorProfile) return [];
 
     const connections = await Connection.find({ investor_id: investorProfile._id })
@@ -290,7 +311,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkExistingConnection(investorUserId: string, startupId: string) {
-    const investorProfile = await InvestorProfile.findOne({ user_id: investorUserId });
+    const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
     if (!investorProfile) return null;
 
     return await Connection.findOne({
@@ -346,7 +367,7 @@ export class DatabaseStorage implements IStorage {
   // ==================== Matching Methods ====================
 
   async getMatchesForInvestor(investorUserId: string, limit: number = 20) {
-    const investorProfile = await InvestorProfile.findOne({ user_id: investorUserId });
+    const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
     if (!investorProfile) return [];
 
     // Get approved startups actively fundraising
