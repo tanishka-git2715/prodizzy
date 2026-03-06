@@ -137,7 +137,7 @@ export function setupAuth(app: Express) {
         async (req, res) => {
             try {
                 if (req.user) {
-                    const userId = (req.user as any).googleId || ((req.user as any)._id ? (req.user as any)._id.toString() : (req.user as any).id);
+                    const userId = (req.user as any)._id?.toString() || (req.user as any).id;
                     const profile = await storage.getProfileByUserId(userId);
                     if (profile && profile.onboarding_completed) {
                         return res.redirect("/dashboard");

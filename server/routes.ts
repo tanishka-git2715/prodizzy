@@ -57,7 +57,7 @@ export async function registerRoutes(
   // Dashboard Initialization (Consolidated for performance)
   app.get("/api/dashboard-init", ensureAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.googleId || (req.user._id ? req.user._id.toString() : req.user.id);
+      const userId = req.user._id?.toString() || req.user.id;
 
       // Fetch profile first as it determines if we need connections/matches
       const profile = await storage.getProfileByUserId(userId);
@@ -128,7 +128,7 @@ export async function registerRoutes(
   // Patch (partial update) the current user's profile
   app.patch("/api/profile", ensureAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.googleId || (req.user._id ? req.user._id.toString() : req.user.id);
+      const userId = req.user._id?.toString() || req.user.id;
       const data = await storage.patchProfile(userId, req.body);
       return res.json(data);
     } catch (err) {
@@ -201,7 +201,7 @@ export async function registerRoutes(
   // GET /api/discover - Investor browse startups
   app.get("/api/discover", ensureAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.googleId || (req.user._id ? req.user._id.toString() : req.user.id);
+      const userId = req.user._id?.toString() || req.user.id;
 
       const profile = await storage.getProfileByUserId(userId);
       if (!profile || !canActAsInvestor(profile)) {
@@ -224,7 +224,7 @@ export async function registerRoutes(
   // POST /api/connections - Investor expresses interest
   app.post("/api/connections", ensureAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.googleId || (req.user._id ? req.user._id.toString() : req.user.id);
+      const userId = req.user._id?.toString() || req.user.id;
       const { startup_id, message } = req.body;
 
       if (!startup_id) {
@@ -249,7 +249,7 @@ export async function registerRoutes(
   // GET /api/connections - Get user's connections
   app.get("/api/connections", ensureAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.googleId || (req.user._id ? req.user._id.toString() : req.user.id);
+      const userId = req.user._id?.toString() || req.user.id;
       const profile = await storage.getProfileByUserId(userId);
 
       if (!profile) {
@@ -274,7 +274,7 @@ export async function registerRoutes(
   // PATCH /api/connections/:id - Accept/decline connection
   app.patch("/api/connections/:id", ensureAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.googleId || (req.user._id ? req.user._id.toString() : req.user.id);
+      const userId = req.user._id?.toString() || req.user.id;
       const connectionId = req.params.id;
       const { status } = req.body;
 
@@ -292,7 +292,7 @@ export async function registerRoutes(
   // GET /api/matches - Get recommended matches for investor
   app.get("/api/matches", ensureAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.googleId || (req.user._id ? req.user._id.toString() : req.user.id);
+      const userId = req.user._id?.toString() || req.user.id;
       const profile = await storage.getProfileByUserId(userId);
 
       if (!profile || !canActAsInvestor(profile)) {

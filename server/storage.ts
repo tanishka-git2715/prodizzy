@@ -74,7 +74,13 @@ export class DatabaseStorage implements IStorage {
 
     if (user?.profileType) {
       const Model = this.getModelByType(user.profileType);
-      const doc = await (Model as any).findOne({ user_id: userId }).lean();
+      let doc = await (Model as any).findOne({ user_id: userId }).lean();
+
+      // Fallback to googleId if not found by MongoDB ID
+      if (!doc && user?.googleId && user.googleId !== userId) {
+        doc = await (Model as any).findOne({ user_id: user.googleId }).lean();
+      }
+
       if (doc) {
         return { ...doc, type: user.profileType };
       }

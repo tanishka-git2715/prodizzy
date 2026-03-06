@@ -107,16 +107,16 @@ export default function Home() {
     queryKey: ["profile-status", session?.user?.id],
     queryFn: async () => {
       const profileRes = await fetch("/api/profile");
-      const hasAnyProfile = profileRes.ok && profileRes.status !== 404;
+      const hasProfile = profileRes.ok;
       let hasCompletedProfile = false;
-      if (hasAnyProfile) {
+      if (hasProfile) {
         const data = await profileRes.json();
         hasCompletedProfile = !!data?.onboarding_completed;
       }
       return {
-        hasProfile: hasAnyProfile,
+        hasProfile,
         hasCompletedProfile,
-        needsOnboarding: !hasAnyProfile,
+        needsOnboarding: profileRes.status === 404,
       };
     },
     enabled: !!session,
