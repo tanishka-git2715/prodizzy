@@ -52,13 +52,27 @@ export function setupAuth(app: Express) {
                     try {
                         let user = await User.findOne({ googleId: profile.id });
                         if (!user) {
-                            user = new User({
-                                googleId: profile.id,
-                                email: profile.emails?.[0].value,
-                                displayName: profile.displayName,
-                                avatarUrl: profile.photos?.[0].value,
-                            });
-                            await user.save();
+                            // Find by email if googleId didn't match, to link existing email accounts to Google
+                            if (profile.emails && profile.emails.length > 0) {
+                                user = await User.findOne({ email: profile.emails[0].value });
+                                if (user) {
+                                    user.googleId = profile.id;
+                                    user.displayName = user.displayName || profile.displayName;
+                                    user.avatarUrl = user.avatarUrl || profile.photos?.[0].value;
+                                    await user.save();
+                                }
+                            }
+
+                            // If still no user, create a brand new one
+                            if (!user) {
+                                user = new User({
+                                    googleId: profile.id,
+                                    email: profile.emails?.[0].value,
+                                    displayName: profile.displayName,
+                                    avatarUrl: profile.photos?.[0].value,
+                                });
+                                await user.save();
+                            }
                         }
                         return done(null, user);
                     } catch (error) {
