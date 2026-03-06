@@ -174,13 +174,39 @@ export function setupAuth(app: Express) {
             user.otpExpiresAt = otpExpiresAt;
             await user.save();
 
-            // MOCK EMAIL SENDING
-            console.log(`\n\n========================================`);
-            console.log(`[MOCK EMAIL] To: ${email}`);
-            console.log(`[MOCK EMAIL] Subject: Your Prodizzy Login Code`);
-            console.log(`[MOCK EMAIL] Body: Your one-time verification code is: ${otp}`);
-            console.log(`[MOCK EMAIL] This code will expire in 10 minutes.`);
-            console.log(`========================================\n\n`);
+            // Send real email using Nodemailer
+            if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+                const nodemailer = await import("nodemailer");
+                const transporter = nodemailer.createTransport({
+                    service: "gmail",
+                    auth: {
+                        user: process.env.SMTP_USER,
+                        pass: process.env.SMTP_PASS,
+                    },
+                });
+
+                await transporter.sendMail({
+                    from: `"Prodizzy Support" <${process.env.SMTP_USER}>`,
+                    to: email,
+                    subject: "Your Prodizzy Login Code",
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-w-lg mx-auto; padding: 20px; color: #333;">
+                            <h2 style="color: #E63946;">Welcome to Prodizzy</h2>
+                            <p>Here is your one-time verification code to sign in:</p>
+                            <h1 style="font-size: 32px; letter-spacing: 5px; color: #111;">${otp}</h1>
+                            <p>This code will expire in 10 minutes.</p>
+                            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                            <p style="font-size: 12px; color: #999;">If you didn't request this code, you can safely ignore this email.</p>
+                        </div>
+                    `,
+                });
+            } else {
+                console.warn("[MAIL] SMTP credentials missing. Falling back to mock email.");
+                console.log(`\n========================================`);
+                console.log(`[MOCK EMAIL] To: ${email}`);
+                console.log(`[MOCK EMAIL] OTP: ${otp}`);
+                console.log(`========================================\n`);
+            }
 
             res.json({ message: "OTP sent successfully" });
         } catch (error) {
