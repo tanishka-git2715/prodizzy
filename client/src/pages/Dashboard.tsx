@@ -709,10 +709,12 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 }
 
 // ─── Partner Dashboard component ─────────────────────────────────────────────
-function PartnerDashboard({ profile, session, signOut, patchMutation, connections, greeting }: {
+function PartnerDashboard({ profile, session, signOut, patchMutation, connections, greeting, showInvestorSection, investorMatches, investorConnections }: {
   profile: PartnerProfile; session: any; signOut: () => void;
   patchMutation: any; connections: any[]; greeting: string;
+  showInvestorSection?: boolean; investorMatches?: any[]; investorConnections?: any[];
 }) {
+  const [, setLocation] = useLocation();
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
 
@@ -1001,6 +1003,108 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
             <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
           </div>
+
+          {/* Investor section: only for approved partner-investors, added below original dashboard */}
+          {showInvestorSection && (
+            <div className="space-y-6 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Browse startups</h2>
+                <button
+                  onClick={() => setLocation('/discover')}
+                  className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+                >
+                  Discover Startups
+                </button>
+              </div>
+
+              <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Recommended Matches</h2>
+                {investorMatches && investorMatches.length > 0 ? (
+                  <div className="space-y-4">
+                    {investorMatches.map((startup: any) => (
+                      <div key={startup.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-4 hover:border-white/10 transition-colors">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-white font-medium">{startup.company_name}</h3>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
+                                {startup.match_score}% match
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {startup.industry?.map((ind: string) => <Tag key={ind} label={ind} />)}
+                              <Tag label={startup.stage} />
+                            </div>
+                            <p className="text-sm text-white/70 mb-2">{startup.product_description}</p>
+                            <p className="text-xs text-white/50">📍 {startup.location}</p>
+                          </div>
+                          <button
+                            onClick={() => setLocation('/discover')}
+                            className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors whitespace-nowrap"
+                          >
+                            View & Express Interest
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-white/25 text-sm">No matches yet. We're curating startups based on your preferences.</p>
+                )}
+              </div>
+
+              <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">My Connections</h2>
+                {investorConnections && investorConnections.length > 0 ? (
+                  <div className="space-y-4">
+                    {investorConnections.map((conn: any) => (
+                      <div key={conn.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-white font-medium">{conn.startup?.company_name}</h3>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
+                                conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                                'bg-yellow-500/15 text-yellow-400'
+                              }`}>
+                                {conn.status}
+                              </span>
+                            </div>
+                            <div className="flex gap-2 mb-2">
+                              {conn.startup?.industry && <Tag label={Array.isArray(conn.startup.industry) ? conn.startup.industry[0] : conn.startup.industry} />}
+                              {conn.startup?.stage && <Tag label={conn.startup.stage} />}
+                            </div>
+                            {conn.status === 'accepted' && conn.startup?.email && (
+                              <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                <p className="text-xs text-green-400 font-medium mb-1">Contact:</p>
+                                <p className="text-sm text-white/90">{conn.startup.email}</p>
+                                {conn.startup.linkedin_url && (
+                                  <a href={conn.startup.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline flex items-center gap-1 mt-1">
+                                    <Linkedin className="w-3 h-3" /> LinkedIn
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-white/25 text-sm mb-4">No connections yet.</p>
+                    <button
+                      onClick={() => setLocation('/discover')}
+                      className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+                    >
+                      Browse Startups
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1191,7 +1295,7 @@ export default function Dashboard() {
       if (!r.ok) return [];
       return r.json();
     },
-    enabled: !!session,
+    enabled: !!session && !!profile && (profile.type === "startup" || profile.type === "investor" || (profile.type === "partner" && profile.partner_type === "Investor" && profile.approved)),
   });
 
   const { data: profile, isLoading, isFetched } = useQuery<any | null>({
@@ -1238,7 +1342,8 @@ export default function Dashboard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['connections'] })
   });
 
-  const isInvestorProfile = profile?.type === 'investor' || (profile?.type === 'partner' && profile?.partner_type === 'Investor');
+  // Matches/connections for dedicated investors, or approved partner-investors only
+  const canSeeStartups = profile?.type === 'investor' || (profile?.type === 'partner' && profile?.partner_type === 'Investor' && profile?.approved);
   const { data: matches } = useQuery({
     queryKey: ['matches'],
     queryFn: async () => {
@@ -1246,7 +1351,7 @@ export default function Dashboard() {
       if (!r.ok) return [];
       return r.json();
     },
-    enabled: !!session && !!isInvestorProfile
+    enabled: !!session && !!canSeeStartups
   });
 
   async function signOut() {
@@ -1275,27 +1380,31 @@ export default function Dashboard() {
     return <StartupDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} acceptMutation={acceptMutation} declineMutation={declineMutation} />;
   }
 
-  // Show Investor dashboard for both dedicated investor profile and partner who selected "Investor" as partner type
-  if (profile.type === "investor" || (profile.type === "partner" && profile.partner_type === "Investor")) {
-    const investorProfileShape = profile.type === "investor"
-      ? profile
-      : {
-          ...profile,
-          firm_name: profile.company_name || profile.firm_name,
-          investor_type: profile.partner_type || "Investor",
-          check_size: profile.check_size || "Not specified",
-          sectors: profile.sectors ?? [],
-          stages: profile.stages ?? [],
-        };
-    return <InvestorDashboard profile={investorProfileShape} session={session} signOut={signOut} connections={connections ?? []} matches={matches ?? []} greeting={greeting} />;
+  // Dedicated investor profile: full Investor dashboard
+  if (profile.type === "investor") {
+    return <InvestorDashboard profile={profile} session={session} signOut={signOut} connections={connections ?? []} matches={matches ?? []} greeting={greeting} />;
   }
 
   if (profile.type === "individual") {
     return <IndividualDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
   }
 
+  // Partner: always show original Partner dashboard; add investor section below only for approved partner-investors
   if (profile.type === "partner") {
-    return <PartnerDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
+    const showInvestorSection = profile.partner_type === "Investor" && !!profile.approved;
+    return (
+      <PartnerDashboard
+        profile={profile}
+        session={session}
+        signOut={signOut}
+        patchMutation={patchMutation}
+        connections={connections ?? []}
+        greeting={greeting}
+        showInvestorSection={showInvestorSection}
+        investorMatches={showInvestorSection ? (matches ?? []) : undefined}
+        investorConnections={showInvestorSection ? (connections ?? []) : undefined}
+      />
+    );
   }
 
   return null;

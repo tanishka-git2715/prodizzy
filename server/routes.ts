@@ -19,11 +19,11 @@ function ensureAdmin(req: Request, res: Response, next: any) {
   res.status(403).json({ message: "Forbidden" });
 }
 
-/** True if profile is a dedicated investor or a partner who selected "Investor" as partner type */
+/** True if profile can browse startups: dedicated investor, or approved partner who selected "Investor" */
 function canActAsInvestor(profile: any): boolean {
   return !!profile && (
     profile.type === "investor" ||
-    (profile.type === "partner" && profile.partner_type === "Investor")
+    (profile.type === "partner" && profile.partner_type === "Investor" && !!profile.approved)
   );
 }
 
