@@ -327,8 +327,6 @@ export class DatabaseStorage implements IStorage {
   async getApprovedStartupsForInvestor(filters: DiscoverFilters) {
     const query: any = {
       approved: true,
-      // Only show startups actively fundraising
-      'intent_fundraising.capital_amount': { $exists: true, $ne: null }
     };
 
     if (filters.industry) {
@@ -372,10 +370,9 @@ export class DatabaseStorage implements IStorage {
     const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
     if (!investorProfile) return [];
 
-    // Get approved startups actively fundraising
+    // Get approved startups (fundraising is optional)
     const startups = await StartupProfile.find({
       approved: true,
-      'intent_fundraising.capital_amount': { $exists: true, $ne: null }
     }).limit(100).lean();
 
     // Score each startup
