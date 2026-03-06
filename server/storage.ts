@@ -127,8 +127,8 @@ export class DatabaseStorage implements IStorage {
 
     const profile = results.find(r => r !== null);
 
-    // 3. If found during fallback, update the user for next time
-    if (profile && user) {
+    // 3. If found during fallback and it is completed, update the user for next time
+    if (profile && user && profile.onboarding_completed) {
       await User.findByIdAndUpdate(userId, { profileType: profile.type });
     }
 
@@ -228,14 +228,15 @@ export class DatabaseStorage implements IStorage {
     if (investorProfile) return investorProfile;
     const partnerProfile = await PartnerProfile.findOne({
       $or: [{ user_id: actualId }, { user_id: userId }],
-      partner_type: "Investor"
+      partner_type: "Investor",
+      onboarding_completed: true
     });
     if (!partnerProfile) return null;
     investorProfile = await InvestorProfile.create({
       user_id: actualId,
-      email: partnerProfile.email,
-      full_name: partnerProfile.full_name,
-      firm_name: partnerProfile.company_name,
+      email: partnerProfile.email as string,
+      full_name: partnerProfile.full_name as string,
+      firm_name: (partnerProfile.company_name as string) || "NA",
       investor_type: "Investor",
       check_size: "<$50k",
       sectors: [],

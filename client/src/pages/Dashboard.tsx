@@ -374,8 +374,8 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-white font-medium">{conn.investor?.firm_name || "Investor"}</h3>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
-                              conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
-                                'bg-yellow-500/15 text-yellow-400'
+                            conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                              'bg-yellow-500/15 text-yellow-400'
                             }`}>
                             {conn.status}
                           </span>
@@ -1027,8 +1027,8 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                             <div className="flex items-center gap-2 mb-2">
                               <h3 className="text-white font-medium">{conn.startup?.company_name}</h3>
                               <span className={`text-xs px-2 py-0.5 rounded-full ${conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
-                                  conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
-                                    'bg-yellow-500/15 text-yellow-400'
+                                conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                                  'bg-yellow-500/15 text-yellow-400'
                                 }`}>
                                 {conn.status}
                               </span>
@@ -1115,7 +1115,9 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h2 className="text-xl font-semibold text-white mb-1">{profile.firm_name || profile.full_name}</h2>
+                <h2 className="text-xl font-semibold text-white mb-1">
+                  {(profile.firm_name && profile.firm_name !== "NA") ? profile.firm_name : profile.full_name}
+                </h2>
                 <p className="text-white/50 text-sm">{profile.investor_type} • {profile.check_size}</p>
               </div>
             </div>
@@ -1147,8 +1149,8 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-white font-medium">{conn.startup?.company_name}</h3>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
-                              conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
-                                'bg-yellow-500/15 text-yellow-400'
+                            conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                              'bg-yellow-500/15 text-yellow-400'
                             }`}>
                             {conn.status}
                           </span>

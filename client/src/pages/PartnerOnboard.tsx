@@ -234,6 +234,60 @@ export default function PartnerOnboard() {
   const [preferredBudgetRange, setPreferredBudgetRange] = useState("");
   const [password, setPassword] = useState("");
 
+  // --- Persistence Logic ---
+  const STORAGE_KEY = "prodizzy_onboard_partner_v1";
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.companyName) setCompanyName(data.companyName);
+        if (data.role) setRole(data.role);
+        if (data.fullName) setFullName(data.fullName);
+        if (data.email) setEmail(data.email);
+        if (data.phone) setPhone(data.phone);
+        if (data.website) setWebsite(data.website);
+        if (data.linkedinUrl) setLinkedinUrl(data.linkedinUrl);
+        if (data.partnerType) setPartnerType(data.partnerType);
+        if (data.servicesOffered) setServicesOffered(data.servicesOffered);
+        if (data.stagesServed) setStagesServed(data.stagesServed);
+        if (data.pricingModel) setPricingModel(data.pricingModel);
+        if (data.averageDealSize) setAverageDealSize(data.averageDealSize);
+        if (data.teamSize) setTeamSize(data.teamSize);
+        if (data.yearsExperience) setYearsExperience(data.yearsExperience);
+        if (data.workMode) setWorkMode(data.workMode);
+        if (data.portfolioLinks) setPortfolioLinks(data.portfolioLinks);
+        if (data.certifications) setCertifications(data.certifications);
+        if (data.lookingFor) setLookingFor(data.lookingFor);
+        if (data.monthlyCapacity) setMonthlyCapacity(data.monthlyCapacity);
+        if (data.preferredBudgetRange) setPreferredBudgetRange(data.preferredBudgetRange);
+        if (typeof data.step === "number") setStep(data.step);
+      } catch (e) {
+        console.error("Failed to parse saved onboarding data", e);
+      }
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    const data = {
+      companyName, role, fullName, email, phone, website, linkedinUrl,
+      partnerType, servicesOffered, stagesServed, pricingModel, averageDealSize,
+      teamSize, yearsExperience, workMode, portfolioLinks, certifications,
+      lookingFor, monthlyCapacity, preferredBudgetRange,
+      step
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, [
+    companyName, role, fullName, email, phone, website, linkedinUrl,
+    partnerType, servicesOffered, stagesServed, pricingModel, averageDealSize,
+    teamSize, yearsExperience, workMode, portfolioLinks, certifications,
+    lookingFor, monthlyCapacity, preferredBudgetRange,
+    step
+  ]);
+
   // If already logged in with a completed profile, send to dashboard
   const { data: existingProfile } = useQuery({
     queryKey: ["profile"],
@@ -320,6 +374,7 @@ export default function PartnerOnboard() {
     const savedProfile = await res.json();
     // Seed the profile cache so Dashboard sees the profile immediately
     qc.setQueryData(["profile"], savedProfile);
+    localStorage.removeItem(STORAGE_KEY);
     setLocation("/dashboard");
   }
 

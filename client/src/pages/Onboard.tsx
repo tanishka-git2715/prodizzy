@@ -257,6 +257,56 @@ export default function Onboard() {
   // Final Step: Account
   const [password, setPassword] = useState("");
 
+  // --- Persistence Logic ---
+  const STORAGE_KEY = "prodizzy_onboard_startup_v1";
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.companyName) setCompanyName(data.companyName);
+        if (data.role) setRole(data.role);
+        if (data.fullName) setFullName(data.fullName);
+        if (data.email) setEmail(data.email);
+        if (data.phone) setPhone(data.phone);
+        if (data.website) setWebsite(data.website);
+        if (data.linkedinUrl) setLinkedinUrl(data.linkedinUrl);
+        if (data.stage) setStage(data.stage);
+        if (data.industry) setIndustry(data.industry);
+        if (data.customIndustry) setCustomIndustry(data.customIndustry);
+        if (data.teamSize) setTeamSize(data.teamSize);
+        if (data.location) setLocation2(data.location);
+        if (data.isRegistered) setIsRegistered(data.isRegistered);
+        if (data.productDesc) setProductDesc(data.productDesc);
+        if (data.targetAudience) setTargetAudience(data.targetAudience);
+        if (data.numUsers) setNumUsers(data.numUsers);
+        if (data.monthlyRevenue) setMonthlyRevenue(data.monthlyRevenue);
+        if (data.tractionHighlights) setTractionHighlights(data.tractionHighlights);
+        if (typeof data.step === "number") setStep(data.step);
+      } catch (e) {
+        console.error("Failed to parse saved onboarding data", e);
+      }
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    const data = {
+      companyName, role, fullName, email, phone, website, linkedinUrl,
+      stage, industry, customIndustry, teamSize, location, isRegistered,
+      productDesc, targetAudience, numUsers, monthlyRevenue, tractionHighlights,
+      step
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, [
+    companyName, role, fullName, email, phone, website, linkedinUrl,
+    stage, industry, customIndustry, teamSize, location, isRegistered,
+    productDesc, targetAudience, numUsers, monthlyRevenue, tractionHighlights,
+    step
+  ]);
+
   // If already logged in with a completed profile, send to dashboard (e.g. user landed on /join-startup again)
   const { data: existingProfile } = useQuery({
     queryKey: ["profile"],
@@ -349,6 +399,7 @@ export default function Onboard() {
 
     // Seed the profile cache so Dashboard sees the profile immediately (avoids race/404)
     qc.setQueryData(["profile"], savedProfile);
+    localStorage.removeItem(STORAGE_KEY);
     setLocation("/dashboard");
   }
 

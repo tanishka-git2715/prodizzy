@@ -228,6 +228,52 @@ export default function IndividualOnboard() {
   // Step 6: Proof + Account
   const [password, setPassword] = useState("");
 
+  // --- Persistence Logic ---
+  const STORAGE_KEY = "prodizzy_onboard_individual_v1";
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.fullName) setFullName(data.fullName);
+        if (data.email) setEmail(data.email);
+        if (data.phone) setPhone(data.phone);
+        if (data.linkedinUrl) setLinkedinUrl(data.linkedinUrl);
+        if (data.portfolioUrl) setPortfolioUrl(data.portfolioUrl);
+        if (data.profileType) setProfileType(data.profileType);
+        if (data.preferredRoles) setPreferredRoles(data.preferredRoles);
+        if (data.experienceLevel) setExperienceLevel(data.experienceLevel);
+        if (data.lookingFor) setLookingFor(data.lookingFor);
+        if (data.availability) setAvailability(data.availability);
+        if (data.workMode) setWorkMode(data.workMode);
+        if (data.userLocation) setUserLocation(data.userLocation);
+        if (data.expectedPay) setExpectedPay(data.expectedPay);
+        if (data.resumeUrl) setResumeUrl(data.resumeUrl);
+        if (typeof data.step === "number") setStep(data.step);
+      } catch (e) {
+        console.error("Failed to parse saved onboarding data", e);
+      }
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    const data = {
+      fullName, email, phone, linkedinUrl, portfolioUrl,
+      profileType, preferredRoles, experienceLevel, lookingFor,
+      availability, workMode, userLocation, expectedPay, resumeUrl,
+      step
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, [
+    fullName, email, phone, linkedinUrl, portfolioUrl,
+    profileType, preferredRoles, experienceLevel, lookingFor,
+    availability, workMode, userLocation, expectedPay, resumeUrl,
+    step
+  ]);
+
   // If already logged in with a completed profile, send to dashboard
   const { data: existingProfile } = useQuery({
     queryKey: ["profile"],
@@ -308,6 +354,7 @@ export default function IndividualOnboard() {
     const savedProfile = await res.json();
     // Seed the profile cache so Dashboard sees the profile immediately
     qc.setQueryData(["profile"], savedProfile);
+    localStorage.removeItem(STORAGE_KEY);
     setLocation("/dashboard");
   }
 
