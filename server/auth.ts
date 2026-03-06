@@ -113,9 +113,14 @@ export function setupAuth(app: Express) {
         done(null, user.id);
     });
 
-    passport.deserializeUser(async (id, done) => {
+    passport.deserializeUser(async (id: any, done) => {
         try {
-            const user = await User.findById(id).lean();
+            const user = await User.findOne({
+                $or: [
+                    { _id: mongoose.isValidObjectId(id) ? id : new mongoose.Types.ObjectId() },
+                    { googleId: id }
+                ]
+            }).lean();
             done(null, user);
         } catch (error) {
             done(error);

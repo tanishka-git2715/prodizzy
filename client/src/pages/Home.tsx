@@ -122,7 +122,9 @@ export default function Home() {
     enabled: !!session,
   });
 
-  // Unified Redirection Logic: Handles both returning users and new users with specific intents
+  const [authSuccess, setAuthSuccess] = useState(false);
+
+  // Consolidated Redirection Logic: Processes intent AFTER sign-in
   useEffect(() => {
     // Wait for session and profile status to be fully resolved
     if (!session || showAuthModal || loadingProfile || !profileStatus) return;
@@ -132,13 +134,13 @@ export default function Home() {
       if (location === "/") {
         setLocation("/dashboard");
       }
-      // If we got here, clear any pending role to avoid unexpected modals/redirects later
       if (pendingRole) setPendingRole(null);
       return;
     }
 
-    // 2. New User with specific intent (clicked Join or a Role card before signing in)
-    if (pendingRole) {
+    // 2. New User with specific intent - ONLY if they just successfully passed Auth or were already authed?
+    // User wants Sign In box *everytime*, so we only proceed if they clicked success in the modal.
+    if (pendingRole && authSuccess) {
       if (pendingRole === "intent_join") {
         setShowRoleModal(true);
       } else if (pendingRole === "startup") {
@@ -149,34 +151,25 @@ export default function Home() {
         setLocation("/individual-onboard");
       }
       setPendingRole(null);
-      return;
+      setAuthSuccess(false);
     }
-
-    // 3. New User, no specific intent, but landed on Home while signed in
-    // This shows the role modal by default to guide them
-    if (profileStatus.needsOnboarding && !showRoleModal && !roleModalDismissed) {
-      setShowRoleModal(true);
-    }
-  }, [session, profileStatus, loadingProfile, pendingRole, showAuthModal, location, setLocation, roleModalDismissed, showRoleModal]);
+  }, [session, profileStatus, loadingProfile, pendingRole, showAuthModal, location, setLocation, authSuccess]);
 
   const handleGoogleLogin = () => {
     loginWithGoogle();
   };
 
 
-  // If user clicks "Join now": already signed in with completed profile → dashboard; else role modal or auth modal
+  // If user clicks "Join now": show auth modal gateway (sign-in box) first, unless already in dashboard
   const handleJoinNow = () => {
-    if (session) {
-      if (loadingProfile) return; // Prevent action while loading profile status
-      if (profileStatus?.hasCompletedProfile) {
-        setLocation("/dashboard");
-      } else {
-        setShowRoleModal(true);
-      }
-    } else {
-      setPendingRole("intent_join");
-      setShowAuthModal(true);
+    if (session && profileStatus?.hasCompletedProfile) {
+      setLocation("/dashboard");
+      return;
     }
+
+    // Always show Auth Modal as the gateway for un-onboarded users
+    setPendingRole("intent_join");
+    setShowAuthModal(true);
   };
 
 
@@ -185,18 +178,14 @@ export default function Home() {
   };
 
   const handleRoleCardClick = (role: "startup" | "partner" | "individual") => {
-    if (session) {
-      if (role === "startup") {
-        setLocation("/join-startup");
-      } else if (role === "partner") {
-        setLocation("/partner-onboard");
-      } else {
-        setLocation("/individual-onboard");
-      }
-    } else {
-      setPendingRole(role);
-      setShowAuthModal(true);
+    if (session && profileStatus?.hasCompletedProfile) {
+      setLocation("/dashboard");
+      return;
     }
+
+    // Always show Auth Modal as the gateway
+    setPendingRole(role);
+    setShowAuthModal(true);
   };
 
   return (
@@ -541,7 +530,14 @@ export default function Home() {
             style={{ background: "#0D0E0F", border: "1px solid rgba(255,255,255,0.1)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <AuthForm onSuccess={() => setShowAuthModal(false)} initialTab={authMode} pendingRole={pendingRole} />
+            <AuthForm
+              onSuccess={() => {
+                setAuthSuccess(true);
+                setShowAuthModal(false);
+              }}
+              initialTab={authMode}
+              pendingRole={pendingRole}
+            />
           </motion.div>
         </div>
       )}
