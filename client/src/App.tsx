@@ -13,63 +13,10 @@ import Discover from "@/pages/Discover";
 import Admin from "@/pages/Admin";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
-import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-
-function IndexRoute() {
-  const { session, loading } = useAuth();
-  const [, setLocation] = useLocation();
-
-  const { data: profileStatus, isLoading: profileLoading } = useQuery({
-    queryKey: ["profile-status", session?.user?.id],
-    queryFn: async () => {
-      const profileRes = await fetch("/api/profile");
-      const hasAnyProfile = profileRes.ok && profileRes.status !== 404;
-      let hasCompletedProfile = false;
-      if (hasAnyProfile) {
-        const data = await profileRes.json();
-        hasCompletedProfile = !!data?.onboarding_completed;
-      }
-      return {
-        hasProfile: hasAnyProfile,
-        hasCompletedProfile,
-        needsOnboarding: !hasAnyProfile,
-      };
-    },
-    enabled: !!session,
-  });
-
-  useEffect(() => {
-    if (!loading && !profileLoading && session && profileStatus?.hasCompletedProfile) {
-      setLocation("/dashboard");
-    }
-  }, [session, profileStatus, loading, profileLoading, setLocation]);
-
-  if (loading || (session && profileLoading)) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // If already logged in and completed profile, we are about to redirect, so show loading to prevent flash
-  if (session && profileStatus?.hasCompletedProfile) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  return <Home />;
-}
-
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={IndexRoute} />
+      <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/join-startup" component={Onboard} />
       <Route path="/partner-onboard" component={PartnerOnboard} />
