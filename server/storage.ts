@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection } from "./models";
 import type {
   InsertWaitlistEntry,
