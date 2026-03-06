@@ -74,7 +74,7 @@ export function useAuth() {
     session,
     user,
     loading,
-    error: (queryError as Error)?.message || sendOtpMutation.error?.message || verifyOtpMutation.error?.message || null,
+    error: sendOtpMutation.error?.message || verifyOtpMutation.error?.message || null,
     refreshSession: () => queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] }),
     loginWithGoogle,
     logout: logoutMutation.mutateAsync,
