@@ -69,8 +69,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProfileByUserId(userId: string): Promise<any | undefined> {
-    // Check all models to find where the user has a profile
-    const models = [StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile];
+    // Check all models to find where the user has a profile.
+    // IMPORTANT: Prefer PartnerProfile over InvestorProfile so "partner_type=Investor"
+    // users keep the original Partner dashboard, with investor features appended below.
+    const models = [StartupProfile, PartnerProfile, IndividualProfile, InvestorProfile];
     for (const Model of models) {
       // Use projection to exclude large intent objects if not needed, 
       // but for now let's just ensure we use .lean() for speed
