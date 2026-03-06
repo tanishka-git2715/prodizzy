@@ -188,6 +188,21 @@ export default function Home() {
     }
   };
 
+  // Prevent flashing the hero UI if the user is signed in and we are actively checking their profile,
+  // or if we are still verifying their session on first load
+  if (loading || (session && profileStatus === undefined)) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#08090A]">
+        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Also prevent rendering if we're mid-redirect
+  if (session && profileStatus?.hasCompletedProfile) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen text-white" style={{ backgroundColor: "#08090A", fontFamily: "'Inter', sans-serif" }}>
       <WebGLMeshBackground />

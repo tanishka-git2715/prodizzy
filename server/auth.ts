@@ -11,8 +11,7 @@ import connectMongo from "connect-mongo";
 const MongoStore: any = (connectMongo as any).default || connectMongo;
 
 import mongoose from "mongoose";
-
-// ... [rest of imports unchanged] ...
+import { storage } from "./storage";
 
 export function setupAuth(app: Express) {
     const sessionSecret = process.env.SESSION_SECRET || "prodizzy_default_secret";
@@ -135,9 +134,18 @@ export function setupAuth(app: Express) {
     app.get(
         "/api/auth/google/callback",
         passport.authenticate("google", { failureRedirect: "/login?error=google" }),
-        (req, res) => {
-            // Redirect to home; the Home page handles new-user role selection and
-            // existing-user redirection to /dashboard via its useEffect logic.
+        async (req, res) => {
+            try {
+                if (req.user) {
+                    const userId = (req.user as any).googleId || (req.user as any).id;
+                    const profile = await storage.getProfileByUserId(userId);
+                    if (profile && profile.onboarding_completed) {
+                        return res.redirect("/dashboard");
+                    }
+                }
+            } catch (error) {
+                console.error("Error in Google Auth callback redirect logic:", error);
+            }
             res.redirect("/");
         }
     );

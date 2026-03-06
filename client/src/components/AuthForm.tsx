@@ -46,11 +46,24 @@ export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: Auth
 
         setIsLoading(true);
         const res = await verifyOtp({ email, otp });
-        setIsLoading(false);
 
         if (res.success) {
+            try {
+                const profileRes = await fetch("/api/profile");
+                if (profileRes.ok && profileRes.status !== 404) {
+                    const data = await profileRes.json();
+                    if (data?.onboarding_completed) {
+                        window.location.href = "/dashboard";
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to check profile status on login", e);
+            }
+            setIsLoading(false);
             if (onSuccess) onSuccess();
         } else {
+            setIsLoading(false);
             setLocalError(res.message || "Invalid code");
         }
     };
