@@ -373,11 +373,10 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-white font-medium">{conn.investor?.firm_name || "Investor"}</h3>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
-                            conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
-                            'bg-yellow-500/15 text-yellow-400'
-                          }`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
+                              conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                                'bg-yellow-500/15 text-yellow-400'
+                            }`}>
                             {conn.status}
                           </span>
                         </div>
@@ -1027,11 +1026,10 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <h3 className="text-white font-medium">{conn.startup?.company_name}</h3>
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
-                                conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
-                                'bg-yellow-500/15 text-yellow-400'
-                              }`}>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
+                                  conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                                    'bg-yellow-500/15 text-yellow-400'
+                                }`}>
                                 {conn.status}
                               </span>
                             </div>
@@ -1148,11 +1146,10 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-white font-medium">{conn.startup?.company_name}</h3>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
-                            conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
-                            'bg-yellow-500/15 text-yellow-400'
-                          }`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${conn.status === 'accepted' ? 'bg-green-500/15 text-green-400' :
+                              conn.status === 'declined' ? 'bg-red-500/15 text-red-400' :
+                                'bg-yellow-500/15 text-yellow-400'
+                            }`}>
                             {conn.status}
                           </span>
                         </div>
@@ -1214,27 +1211,27 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const qc = useQueryClient();
 
-  const { data: profile, isLoading, isFetched } = useQuery<any | null>({
-    queryKey: ["profile"],
+  const { data: dashboardData, isLoading, isFetched } = useQuery<any>({
+    queryKey: ["dashboard-init"],
     queryFn: async () => {
-      const r = await fetch("/api/profile", { headers: authHeaders() });
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error("Failed to fetch profile");
-      return r.json();
+      const r = await fetch("/api/dashboard-init", { headers: authHeaders() });
+      if (!r.ok) throw new Error("Failed to initialize dashboard");
+      const data = await r.json();
+
+      // Seed other query caches so profile/connections lookups elsewhere still work
+      if (data.profile) qc.setQueryData(["profile"], data.profile);
+      if (data.connections) qc.setQueryData(["connections"], data.connections);
+      if (data.matches) qc.setQueryData(["matches"], data.matches);
+
+      return data;
     },
     enabled: !!session,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 5 * 60 * 1000,
   });
 
-  const { data: connections } = useQuery<any[]>({
-    queryKey: ["connections"],
-    queryFn: async () => {
-      const r = await fetch("/api/connections", { headers: authHeaders() });
-      if (!r.ok) return [];
-      return r.json();
-    },
-    enabled: !!session && !!profile && (profile.type === "startup" || profile.type === "investor" || (profile.type === "partner" && profile.partner_type === "Investor" && profile.approved)),
-  });
+  const profile = dashboardData?.profile;
+  const connections = dashboardData?.connections;
+  const matches = dashboardData?.matches;
 
   const patchMutation = useMutation({
     mutationFn: (patch: any) =>
@@ -1268,17 +1265,8 @@ export default function Dashboard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['connections'] })
   });
 
-  // Matches/connections for dedicated investors, or approved partner-investors only
+  // Matches logic is now handled in dashboard-init
   const canSeeStartups = profile?.type === 'investor' || (profile?.type === 'partner' && profile?.partner_type === 'Investor' && profile?.approved);
-  const { data: matches } = useQuery({
-    queryKey: ['matches'],
-    queryFn: async () => {
-      const r = await fetch('/api/matches?limit=10', { headers: authHeaders() });
-      if (!r.ok) return [];
-      return r.json();
-    },
-    enabled: !!session && !!canSeeStartups
-  });
 
   async function signOut() {
     qc.clear();

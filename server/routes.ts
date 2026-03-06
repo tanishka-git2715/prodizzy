@@ -54,6 +54,48 @@ export async function registerRoutes(
     }
   });
 
+  // Dashboard Initialization (Consolidated for performance)
+  app.get("/api/dashboard-init", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.googleId || req.user.id;
+
+      // Fetch profile first as it determines if we need connections/matches
+      const profile = await storage.getProfileByUserId(userId);
+
+      if (!profile) {
+        return res.json({ user: req.user, profile: null });
+      }
+
+      const promises: any = {};
+
+      // Fetch connections if applicable
+      if (canActAsInvestor(profile) || profile.type === 'startup') {
+        promises.connections = canActAsInvestor(profile)
+          ? storage.getConnectionsByInvestor(userId)
+          : storage.getConnectionsByStartup(userId);
+      }
+
+      // Fetch matches if investor
+      if (canActAsInvestor(profile)) {
+        promises.matches = storage.getMatchesForInvestor(userId, 10);
+      }
+
+      const results = await Promise.all(Object.values(promises));
+      const response: any = {
+        user: req.user,
+        profile
+      };
+
+      Object.keys(promises).forEach((key, index) => {
+        response[key] = results[index];
+      });
+
+      res.json(response);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Profile Routes
   app.get("/api/profile", ensureAuthenticated, async (req: any, res) => {
     try {

@@ -69,31 +69,57 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProfileByUserId(userId: string): Promise<any | undefined> {
-    // Check all models to find where the user has a profile.
-    // IMPORTANT: Prefer PartnerProfile over InvestorProfile so "partner_type=Investor"
-    // users keep the original Partner dashboard, with investor features appended below.
-    const models = [StartupProfile, PartnerProfile, IndividualProfile, InvestorProfile];
-    for (const Model of models) {
-      // Use projection to exclude large intent objects if not needed, 
-      // but for now let's just ensure we use .lean() for speed
+    // 1. Try to get the user first to see if they have a cached profileType
+    const user = await User.findById(userId).lean();
+
+    if (user?.profileType) {
+      const Model = this.getModelByType(user.profileType);
       const doc = await (Model as any).findOne({ user_id: userId }).lean();
       if (doc) {
-        const obj = { ...doc };
-        obj.type = Model.modelName.replace("Profile", "").toLowerCase();
-        return obj;
+        return { ...doc, type: user.profileType };
       }
     }
-    return undefined;
+
+    // 2. Fallback: Check all models in parallel if profileType is missing or profile not found
+    const models = [
+      { model: StartupProfile, type: "startup" },
+      { model: PartnerProfile, type: "partner" },
+      { model: IndividualProfile, type: "individual" },
+      { model: InvestorProfile, type: "investor" }
+    ];
+
+    const results = await Promise.all(
+      models.map(async ({ model, type }) => {
+        const doc = await (model as any).findOne({ user_id: userId }).lean();
+        if (doc) return { ...doc, type };
+        return null;
+      })
+    );
+
+    const profile = results.find(r => r !== null);
+
+    // 3. If found during fallback, update the user for next time
+    if (profile && user) {
+      await User.findByIdAndUpdate(userId, { profileType: profile.type });
+    }
+
+    return profile || undefined;
   }
 
   async upsertProfile(userId: string, email: string, profile: any, type: string): Promise<any> {
     const Model = this.getModelByType(type);
-    const doc = await (Model as any).findOneAndUpdate(
-      { user_id: userId },
-      { user_id: userId, email, ...profile, onboarding_completed: true },
-      { upsert: true, new: true }
-    ).lean();
-    return { ...doc, type: Model.modelName.replace("Profile", "").toLowerCase() };
+
+    // Update user's profileType and profile in parallel
+    const [doc] = await Promise.all([
+      (Model as any).findOneAndUpdate(
+        { user_id: userId },
+        { user_id: userId, email, ...profile, onboarding_completed: true },
+        { upsert: true, new: true }
+      ).lean(),
+      User.findByIdAndUpdate(userId, { profileType: type })
+    ]);
+
+    return { ...doc, type: type };
   }
 
   async patchProfile(userId: string, patch: any): Promise<any> {
