@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Onboard from "@/pages/Onboard";
-import InvestorOnboard from "@/pages/InvestorOnboard";
 import PartnerOnboard from "@/pages/PartnerOnboard";
 import IndividualOnboard from "@/pages/IndividualOnboard";
 import Dashboard from "@/pages/Dashboard";
