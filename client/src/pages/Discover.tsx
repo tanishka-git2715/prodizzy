@@ -116,7 +116,7 @@ function InterestModal({ startup, onClose }: { startup: PublicStartupProfile; on
 }
 
 // Startup card
-function StartupCard({ profile }: { profile: PublicStartupProfile }) {
+function StartupCard({ profile, hasExpressedInterest }: { profile: PublicStartupProfile; hasExpressedInterest?: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -127,9 +127,9 @@ function StartupCard({ profile }: { profile: PublicStartupProfile }) {
     <>
       <div className="group bg-white/[0.03] border border-white/8 rounded-2xl p-5 space-y-4 hover:border-white/15 transition-colors">
         <div>
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <h3 className="text-white font-semibold tracking-tight">{profile.company_name}</h3>
+          <div className="flex items-start justify-between mb-1 gap-2">
+            <div className="min-w-0">
+              <h3 className="text-white font-semibold tracking-tight truncate">{profile.company_name}</h3>
               <div className="flex items-center gap-2 mt-1 text-xs text-white/35">
                 {profile.founder_label && (
                   <span className="px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-white/55">
@@ -144,6 +144,11 @@ function StartupCard({ profile }: { profile: PublicStartupProfile }) {
                 )}
               </div>
             </div>
+            {hasExpressedInterest && (
+              <span className="ml-2 px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-[11px] font-medium text-emerald-300 shrink-0">
+                Interest sent
+              </span>
+            )}
           </div>
           <p className="text-white/65 text-sm leading-relaxed line-clamp-3">{headline}</p>
         </div>
@@ -206,8 +211,14 @@ function StartupCard({ profile }: { profile: PublicStartupProfile }) {
           >
             {expanded ? <><ChevronUp className="w-3 h-3" /> Less</> : <><ChevronDown className="w-3 h-3" /> More details</>}
           </button>
-          <Button onClick={() => setShowModal(true)} size="sm" className="ml-auto">
-            Express interest
+          <Button
+            onClick={() => !hasExpressedInterest && setShowModal(true)}
+            size="sm"
+            className="ml-auto"
+            disabled={hasExpressedInterest}
+            variant={hasExpressedInterest ? "outline" : "default"}
+          >
+            {hasExpressedInterest ? "Interest sent" : "Express interest"}
           </Button>
         </div>
       </div>
@@ -245,6 +256,18 @@ export default function Discover() {
 
   const hasActiveFilters = !!(industry || stage || fundraising || locationQ);
 
+  // Existing connections so we can mark startups with interest already sent
+  const { data: connections } = useQuery<any[]>({
+    queryKey: ["discover-connections"],
+    queryFn: async () => {
+      const r = await fetch("/api/connections", { headers: authHeaders() });
+      if (!r.ok) return [];
+      return r.json();
+    },
+    enabled: !!session,
+    staleTime: 60 * 1000,
+  });
+
   const { data: profiles, isLoading, error } = useQuery<PublicStartupProfile[]>({
     queryKey: ["discover", industry, stage, fundraising, locationQ],
     queryFn: async () => {
@@ -256,6 +279,22 @@ export default function Discover() {
     enabled: !!session,
     retry: false,
   });
+
+  const interestedStartupIds = useMemo(() => {
+    const set = new Set<string>();
+    if (!connections) return set;
+    for (const c of connections as any[]) {
+      const startupIdField = (c as any).startup_id;
+      const fromStartupId =
+        typeof startupIdField === "string"
+          ? startupIdField
+          : startupIdField?._id;
+      const fromStartup = (c as any).startup?.id;
+      if (fromStartupId) set.add(String(fromStartupId));
+      if (fromStartup) set.add(String(fromStartup));
+    }
+    return set;
+  }, [connections]);
 
   if (error && (error as Error).message === "investor_gate") {
     return (
@@ -388,7 +427,13 @@ export default function Discover() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {profiles?.map(p => <StartupCard key={p.id} profile={p} />)}
+          {profiles?.map(p => (
+            <StartupCard
+              key={p.id}
+              profile={p}
+              hasExpressedInterest={interestedStartupIds.has(p.id)}
+            />
+          ))}
         </div>
       </div>
     </div>

@@ -1018,42 +1018,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
               </div>
 
               <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
-                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Recommended Matches</h2>
-                {investorMatches && investorMatches.length > 0 ? (
-                  <div className="space-y-4">
-                    {investorMatches.map((startup: any) => (
-                      <div key={startup.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-4 hover:border-white/10 transition-colors">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-white font-medium">{startup.company_name}</h3>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
-                                {startup.match_score}% match
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mb-3">
-                              {startup.industry?.map((ind: string) => <Tag key={ind} label={ind} />)}
-                              <Tag label={startup.stage} />
-                            </div>
-                            <p className="text-sm text-white/70 mb-2">{startup.product_description}</p>
-                            <p className="text-xs text-white/50">📍 {startup.location}</p>
-                          </div>
-                          <button
-                            onClick={() => setLocation('/discover')}
-                            className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors whitespace-nowrap"
-                          >
-                            View & Express Interest
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-white/25 text-sm">No matches yet. We're curating startups based on your preferences.</p>
-                )}
-              </div>
-
-              <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
                 <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">My Connections</h2>
                 {investorConnections && investorConnections.length > 0 ? (
                   <div className="space-y-4">
@@ -1171,44 +1135,6 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Recommended Matches */}
-          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Recommended Matches</h2>
-            {matches && matches.length > 0 ? (
-              <div className="space-y-4">
-                {matches.map((startup: any) => (
-                  <div key={startup.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-4 hover:border-white/10 transition-colors">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-white font-medium">{startup.company_name}</h3>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
-                            {startup.match_score}% match
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {startup.industry?.map((ind: string) => <Tag key={ind} label={ind} />)}
-                          <Tag label={startup.stage} />
-                        </div>
-                        <p className="text-sm text-white/70 mb-2">{startup.product_description}</p>
-                        <p className="text-xs text-white/50">📍 {startup.location}</p>
-                        {startup.monthly_revenue && <p className="text-xs text-white/50 mt-1">💰 Revenue: {startup.monthly_revenue}</p>}
-                      </div>
-                      <button
-                        onClick={() => setLocation('/discover')}
-                        className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors whitespace-nowrap"
-                      >
-                        View & Express Interest
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-white/25 text-sm">No matches yet. We're curating startups based on your preferences.</p>
-            )}
           </div>
 
           {/* My Connections */}
