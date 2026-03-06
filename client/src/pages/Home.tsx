@@ -103,7 +103,7 @@ export default function Home() {
   };
 
   // Check if signed-in user already has a completed profile (backend uses single /api/profile for all types)
-  const { data: profileStatus } = useQuery({
+  const { data: profileStatus, isFetching: loadingProfile } = useQuery({
     queryKey: ["profile-status", session?.user?.id],
     queryFn: async () => {
       const profileRes = await fetch("/api/profile");
@@ -133,10 +133,13 @@ export default function Home() {
 
   // If user clicks "Join now": already signed in with completed profile → dashboard; else role modal or auth modal
   const handleJoinNow = () => {
-    if (session && profileStatus?.hasCompletedProfile) {
-      setLocation("/dashboard");
-    } else if (session) {
-      setShowRoleModal(true);
+    if (session) {
+      if (loadingProfile) return; // Prevent action while loading profile status
+      if (profileStatus?.hasCompletedProfile) {
+        setLocation("/dashboard");
+      } else {
+        setShowRoleModal(true);
+      }
     } else {
       setPendingRole("intent_join");
       setShowAuthModal(true);

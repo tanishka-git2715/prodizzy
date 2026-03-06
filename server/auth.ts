@@ -137,7 +137,7 @@ export function setupAuth(app: Express) {
         async (req, res) => {
             try {
                 if (req.user) {
-                    const userId = (req.user as any).googleId || (req.user as any).id;
+                    const userId = (req.user as any).googleId || ((req.user as any)._id ? (req.user as any)._id.toString() : (req.user as any).id);
                     const profile = await storage.getProfileByUserId(userId);
                     if (profile && profile.onboarding_completed) {
                         return res.redirect("/dashboard");
@@ -248,9 +248,10 @@ export function setupAuth(app: Express) {
         }
     });
 
-    app.get("/api/auth/me", (req, res) => {
+    app.get("/api/auth/me", (req: any, res) => {
         if (req.isAuthenticated()) {
-            res.json(req.user);
+            const user = { ...req.user, id: req.user._id?.toString() || req.user.id };
+            res.json(user);
         } else {
             res.status(401).json({ message: "Not authenticated" });
         }

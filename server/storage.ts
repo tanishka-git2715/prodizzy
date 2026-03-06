@@ -90,7 +90,14 @@ export class DatabaseStorage implements IStorage {
 
     const results = await Promise.all(
       models.map(async ({ model, type }) => {
-        const doc = await (model as any).findOne({ user_id: userId }).lean();
+        // Search by the provided userId (could be _id or googleId)
+        let doc = await (model as any).findOne({ user_id: userId }).lean();
+
+        // If not found and we have a googleId, search by that too (backward compatibility)
+        if (!doc && user?.googleId && user.googleId !== userId) {
+          doc = await (model as any).findOne({ user_id: user.googleId }).lean();
+        }
+
         if (doc) return { ...doc, type };
         return null;
       })
