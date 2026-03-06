@@ -177,7 +177,8 @@ export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: Auth
             <button
                 type="button"
                 onClick={() => {
-                    // Persist pendingRole across the Google OAuth full-page redirect
+                    // Persist pendingRole and authSuccess across the Google OAuth full-page redirect
+                    sessionStorage.setItem("prodizzy-auth-success", "true");
                     if (pendingRole) {
                         sessionStorage.setItem("prodizzy-pending-role", pendingRole);
                     } else {

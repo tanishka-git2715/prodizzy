@@ -122,7 +122,17 @@ export default function Home() {
     enabled: !!session,
   });
 
-  const [authSuccess, setAuthSuccess] = useState(false);
+  const [authSuccess, setAuthSuccess] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const saved = sessionStorage.getItem("prodizzy-auth-success");
+      if (saved === "true") {
+        sessionStorage.removeItem("prodizzy-auth-success");
+        return true;
+      }
+    } catch { /* ignore */ }
+    return false;
+  });
 
   // Consolidated Redirection Logic: Processes intent AFTER sign-in
   useEffect(() => {
