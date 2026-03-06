@@ -3,14 +3,12 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as LocalStrategy } from "passport-local";
 import { User } from "./models";
 import session from "express-session";
-// Use require-style interop to avoid esbuild CJS bundle wrapping connect-mongo with .default
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const connectMongo = require("connect-mongo");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MongoStore: any = connectMongo.default ?? connectMongo;
-
 import { Express } from "express";
 import bcrypt from "bcryptjs";
+import connectMongo from "connect-mongo";
+
+// We can use the imported connectMongo directly since it provides a valid ES module export in newer versions.
+const MongoStore = connectMongo;
 
 export function setupAuth(app: Express) {
     const sessionSecret = process.env.SESSION_SECRET || "prodizzy_default_secret";
@@ -123,44 +121,76 @@ export function setupAuth(app: Express) {
         }
     );
 
-    app.post("/api/auth/register", async (req, res, next) => {
+    app.post("/api/auth/send-otp", async (req, res, next) => {
         try {
-            const { email, password, displayName } = req.body;
-            if (!email || !password || password.length < 6) {
-                return res.status(400).json({ message: "Invalid email or password (min 6 chars)" });
+            const { email } = req.body;
+            if (!email) {
+                return res.status(400).json({ message: "Email is required" });
             }
 
-            const existingUser = await User.findOne({ email });
-            if (existingUser) {
-                return res.status(400).json({ message: "User already exists" });
+            // Generate 6-digit OTP
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // Expires in 10 minutes
+
+            let user = await User.findOne({ email });
+            if (!user) {
+                // Create user if they don't exist
+                user = new User({
+                    email,
+                    displayName: email.split("@")[0],
+                });
             }
 
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const user = new User({
-                email,
-                password: hashedPassword,
-                displayName: displayName || email.split("@")[0],
-            });
+            user.otp = otp;
+            user.otpExpiresAt = otpExpiresAt;
             await user.save();
 
-            req.login(user, (err) => {
-                if (err) return next(err);
-                res.status(201).json(user);
-            });
+            // MOCK EMAIL SENDING
+            console.log(`\n\n========================================`);
+            console.log(`[MOCK EMAIL] To: ${email}`);
+            console.log(`[MOCK EMAIL] Subject: Your Prodizzy Login Code`);
+            console.log(`[MOCK EMAIL] Body: Your one-time verification code is: ${otp}`);
+            console.log(`[MOCK EMAIL] This code will expire in 10 minutes.`);
+            console.log(`========================================\n\n`);
+
+            res.json({ message: "OTP sent successfully" });
         } catch (error) {
             next(error);
         }
     });
 
-    app.post("/api/auth/login", (req, res, next) => {
-        passport.authenticate("local", (err: any, user: any, info: any) => {
-            if (err) return next(err);
-            if (!user) return res.status(401).json({ message: info.message || "Login failed" });
+    app.post("/api/auth/verify-otp", async (req, res, next) => {
+        try {
+            const { email, otp } = req.body;
+            if (!email || !otp) {
+                return res.status(400).json({ message: "Email and OTP are required" });
+            }
+
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            if (user.otp !== otp) {
+                return res.status(400).json({ message: "Invalid OTP" });
+            }
+
+            if (!user.otpExpiresAt || new Date() > user.otpExpiresAt) {
+                return res.status(400).json({ message: "OTP has expired" });
+            }
+
+            // Clear OTP after successful verification
+            user.otp = undefined;
+            user.otpExpiresAt = undefined;
+            await user.save();
+
             req.login(user, (err) => {
                 if (err) return next(err);
                 res.json(user);
             });
-        })(req, res, next);
+        } catch (error) {
+            next(error);
+        }
     });
 
     app.get("/api/auth/me", (req, res) => {

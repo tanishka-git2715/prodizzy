@@ -133,6 +133,8 @@ const UserSchema = new Schema({
     displayName: String,
     avatarUrl: String,
     role: { type: String, default: "user", enum: ["user", "admin"] },
+    otp: { type: String },
+    otpExpiresAt: { type: Date },
     createdAt: { type: Date, default: Date.now },
 });
 

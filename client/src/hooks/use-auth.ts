@@ -21,34 +21,31 @@ export function useAuth() {
 
   const session = user ? { user } : null;
 
-  const loginMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await fetch("/api/auth/login", {
+  const sendOtpMutation = useMutation({
+    mutationFn: async (data: { email: string }) => {
+      const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Login failed");
+        throw new Error(errorData.message || "Failed to send OTP");
       }
       return res.json();
     },
-    onSuccess: (user) => {
-      queryClient.setQueryData(["/api/auth/me"], user);
-    },
   });
 
-  const registerMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await fetch("/api/auth/register", {
+  const verifyOtpMutation = useMutation({
+    mutationFn: async (data: { email: string; otp: string }) => {
+      const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Registration failed");
+        throw new Error(errorData.message || "Failed to verify OTP");
       }
       return res.json();
     },
@@ -77,21 +74,21 @@ export function useAuth() {
     session,
     user,
     loading,
-    error: (queryError as Error)?.message || loginMutation.error?.message || registerMutation.error?.message || null,
+    error: (queryError as Error)?.message || sendOtpMutation.error?.message || verifyOtpMutation.error?.message || null,
     refreshSession: () => queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] }),
     loginWithGoogle,
     logout: logoutMutation.mutateAsync,
-    login: async (data: any) => {
+    sendOtp: async (data: { email: string }) => {
       try {
-        await loginMutation.mutateAsync(data);
+        await sendOtpMutation.mutateAsync(data);
         return { success: true };
       } catch (err: any) {
         return { success: false, message: err.message };
       }
     },
-    register: async (data: any) => {
+    verifyOtp: async (data: { email: string; otp: string }) => {
       try {
-        await registerMutation.mutateAsync(data);
+        await verifyOtpMutation.mutateAsync(data);
         return { success: true };
       } catch (err: any) {
         return { success: false, message: err.message };
