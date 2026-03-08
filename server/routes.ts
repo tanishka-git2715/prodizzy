@@ -187,6 +187,91 @@ export async function registerRoutes(
     }
   });
 
+  // Admin Analytics Endpoints
+  app.get("/api/admin/analytics/overview", ensureAdmin, async (req, res) => {
+    try {
+      const totalUsers = await storage.getAllUsers();
+      const mau = await storage.getActiveUsersCount(30);
+      const dau = await storage.getActiveUsersCount(1);
+      const connectionMetrics = await storage.getConnectionMetrics();
+      const marketplaceHealth = await storage.getMarketplaceHealth();
+
+      res.json({
+        totalUsers: totalUsers.length,
+        mau,
+        dau,
+        engagementRate: totalUsers.length > 0 ? ((mau / totalUsers.length) * 100).toFixed(2) : "0.00",
+        totalConnections: connectionMetrics.total,
+        acceptanceRate: connectionMetrics.acceptanceRate,
+        startupCount: marketplaceHealth.startupCount,
+        investorCount: marketplaceHealth.investorCount,
+        partnerCount: marketplaceHealth.partnerCount
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/analytics/growth", ensureAdmin, async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+
+      const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+      const end = endDate ? new Date(endDate as string) : new Date();
+
+      const growthData = await storage.getUserGrowthTrends(start, end);
+
+      // Calculate cumulative totals
+      let cumulativeTotal = 0;
+      const enrichedData = growthData.map(item => {
+        cumulativeTotal += item.count;
+        return {
+          ...item,
+          cumulative: cumulativeTotal
+        };
+      });
+
+      res.json({
+        trends: enrichedData,
+        totalNewUsers: growthData.reduce((sum, item) => sum + item.count, 0)
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/analytics/engagement", ensureAdmin, async (req, res) => {
+    try {
+      const funnelData = await storage.getEngagementFunnel();
+      res.json(funnelData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/analytics/marketplace", ensureAdmin, async (req, res) => {
+    try {
+      const marketplaceHealth = await storage.getMarketplaceHealth();
+      const connectionMetrics = await storage.getConnectionMetrics();
+
+      res.json({
+        ...marketplaceHealth,
+        connections: connectionMetrics
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/analytics/cohorts", ensureAdmin, async (req, res) => {
+    try {
+      const cohortData = await storage.getCohortData();
+      res.json(cohortData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/admin/waitlist", ensureAdmin, async (req, res) => {
     try {
       const entries = await storage.getAllWaitlistEntries();

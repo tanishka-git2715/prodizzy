@@ -3,11 +3,16 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2, Users, TrendingUp, Activity, FileText } from "lucide-react";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
+import { MetricCard } from "@/components/admin/MetricCard";
+import { GrowthChart } from "@/components/admin/GrowthChart";
+import { CohortTable } from "@/components/admin/CohortTable";
+import { FunnelChart } from "@/components/admin/FunnelChart";
+import { ensureHttps } from "@/lib/utils";
 
 type ProfileType = "startup" | "partner" | "individual";
-type AdminTab = ProfileType | "users";
+type AdminTab = "overview" | "growth" | "marketplace" | "profiles" | ProfileType | "users";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -125,9 +130,9 @@ function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; 
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Contact (admin only)</p>
                 <div className="flex flex-wrap gap-4 text-xs text-white/50">
                   <span>Email: <span className="text-white/75">{profile.email}</span></span>
-                  {profile.linkedin_url && <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
-                  {profile.deck_link && <a href={profile.deck_link} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Deck</a>}
-                  {profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Website</a>}
+                  {profile.linkedin_url && <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
+                  {profile.deck_link && <a href={ensureHttps(profile.deck_link)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Deck</a>}
+                  {profile.website && <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Website</a>}
                 </div>
               </div>
             </div>
@@ -257,8 +262,8 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
                 <div className="flex flex-wrap gap-4 text-xs text-white/50">
                   <span>Email: <span className="text-white/75">{profile.email}</span></span>
                   <span>Phone: <span className="text-white/75">{profile.phone}</span></span>
-                  {profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Website</a>}
-                  {profile.linkedin_url && <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
+                  {profile.website && <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Website</a>}
+                  {profile.linkedin_url && <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
                 </div>
               </div>
             </div>
@@ -362,9 +367,9 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
                 <div className="flex flex-wrap gap-4 text-xs text-white/50">
                   <span>Email: <span className="text-white/75">{profile.email}</span></span>
                   <span>Phone: <span className="text-white/75">{profile.phone}</span></span>
-                  {profile.linkedin_url && <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
-                  {profile.portfolio_url && <a href={profile.portfolio_url} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Portfolio</a>}
-                  {profile.github_url && <a href={profile.github_url} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">GitHub</a>}
+                  {profile.linkedin_url && <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
+                  {profile.portfolio_url && <a href={ensureHttps(profile.portfolio_url)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Portfolio</a>}
+                  {profile.github_url && <a href={ensureHttps(profile.github_url)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">GitHub</a>}
                 </div>
               </div>
             </div>
@@ -378,17 +383,18 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
 export default function Admin() {
   const { session, logout } = useAuth();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<AdminTab>("startup");
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [profileTab, setProfileTab] = useState<ProfileType | "users">("startup");
 
   const { data: profiles, isLoading: profilesLoading, error: profilesError } = useQuery<any[]>({
-    queryKey: ["admin-profiles", activeTab],
+    queryKey: ["admin-profiles", profileTab],
     queryFn: async () => {
-      const r = await fetch(`/api/admin?type=${activeTab}`, { headers: authHeaders() });
+      const r = await fetch(`/api/admin?type=${profileTab}`, { headers: authHeaders() });
       if (r.status === 403) throw new Error("forbidden");
       if (!r.ok) throw new Error("Failed to load");
       return r.json();
     },
-    enabled: !!session && activeTab !== "users",
+    enabled: !!session && activeTab === "profiles" && profileTab !== "users",
     retry: false,
   });
 
@@ -400,12 +406,68 @@ export default function Admin() {
       if (!r.ok) throw new Error("Failed to load");
       return r.json();
     },
-    enabled: !!session && activeTab === "users",
+    enabled: !!session && activeTab === "profiles" && profileTab === "users",
     retry: false,
   });
 
-  const isLoading = activeTab === "users" ? usersLoading : profilesLoading;
-  const error = activeTab === "users" ? usersError : profilesError;
+  // Analytics queries
+  const { data: overviewData } = useQuery({
+    queryKey: ["admin-analytics-overview"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/analytics/overview", { headers: authHeaders() });
+      if (!r.ok) throw new Error("Failed to load");
+      return r.json();
+    },
+    enabled: !!session && activeTab === "overview",
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const { data: growthData } = useQuery({
+    queryKey: ["admin-analytics-growth"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/analytics/growth", { headers: authHeaders() });
+      if (!r.ok) throw new Error("Failed to load");
+      return r.json();
+    },
+    enabled: !!session && activeTab === "growth",
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: engagementData } = useQuery({
+    queryKey: ["admin-analytics-engagement"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/analytics/engagement", { headers: authHeaders() });
+      if (!r.ok) throw new Error("Failed to load");
+      return r.json();
+    },
+    enabled: !!session && (activeTab === "overview" || activeTab === "growth"),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: marketplaceData } = useQuery({
+    queryKey: ["admin-analytics-marketplace"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/analytics/marketplace", { headers: authHeaders() });
+      if (!r.ok) throw new Error("Failed to load");
+      return r.json();
+    },
+    enabled: !!session && (activeTab === "overview" || activeTab === "marketplace"),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: cohortData } = useQuery({
+    queryKey: ["admin-analytics-cohorts"],
+    queryFn: async () => {
+      const r = await fetch("/api/admin/analytics/cohorts", { headers: authHeaders() });
+      if (!r.ok) throw new Error("Failed to load");
+      return r.json();
+    },
+    enabled: !!session && activeTab === "growth",
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isLoading = activeTab === "profiles" && (profileTab === "users" ? usersLoading : profilesLoading);
+  const error = activeTab === "profiles" && (profileTab === "users" ? usersError : profilesError);
 
   async function signOut() {
     await logout();
@@ -439,90 +501,214 @@ export default function Admin() {
 
       {/* Tabs */}
       <div className="bg-black/60 border-b border-white/5 px-6">
-        <div className="max-w-5xl mx-auto flex gap-6 overflow-x-auto no-scrollbar">
+        <div className="max-w-7xl mx-auto flex gap-6 overflow-x-auto no-scrollbar">
           {[
-            { type: "startup" as AdminTab, label: "Startups" },
-            { type: "partner" as AdminTab, label: "Partners" },
-            { type: "individual" as AdminTab, label: "Individuals" },
-            { type: "users" as AdminTab, label: "All Users" },
+            { type: "overview" as AdminTab, label: "Overview", icon: Activity },
+            { type: "growth" as AdminTab, label: "Growth", icon: TrendingUp },
+            { type: "marketplace" as AdminTab, label: "Marketplace", icon: Users },
+            { type: "profiles" as AdminTab, label: "Profiles", icon: FileText },
           ].map(tab => (
             <button
               key={tab.type}
               onClick={() => setActiveTab(tab.type)}
-              className={`py-3 text-sm font-medium border-b-2 transition-colors shrink-0 ${activeTab === tab.type
+              className={`py-3 px-1 text-sm font-medium border-b-2 transition-colors shrink-0 flex items-center gap-2 ${activeTab === tab.type
                 ? "border-white text-white"
                 : "border-transparent text-white/40 hover:text-white/60"
                 }`}
             >
+              <tab.icon className="w-4 h-4" />
               {tab.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            {
-              label: activeTab === "users" ? "Total Users" : `Total ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}s`,
-              value: activeTab === "users" ? (users?.length ?? "...") : (profiles?.length ?? "...")
-            },
-            { label: "Pending approval", value: activeTab === "users" ? "—" : (pending.length || "0") },
-            { label: "Approved", value: activeTab === "users" ? "—" : (approved.length || "0") },
-          ].map(s => (
-            <div key={s.label} className="bg-white/[0.03] border border-white/8 rounded-xl p-4">
-              <div className="text-2xl font-bold tabular-nums">{s.value}</div>
-              <div className="text-xs text-white/35 mt-0.5">{s.label}</div>
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Overview Tab */}
+        {activeTab === "overview" && overviewData && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard title="Total Users" value={overviewData.totalUsers} subtitle="All registered users" />
+              <MetricCard title="Monthly Active Users" value={overviewData.mau} subtitle={`${overviewData.engagementRate}% engagement rate`} />
+              <MetricCard title="Total Connections" value={overviewData.totalConnections} subtitle={`${overviewData.acceptanceRate}% acceptance rate`} />
+              <MetricCard title="Daily Active Users" value={overviewData.dau} />
             </div>
-          ))}
-        </div>
 
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
-          </div>
-        )}
-
-        {/* Users List */}
-        {activeTab === "users" && users && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Registered Users ({users.length})</h2>
-            <div className="grid grid-cols-1 gap-3">
-              {users.map(u => <UserRow key={u.id || u.googleId || u._id} user={u} />)}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <MetricCard title="Startups" value={overviewData.startupCount} subtitle="Approved profiles" />
+              <MetricCard title="Investors" value={overviewData.investorCount} subtitle="Active on platform" />
+              <MetricCard title="Partners" value={overviewData.partnerCount} subtitle="Approved profiles" />
             </div>
-          </div>
+
+            {engagementData && <FunnelChart data={engagementData} />}
+          </>
         )}
 
+        {/* Growth Tab */}
+        {activeTab === "growth" && (
+          <>
+            {growthData && (
+              <GrowthChart
+                data={growthData.trends || []}
+                title="User Signups Over Time"
+                description={`${growthData.totalNewUsers} new users in selected period`}
+                dataKeys={[
+                  { key: "count", label: "Total Signups", color: "#3b82f6" },
+                  { key: "cumulative", label: "Cumulative Total", color: "#8b5cf6" },
+                ]}
+                type="line"
+              />
+            )}
 
-        {/* Pending */}
-        {activeTab !== "users" && pending.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
-            {pending.map(p => {
-              const pt = activeTab as ProfileType;
-              if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
-              if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
-              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
-            })}
-          </div>
+            {growthData && (
+              <GrowthChart
+                data={growthData.trends || []}
+                title="Signups by Profile Type"
+                description="Breakdown of new users by type"
+                dataKeys={[
+                  { key: "startups", label: "Startups", color: "#3b82f6" },
+                  { key: "partners", label: "Partners", color: "#8b5cf6" },
+                  { key: "individuals", label: "Individuals", color: "#ec4899" },
+                  { key: "investors", label: "Investors", color: "#10b981" },
+                ]}
+                type="area"
+              />
+            )}
+
+            {cohortData && <CohortTable data={cohortData} />}
+          </>
         )}
 
-        {/* Approved */}
-        {activeTab !== "users" && approved.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Approved ({approved.length})</h2>
-            {approved.map(p => {
-              const pt = activeTab as ProfileType;
-              if (activeTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
-              if (activeTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
-              return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
-            })}
-          </div>
+        {/* Marketplace Tab */}
+        {activeTab === "marketplace" && marketplaceData && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard
+                title="Startup to Investor Ratio"
+                value={marketplaceData.startupToInvestorRatio}
+                subtitle="Supply-demand balance"
+              />
+              <MetricCard
+                title="Seller Liquidity Index"
+                value={`${marketplaceData.sellerLiquidityIndex}%`}
+                subtitle={`${marketplaceData.activeSellers} / ${marketplaceData.totalSellers} active`}
+              />
+              <MetricCard
+                title="Connection Acceptance Rate"
+                value={`${marketplaceData.connectionAcceptanceRate}%`}
+                subtitle="Match quality indicator"
+              />
+              <MetricCard
+                title="Avg Connections per User"
+                value={marketplaceData.avgConnectionsPerActiveUser}
+                subtitle="User engagement"
+              />
+            </div>
+
+            {marketplaceData.connections && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricCard title="Total Connections" value={marketplaceData.connections.total} />
+                <MetricCard title="Pending" value={marketplaceData.connections.pending} subtitle="Awaiting response" />
+                <MetricCard title="Accepted" value={marketplaceData.connections.accepted} subtitle="Successful matches" />
+                <MetricCard
+                  title="Avg Response Time"
+                  value={`${marketplaceData.connections.avgResponseTimeDays} days`}
+                  subtitle="Time to accept/decline"
+                />
+              </div>
+            )}
+          </>
         )}
 
-        {profiles?.length === 0 && !isLoading && (
-          <div className="text-center py-12 text-white/30">No profiles yet.</div>
+        {/* Profiles Tab - Existing functionality */}
+        {activeTab === "profiles" && (
+          <>
+            {/* Profile Sub-Tabs */}
+            <div className="border-b border-white/5">
+              <div className="flex gap-4 overflow-x-auto no-scrollbar">
+                {[
+                  { type: "startup" as const, label: "Startups" },
+                  { type: "partner" as const, label: "Partners" },
+                  { type: "individual" as const, label: "Individuals" },
+                  { type: "users" as const, label: "All Users" },
+                ].map(tab => (
+                  <button
+                    key={tab.type}
+                    onClick={() => setProfileTab(tab.type)}
+                    className={`py-2 px-3 text-sm font-medium border-b-2 transition-colors shrink-0 ${profileTab === tab.type
+                      ? "border-white text-white"
+                      : "border-transparent text-white/40 hover:text-white/60"
+                      }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                {
+                  label: profileTab === "users" ? "Total Users" : `Total ${profileTab.charAt(0).toUpperCase() + profileTab.slice(1)}s`,
+                  value: profileTab === "users" ? (users?.length ?? "...") : (profiles?.length ?? "...")
+                },
+                { label: "Pending approval", value: profileTab === "users" ? "—" : (pending.length || "0") },
+                { label: "Approved", value: profileTab === "users" ? "—" : (approved.length || "0") },
+              ].map(s => (
+                <div key={s.label} className="bg-white/[0.03] border border-white/8 rounded-xl p-4">
+                  <div className="text-2xl font-bold tabular-nums">{s.value}</div>
+                  <div className="text-xs text-white/35 mt-0.5">{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {isLoading && (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-6 h-6 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+              </div>
+            )}
+
+            {/* Users List */}
+            {profileTab === "users" && users && (
+              <div className="space-y-3">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Registered Users ({users.length})</h2>
+                <div className="grid grid-cols-1 gap-3">
+                  {users.map(u => <UserRow key={u.id || u.googleId || u._id} user={u} />)}
+                </div>
+              </div>
+            )}
+
+            {/* Pending */}
+            {profileTab !== "users" && pending.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
+                {pending.map(p => {
+                  const pt = profileTab as ProfileType;
+                  if (profileTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
+                  if (profileTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
+                  return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                })}
+              </div>
+            )}
+
+            {/* Approved */}
+            {profileTab !== "users" && approved.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Approved ({approved.length})</h2>
+                {approved.map(p => {
+                  const pt = profileTab as ProfileType;
+                  if (profileTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
+                  if (profileTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
+                  return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                })}
+              </div>
+            )}
+
+            {profiles?.length === 0 && !isLoading && (
+              <div className="text-center py-12 text-white/30">No profiles yet.</div>
+            )}
+          </>
         )}
       </div>
     </div>

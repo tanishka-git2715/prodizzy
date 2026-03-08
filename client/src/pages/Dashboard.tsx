@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
 import { LogOut, ChevronRight, Check, Edit2, X, Mail, Phone, Linkedin, Globe, Github, FileText, MapPin, Briefcase } from "lucide-react";
+import { ensureHttps } from "@/lib/utils";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -275,12 +276,12 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     </div>
                     <div>
                       <p className="text-[10px] text-white/25 uppercase tracking-wider mb-0.5">LinkedIn</p>
-                      <a href={profile.linkedin_url || "#"} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline truncate block">Profile &rarr;</a>
+                      <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline truncate block">Profile &rarr;</a>
                     </div>
                     {profile.website && (
                       <div>
                         <p className="text-[10px] text-white/25 uppercase tracking-wider mb-0.5">Website</p>
-                        <a href={profile.website} target="_blank" rel="noreferrer" className="text-xs text-white/60 hover:underline truncate block">{profile.website.replace(/^https?:\/\//, "")}</a>
+                        <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-xs text-white/60 hover:underline truncate block">{profile.website.replace(/^https?:\/\//, "")}</a>
                       </div>
                     )}
                   </div>
@@ -556,12 +557,12 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                           )}
                           <div className="flex items-center gap-3 text-sm">
                             <Linkedin className="w-3.5 h-3.5 text-white/30" />
-                            <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn Profile &rarr;</a>
+                            <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn Profile &rarr;</a>
                           </div>
                           {profile.portfolio_url && (
                             <div className="flex items-center gap-3 text-sm">
                               <Globe className="w-3.5 h-3.5 text-white/30" />
-                              <a href={profile.portfolio_url} target="_blank" rel="noreferrer" className="text-white/70 hover:underline truncate">{profile.portfolio_url.replace(/^https?:\/\//, "")}</a>
+                              <a href={ensureHttps(profile.portfolio_url)} target="_blank" rel="noreferrer" className="text-white/70 hover:underline truncate">{profile.portfolio_url.replace(/^https?:\/\//, "")}</a>
                             </div>
                           )}
                           {profile.resume_url && (
@@ -845,12 +846,12 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                           )}
                           <div className="flex items-center gap-3 text-sm">
                             <Linkedin className="w-3.5 h-3.5 text-white/30" />
-                            <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn Profile &rarr;</a>
+                            <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn Profile &rarr;</a>
                           </div>
                           {profile.website && (
                             <div className="flex items-center gap-3 text-sm">
                               <Globe className="w-3.5 h-3.5 text-white/30" />
-                              <a href={profile.website} target="_blank" rel="noreferrer" className="text-white/70 hover:underline truncate">{profile.website.replace(/^https?:\/\//, "")}</a>
+                              <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-white/70 hover:underline truncate">{profile.website.replace(/^https?:\/\//, "")}</a>
                             </div>
                           )}
                         </div>
