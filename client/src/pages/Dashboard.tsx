@@ -1242,8 +1242,31 @@ export default function Dashboard() {
         headers: authHeaders(),
         body: JSON.stringify(patch),
       }).then(r => r.json()),
+    onMutate: async (patch) => {
+      // Cancel outgoing refetches
+      await qc.cancelQueries({ queryKey: ["dashboard-init"] });
+
+      // Snapshot previous value for rollback
+      const previousData = qc.getQueryData(["dashboard-init"]);
+
+      // Optimistically update cache
+      qc.setQueryData(["dashboard-init"], (old: any) => ({
+        ...old,
+        profile: { ...old?.profile, ...patch }
+      }));
+
+      return { previousData };
+    },
+    onError: (err, patch, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        qc.setQueryData(["dashboard-init"], context.previousData);
+      }
+    },
     onSuccess: (data: any) => {
-      qc.invalidateQueries({ queryKey: ["profile"] });
+      // Invalidate to fetch fresh data from server
+      qc.invalidateQueries({ queryKey: ["dashboard-init"] });
+      qc.invalidateQueries({ queryKey: ["profile"] }); // Keep for backward compatibility
     },
   });
 
