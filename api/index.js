@@ -11747,6 +11747,9 @@ module.exports = __toCommonJS(index_exports);
 // server/app.ts
 var import_express = __toESM(require("express"), 1);
 
+// server/storage.ts
+var import_mongoose2 = __toESM(require("mongoose"), 1);
+
 // server/models.ts
 var import_mongoose = __toESM(require("mongoose"), 1);
 var WaitlistSchema = new import_mongoose.Schema({
@@ -11868,6 +11871,7 @@ var UserSchema = new import_mongoose.Schema({
   displayName: String,
   avatarUrl: String,
   role: { type: String, default: "user", enum: ["user", "admin"] },
+  profileType: { type: String, enum: ["startup", "investor", "partner", "individual"] },
   otp: { type: String },
   otpExpiresAt: { type: Date },
   createdAt: { type: Date, default: Date.now }
@@ -11913,6 +11917,15 @@ var DatabaseStorage = class {
     if (!doc) return void 0;
     return doc.toObject();
   }
+  async getCanonicalUserId(userId) {
+    const user = await User.findOne({
+      $or: [
+        { _id: import_mongoose2.default.isValidObjectId(userId) ? userId : new import_mongoose2.default.Types.ObjectId() },
+        { googleId: userId }
+      ]
+    }).lean();
+    return user ? user._id.toString() : userId;
+  }
   getModelByType(type) {
     switch (type) {
       case "startup":
@@ -11928,32 +11941,72 @@ var DatabaseStorage = class {
     }
   }
   async getProfileByUserId(userId) {
-    const models = [StartupProfile, PartnerProfile, IndividualProfile, InvestorProfile];
-    for (const Model of models) {
-      const doc = await Model.findOne({ user_id: userId }).lean();
+    const user = await User.findOne({
+      $or: [
+        { _id: import_mongoose2.default.isValidObjectId(userId) ? userId : new import_mongoose2.default.Types.ObjectId() },
+        { googleId: userId }
+      ]
+    }).lean();
+    if (user?.profileType) {
+      const Model = this.getModelByType(user.profileType);
+      let doc = await Model.findOne({ user_id: userId }).lean();
+      if (!doc && user?.googleId && user.googleId !== userId) {
+        doc = await Model.findOne({ user_id: user.googleId }).lean();
+      }
       if (doc) {
-        const obj = { ...doc };
-        obj.type = Model.modelName.replace("Profile", "").toLowerCase();
-        return obj;
+        return { ...doc, type: user.profileType };
       }
     }
-    return void 0;
+    const models = [
+      { model: StartupProfile, type: "startup" },
+      { model: PartnerProfile, type: "partner" },
+      { model: IndividualProfile, type: "individual" },
+      { model: InvestorProfile, type: "investor" }
+    ];
+    const results = await Promise.all(
+      models.map(async ({ model, type }) => {
+        let doc = await model.findOne({ user_id: userId }).lean();
+        if (!doc && user?.googleId && user.googleId !== userId) {
+          doc = await model.findOne({ user_id: user.googleId }).lean();
+        }
+        if (doc) return { ...doc, type };
+        return null;
+      })
+    );
+    const profile = results.find((r) => r !== null);
+    if (profile && user && profile.onboarding_completed) {
+      await User.findByIdAndUpdate(userId, { profileType: profile.type });
+    }
+    return profile || void 0;
   }
   async upsertProfile(userId, email, profile, type) {
     const Model = this.getModelByType(type);
-    const doc = await Model.findOneAndUpdate(
-      { user_id: userId },
-      { user_id: userId, email, ...profile, onboarding_completed: true },
-      { upsert: true, new: true }
-    ).lean();
-    return { ...doc, type: Model.modelName.replace("Profile", "").toLowerCase() };
+    const user = await User.findOne({
+      $or: [
+        { _id: import_mongoose2.default.isValidObjectId(userId) ? userId : new import_mongoose2.default.Types.ObjectId() },
+        { googleId: userId }
+      ]
+    }).lean();
+    if (!user) throw new Error("User not found");
+    const actualId = user._id.toString();
+    const [doc] = await Promise.all([
+      Model.findOneAndUpdate(
+        { $or: [{ user_id: userId }, { user_id: user.googleId }] },
+        { user_id: actualId, email, ...profile, onboarding_completed: true },
+        { upsert: true, new: true }
+      ).lean(),
+      User.findByIdAndUpdate(actualId, { profileType: type })
+    ]);
+    return { ...doc, type };
   }
   async patchProfile(userId, patch) {
-    const profile = await this.getProfileByUserId(userId);
+    const actualId = await this.getCanonicalUserId(userId);
+    const profile = await this.getProfileByUserId(actualId);
     if (!profile) throw new Error("Profile not found");
     const Model = this.getModelByType(profile.type);
     const doc = await Model.findOneAndUpdate(
-      { user_id: userId },
+      { user_id: profile.user_id },
+      // Use the ID already in the profile doc
       { $set: patch },
       { new: true }
     ).lean();
@@ -11996,15 +12049,22 @@ var DatabaseStorage = class {
   // ==================== Connection Methods ====================
   /** Get existing InvestorProfile or create one from PartnerProfile when partner_type is "Investor" */
   async getOrCreateInvestorProfileForUser(userId) {
-    let investorProfile = await InvestorProfile.findOne({ user_id: userId });
+    const actualId = await this.getCanonicalUserId(userId);
+    let investorProfile = await InvestorProfile.findOne({
+      $or: [{ user_id: actualId }, { user_id: userId }]
+    });
     if (investorProfile) return investorProfile;
-    const partnerProfile = await PartnerProfile.findOne({ user_id: userId, partner_type: "Investor" });
+    const partnerProfile = await PartnerProfile.findOne({
+      $or: [{ user_id: actualId }, { user_id: userId }],
+      partner_type: "Investor",
+      onboarding_completed: true
+    });
     if (!partnerProfile) return null;
     investorProfile = await InvestorProfile.create({
-      user_id: userId,
+      user_id: actualId,
       email: partnerProfile.email,
       full_name: partnerProfile.full_name,
-      firm_name: partnerProfile.company_name,
+      firm_name: partnerProfile.company_name || "NA",
       investor_type: "Investor",
       check_size: "<$50k",
       sectors: [],
@@ -12066,7 +12126,10 @@ var DatabaseStorage = class {
     });
   }
   async getConnectionsByStartup(startupUserId) {
-    const startupProfile = await StartupProfile.findOne({ user_id: startupUserId });
+    const actualId = await this.getCanonicalUserId(startupUserId);
+    const startupProfile = await StartupProfile.findOne({
+      $or: [{ user_id: actualId }, { user_id: startupUserId }]
+    });
     if (!startupProfile) return [];
     const connections = await Connection.find({ startup_id: startupProfile._id }).populate("investor_id", "full_name firm_name investor_type check_size email user_id").sort({ created_at: -1 }).lean();
     return connections.map((conn) => {
@@ -12094,8 +12157,9 @@ var DatabaseStorage = class {
     if (!connection) throw new Error("Connection not found");
     const startup = connection.startup_id;
     const investor = connection.investor_id;
-    const isStartup = startup.user_id === userId;
-    const isInvestor = investor.user_id === userId;
+    const actualId = await this.getCanonicalUserId(userId);
+    const isStartup = startup.user_id === actualId || startup.user_id === userId;
+    const isInvestor = investor.user_id === actualId || investor.user_id === userId;
     if (!isStartup && !isInvestor) {
       throw new Error("Unauthorized to update this connection");
     }
@@ -12115,7 +12179,8 @@ var DatabaseStorage = class {
     return this.getConnectionById(connectionId);
   }
   async checkExistingConnection(investorUserId, startupId) {
-    const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
+    const actualId = await this.getCanonicalUserId(investorUserId);
+    const investorProfile = await this.getOrCreateInvestorProfileForUser(actualId);
     if (!investorProfile) return null;
     return await Connection.findOne({
       startup_id: startupId,
@@ -12153,7 +12218,8 @@ var DatabaseStorage = class {
   }
   // ==================== Matching Methods ====================
   async getMatchesForInvestor(investorUserId, limit = 20) {
-    const investorProfile = await this.getOrCreateInvestorProfileForUser(investorUserId);
+    const actualId = await this.getCanonicalUserId(investorUserId);
+    const investorProfile = await this.getOrCreateInvestorProfileForUser(actualId);
     if (!investorProfile) return [];
     const startups = await StartupProfile.find({
       approved: true
@@ -15167,6 +15233,33 @@ async function registerRoutes(httpServer2, app3) {
       throw err;
     }
   });
+  app3.get("/api/dashboard-init", ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const profile = await storage.getProfileByUserId(userId);
+      if (!profile) {
+        return res.json({ user: req.user, profile: null });
+      }
+      const promises = {};
+      if (canActAsInvestor(profile) || profile.type === "startup") {
+        promises.connections = canActAsInvestor(profile) ? storage.getConnectionsByInvestor(userId) : storage.getConnectionsByStartup(userId);
+      }
+      if (canActAsInvestor(profile)) {
+        promises.matches = storage.getMatchesForInvestor(userId, 10);
+      }
+      const results = await Promise.all(Object.values(promises));
+      const response = {
+        user: { ...req.user, id: req.user._id?.toString() || req.user.id },
+        profile
+      };
+      Object.keys(promises).forEach((key, index) => {
+        response[key] = results[index];
+      });
+      res.json(response);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
   app3.get("/api/profile", ensureAuthenticated, async (req, res) => {
     try {
       const profile = await storage.getProfileByUserId(req.user.googleId || req.user.id);
@@ -15181,7 +15274,7 @@ async function registerRoutes(httpServer2, app3) {
       const { type, ...profileData } = req.body;
       if (!type) return res.status(400).json({ message: "Profile type is required" });
       const data = await storage.upsertProfile(
-        req.user.googleId || req.user.id,
+        req.user._id?.toString() || req.user.id,
         req.user.email,
         profileData,
         type
@@ -15193,7 +15286,7 @@ async function registerRoutes(httpServer2, app3) {
   });
   app3.patch("/api/profile", ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.googleId || req.user.id;
+      const userId = req.user._id?.toString() || req.user.id;
       const data = await storage.patchProfile(userId, req.body);
       return res.json(data);
     } catch (err) {
@@ -15251,7 +15344,7 @@ async function registerRoutes(httpServer2, app3) {
   });
   app3.get("/api/discover", ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.googleId || req.user.id;
+      const userId = req.user._id?.toString() || req.user.id;
       const profile = await storage.getProfileByUserId(userId);
       if (!profile || !canActAsInvestor(profile)) {
         return res.status(403).json({ message: "Investor profile required" });
@@ -15269,7 +15362,7 @@ async function registerRoutes(httpServer2, app3) {
   });
   app3.post("/api/connections", ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.googleId || req.user.id;
+      const userId = req.user._id?.toString() || req.user.id;
       const { startup_id, message } = req.body;
       if (!startup_id) {
         return res.status(400).json({ message: "startup_id is required" });
@@ -15289,7 +15382,7 @@ async function registerRoutes(httpServer2, app3) {
   });
   app3.get("/api/connections", ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.googleId || req.user.id;
+      const userId = req.user._id?.toString() || req.user.id;
       const profile = await storage.getProfileByUserId(userId);
       if (!profile) {
         return res.status(404).json({ message: "Profile not found" });
@@ -15309,7 +15402,7 @@ async function registerRoutes(httpServer2, app3) {
   });
   app3.patch("/api/connections/:id", ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.googleId || req.user.id;
+      const userId = req.user._id?.toString() || req.user.id;
       const connectionId = req.params.id;
       const { status } = req.body;
       if (!["accepted", "declined"].includes(status)) {
@@ -15323,7 +15416,7 @@ async function registerRoutes(httpServer2, app3) {
   });
   app3.get("/api/matches", ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.googleId || req.user.id;
+      const userId = req.user._id?.toString() || req.user.id;
       const profile = await storage.getProfileByUserId(userId);
       if (!profile || !canActAsInvestor(profile)) {
         return res.status(403).json({ message: "Investor profile required" });
@@ -15345,11 +15438,11 @@ var import_passport_local = require("passport-local");
 var import_express_session = __toESM(require("express-session"), 1);
 var import_bcryptjs = __toESM(require("bcryptjs"), 1);
 var import_connect_mongo = __toESM(require("connect-mongo"), 1);
-var import_mongoose2 = __toESM(require("mongoose"), 1);
+var import_mongoose3 = __toESM(require("mongoose"), 1);
 var MongoStore = import_connect_mongo.default.default || import_connect_mongo.default;
 function setupAuth(app3) {
   const sessionSecret = process.env.SESSION_SECRET || "prodizzy_default_secret";
-  const clientPromise = import_mongoose2.default.connection.asPromise().then((conn) => conn.getClient());
+  const clientPromise = import_mongoose3.default.connection.asPromise().then((conn) => conn.getClient());
   app3.use(
     (0, import_express_session.default)({
       secret: sessionSecret,
@@ -15435,7 +15528,12 @@ function setupAuth(app3) {
   });
   import_passport.default.deserializeUser(async (id, done) => {
     try {
-      const user = await User.findById(id);
+      const user = await User.findOne({
+        $or: [
+          { _id: import_mongoose3.default.isValidObjectId(id) ? id : new import_mongoose3.default.Types.ObjectId() },
+          { googleId: id }
+        ]
+      }).lean();
       done(null, user);
     } catch (error) {
       done(error);
@@ -15455,8 +15553,9 @@ function setupAuth(app3) {
     async (req, res) => {
       try {
         if (req.user) {
-          const userId = req.user.googleId || req.user.id;
+          const userId = req.user._id?.toString() || req.user.id;
           const profile = await storage.getProfileByUserId(userId);
+          console.log(`[Auth Google Callback] userId: ${userId}, profileFound: ${!!profile}, onboardingCompleted: ${profile?.onboarding_completed}`);
           if (profile && profile.onboarding_completed) {
             return res.redirect("/dashboard");
           }
@@ -15552,7 +15651,8 @@ function setupAuth(app3) {
   });
   app3.get("/api/auth/me", (req, res) => {
     if (req.isAuthenticated()) {
-      res.json(req.user);
+      const user = { ...req.user, id: req.user._id?.toString() || req.user.id };
+      res.json(user);
     } else {
       res.status(401).json({ message: "Not authenticated" });
     }
@@ -15566,7 +15666,7 @@ function setupAuth(app3) {
 }
 
 // server/db.ts
-var import_mongoose3 = __toESM(require("mongoose"), 1);
+var import_mongoose4 = __toESM(require("mongoose"), 1);
 var isConnected = false;
 var connectDB = async () => {
   const MONGODB_URI = process.env.MONGODB_URI;
@@ -15579,7 +15679,7 @@ var connectDB = async () => {
   }
   try {
     console.log("Connecting to MongoDB...");
-    const db = await import_mongoose3.default.connect(MONGODB_URI, {
+    const db = await import_mongoose4.default.connect(MONGODB_URI, {
       family: 4,
       serverSelectionTimeoutMS: 1e4,
       connectTimeoutMS: 1e4
