@@ -345,7 +345,9 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
               </div>
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Looking for</p>
-                <p className="text-white/65">{profile.looking_for || "—"}</p>
+                <p className="text-white/65">
+                  {Array.isArray(profile.looking_for) ? profile.looking_for[0] || "—" : (profile.looking_for || "—")}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Availability</p>

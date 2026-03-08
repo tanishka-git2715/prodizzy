@@ -445,7 +445,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const [skills, setSkills] = useState<string[]>(profile.skills || []);
   const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
   const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
-  const [lookingFor, setLookingFor] = useState(profile.looking_for?.[0] || "");
+  const [lookingFor, setLookingFor] = useState(
+    Array.isArray(profile.looking_for) ? (profile.looking_for[0] || "") : (profile.looking_for || "")
+  );
   const [preferredRoles, setPreferredRoles] = useState(profile.preferred_roles || "");
   const [preferredIndustries, setPreferredIndustries] = useState<string[]>(profile.preferred_industries?.split(", ") || []);
   const [availability, setAvailability] = useState(profile.availability || "");
@@ -476,7 +478,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       profile_type: profileType,
       preferred_roles: preferredRoles,
       experience_level: experienceLevel,
-      looking_for: lookingFor ? [lookingFor] : [],
+      looking_for: lookingFor || undefined,
       availability,
       work_mode: workMode,
       expected_pay: expectedPay,
@@ -598,8 +600,8 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                           <div>
                             <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
                             <div className="flex flex-wrap gap-1.5">
-                              {profile.looking_for && profile.looking_for.length > 0 && (
-                                <Tag label={profile.looking_for[0]} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
+                              {(Array.isArray(profile.looking_for) ? profile.looking_for[0] : profile.looking_for) && (
+                                <Tag label={Array.isArray(profile.looking_for) ? profile.looking_for[0] : profile.looking_for} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
                               )}
                             </div>
                           </div>
@@ -739,7 +741,9 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
   const [workMode, setWorkMode] = useState(profile.work_mode || "");
   const [portfolioLinks, setPortfolioLinks] = useState(profile.portfolio_links || "");
   const [certifications, setCertifications] = useState(profile.certifications || "");
-  const [lookingFor, setLookingFor] = useState(profile.looking_for?.[0] || "");
+  const [lookingFor, setLookingFor] = useState(
+    Array.isArray(profile.looking_for) ? (profile.looking_for[0] || "") : (profile.looking_for || "")
+  );
   const [monthlyCapacity, setMonthlyCapacity] = useState(profile.monthly_capacity || "");
   const [preferredBudgetRange, setPreferredBudgetRange] = useState(profile.preferred_budget_range || "");
 
@@ -768,7 +772,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       work_mode: workMode,
       portfolio_links: portfolioLinks,
       certifications: certifications,
-      looking_for: lookingFor ? [lookingFor] : [],
+      looking_for: lookingFor || undefined,
       monthly_capacity: monthlyCapacity,
       preferred_budget_range: preferredBudgetRange
     });
@@ -910,7 +914,9 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                         <div className="mt-3">
                           <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
                           <div className="flex flex-wrap gap-2">
-                            {profile.looking_for && profile.looking_for.length > 0 && <Tag label={profile.looking_for[0]} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />}
+                            {(Array.isArray(profile.looking_for) ? profile.looking_for[0] : profile.looking_for) && (
+                              <Tag label={Array.isArray(profile.looking_for) ? profile.looking_for[0] : profile.looking_for} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
+                            )}
                           </div>
                         </div>
                       </div>
