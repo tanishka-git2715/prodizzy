@@ -9,38 +9,36 @@ interface CreateIntentCardProps {
 
 export function CreateIntentCard({ onFormCreate, onAICreate }: CreateIntentCardProps) {
   return (
-    <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/20">
-      <CardHeader>
+    <Card className="bg-white/5 border-white/10">
+      <CardHeader className="pb-4">
         <CardTitle className="text-xl">What do you need help with?</CardTitle>
-        <CardDescription className="text-white/60">
+        <CardDescription className="text-white/50">
           Create an intent to get matched with the right people
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
             onClick={onAICreate}
-            className="h-auto py-4 flex flex-col items-center gap-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 border border-blue-500/30"
-            variant="outline"
+            className="flex flex-col items-start gap-3 rounded-lg border border-white/15 bg-white/5 p-5 text-left transition-colors hover:border-white/25 hover:bg-white/10"
           >
-            <Sparkles className="h-6 w-6" />
-            <div className="text-center">
-              <div className="font-semibold">Describe in Your Words</div>
-              <div className="text-xs text-white/60 mt-1">AI will understand what you need</div>
+            <Sparkles className="h-5 w-5 text-white/70" />
+            <div>
+              <div className="font-medium text-white mb-1">Describe in Your Words</div>
+              <div className="text-sm text-white/50">AI will understand what you need</div>
             </div>
-          </Button>
+          </button>
 
-          <Button
+          <button
             onClick={onFormCreate}
-            className="h-auto py-4 flex flex-col items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/20"
-            variant="outline"
+            className="flex flex-col items-start gap-3 rounded-lg border border-white/15 bg-white/5 p-5 text-left transition-colors hover:border-white/25 hover:bg-white/10"
           >
-            <FileText className="h-6 w-6" />
-            <div className="text-center">
-              <div className="font-semibold">Fill a Form</div>
-              <div className="text-xs text-white/60 mt-1">Traditional structured approach</div>
+            <FileText className="h-5 w-5 text-white/70" />
+            <div>
+              <div className="font-medium text-white mb-1">Fill a Form</div>
+              <div className="text-sm text-white/50">Traditional structured approach</div>
             </div>
-          </Button>
+          </button>
         </div>
       </CardContent>
     </Card>

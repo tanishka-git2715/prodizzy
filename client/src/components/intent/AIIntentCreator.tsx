@@ -43,7 +43,8 @@ export function AIIntentCreator({ open, onClose, profileType, onSubmit, onSwitch
       });
 
       if (!response.ok) {
-        throw new Error("Failed to parse intent");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to parse intent. Please make sure OpenAI API key is configured.");
       }
 
       const data = await response.json();

@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles, MapPin, Building2, User, TrendingUp, X } from "lucide-react";
+import { Loader2, Sparkles, MapPin, Building2, User, TrendingUp, X, Search } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface IntentMatchesModalProps {
   open: boolean;
@@ -138,6 +139,7 @@ function MatchCard({ match, onConnect }: { match: any; onConnect: (matchId: stri
 }
 
 export function IntentMatchesModal({ open, onClose, intentId, intentType }: IntentMatchesModalProps) {
+  const [, setLocation] = useLocation();
   const { data: matches, isLoading, error } = useQuery({
     queryKey: ["intent-matches", intentId],
     queryFn: async () => {
@@ -164,6 +166,11 @@ export function IntentMatchesModal({ open, onClose, intentId, intentType }: Inte
       throw new Error(error.message || "Failed to create connection");
     }
     return response.json();
+  };
+
+  const handleDiscover = () => {
+    onClose();
+    setLocation("/discover");
   };
 
   return (
@@ -198,9 +205,19 @@ export function IntentMatchesModal({ open, onClose, intentId, intentType }: Inte
           )}
 
           {matches && matches.length === 0 && (
-            <div className="text-center py-12 space-y-2">
-              <div className="text-white/40 text-sm">No matches found yet</div>
-              <div className="text-white/30 text-xs">Check back later as more users join</div>
+            <div className="text-center py-12 space-y-4">
+              <div className="space-y-2">
+                <div className="text-white/40 text-sm">No matches found yet</div>
+                <div className="text-white/30 text-xs">Check back later as more users join</div>
+              </div>
+              <Button
+                onClick={handleDiscover}
+                variant="outline"
+                className="border-white/20 hover:bg-white/10"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Browse Discover Page
+              </Button>
             </div>
           )}
 
