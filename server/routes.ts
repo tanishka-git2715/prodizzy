@@ -318,7 +318,7 @@ If you're unsure about the intent type (confidence < 60), return:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userText }
