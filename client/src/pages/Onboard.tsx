@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { ChevronLeft, LogIn } from "lucide-react";
+import { ApprovalPendingModal } from "@/components/ApprovalPendingModal";
 
 const TOTAL_STEPS = 4;
 
@@ -229,6 +230,7 @@ export default function Onboard() {
   const [dir, setDir] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
 
   // SECTION 1: BASIC DETAILS
   const [companyName, setCompanyName] = useState("");
@@ -400,7 +402,9 @@ export default function Onboard() {
     // Seed the profile cache so Dashboard sees the profile immediately (avoids race/404)
     qc.setQueryData(["profile"], savedProfile);
     localStorage.removeItem(STORAGE_KEY);
-    setLocation("/dashboard");
+
+    // Show approval modal, then navigate to dashboard after it closes
+    setShowApprovalModal(true);
   }
 
   const allSteps = [
@@ -616,6 +620,16 @@ export default function Onboard() {
           )}
         </div>
       </div>
+
+      {/* Approval Pending Modal */}
+      <ApprovalPendingModal
+        show={showApprovalModal}
+        onClose={() => {
+          setShowApprovalModal(false);
+          setLocation("/dashboard");
+        }}
+        autoCloseDelay={4000}
+      />
     </div>
   );
 }
