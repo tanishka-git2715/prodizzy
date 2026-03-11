@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection } from "./models";
+import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection, Business, TeamMember } from "./models";
 import type {
   InsertWaitlistEntry,
   WaitlistResponse,
@@ -7,6 +7,7 @@ import type {
   UpdateProfile,
   StartupProfile as StartupProfileType
 } from "@shared/schema";
+import crypto from "crypto";
 
 interface DiscoverFilters {
   industry?: string;
@@ -52,6 +53,22 @@ export interface IStorage {
   getCohortData(): Promise<any[]>;
   getEngagementFunnel(): Promise<any>;
   getMarketplaceHealth(): Promise<any>;
+
+  // Business Methods
+  createBusiness(userId: string, businessData: any): Promise<any>;
+  getUserBusinesses(userId: string): Promise<any[]>;
+  getBusinessById(businessId: string): Promise<any | undefined>;
+  updateBusiness(businessId: string, updates: any): Promise<any>;
+  deleteBusiness(businessId: string): Promise<void>;
+
+  // Team Member Methods
+  inviteTeamMember(businessId: string, email: string, invitedBy: string, role: string, permissions?: any): Promise<any>;
+  getTeamMembers(businessId: string): Promise<any[]>;
+  getTeamMemberByToken(token: string): Promise<any | undefined>;
+  acceptInvite(token: string, userId: string): Promise<any>;
+  updateTeamMember(businessId: string, memberId: string, updates: any): Promise<any>;
+  removeTeamMember(businessId: string, memberId: string): Promise<void>;
+  getUserBusinessMemberships(userId: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -789,6 +806,249 @@ export class DatabaseStorage implements IStorage {
         ? (connectionMetrics.total / totalSellers).toFixed(2)
         : "0.00"
     };
+  }
+
+  // =============================================
+  // BUSINESS METHODS
+  // =============================================
+
+  async createBusiness(userId: string, businessData: any): Promise<any> {
+    const business = new Business({
+      owner_user_id: userId,
+      ...businessData,
+      approved: false,
+      onboarding_completed: true
+    });
+    await business.save();
+
+    // Create owner team member record
+    await this.inviteTeamMember(
+      business._id.toString(),
+      businessData.email || "",
+      userId,
+      "owner",
+      {
+        can_create_campaigns: true,
+        can_edit_business: true,
+        can_invite_members: true,
+        can_view_analytics: true
+      }
+    );
+
+    // Auto-accept owner's team member record
+    const ownerMember = await TeamMember.findOne({
+      business_id: business._id,
+      email: businessData.email
+    });
+    if (ownerMember) {
+      ownerMember.user_id = userId;
+      ownerMember.invite_status = "accepted";
+      ownerMember.accepted_at = new Date();
+      await ownerMember.save();
+    }
+
+    return business.toObject();
+  }
+
+  async getUserBusinesses(userId: string): Promise<any[]> {
+    // Get businesses owned by user
+    const ownedBusinesses = await Business.find({ owner_user_id: userId }).lean();
+
+    // Get businesses where user is a team member
+    const memberships = await TeamMember.find({
+      user_id: userId,
+      invite_status: "accepted"
+    }).lean();
+
+    const memberBusinessIds = memberships
+      .map(m => m.business_id)
+      .filter(id => !ownedBusinesses.some(b => b._id.toString() === id.toString()));
+
+    const memberBusinesses = memberBusinessIds.length > 0
+      ? await Business.find({ _id: { $in: memberBusinessIds } }).lean()
+      : [];
+
+    // Combine and add role information
+    const allBusinesses = [
+      ...ownedBusinesses.map(b => ({ ...b, user_role: "owner" })),
+      ...memberBusinesses.map(b => {
+        const membership = memberships.find(m => m.business_id.toString() === b._id.toString());
+        return { ...b, user_role: membership?.role || "member" };
+      })
+    ];
+
+    return allBusinesses;
+  }
+
+  async getBusinessById(businessId: string): Promise<any | undefined> {
+    const business = await Business.findById(businessId).lean();
+    return business || undefined;
+  }
+
+  async updateBusiness(businessId: string, updates: any): Promise<any> {
+    const business = await Business.findByIdAndUpdate(
+      businessId,
+      { ...updates, updatedAt: new Date() },
+      { new: true }
+    );
+    if (!business) throw new Error("Business not found");
+    return business.toObject();
+  }
+
+  async deleteBusiness(businessId: string): Promise<void> {
+    // Delete all team members
+    await TeamMember.deleteMany({ business_id: businessId });
+    // Delete business
+    await Business.findByIdAndDelete(businessId);
+  }
+
+  // =============================================
+  // TEAM MEMBER METHODS
+  // =============================================
+
+  async inviteTeamMember(
+    businessId: string,
+    email: string,
+    invitedBy: string,
+    role: string = "member",
+    permissions?: any
+  ): Promise<any> {
+    // Generate unique invite token
+    const inviteToken = crypto.randomBytes(32).toString("hex");
+
+    // Check if invite already exists
+    const existing = await TeamMember.findOne({
+      business_id: businessId,
+      email: email,
+      invite_status: "pending"
+    });
+
+    if (existing) {
+      throw new Error("User already invited to this business");
+    }
+
+    // Check if user already member
+    const existingMember = await TeamMember.findOne({
+      business_id: businessId,
+      email: email,
+      invite_status: "accepted"
+    });
+
+    if (existingMember) {
+      throw new Error("User is already a team member");
+    }
+
+    const defaultPermissions = {
+      can_create_campaigns: true,
+      can_edit_business: role === "admin" || role === "owner",
+      can_invite_members: role === "admin" || role === "owner",
+      can_view_analytics: true
+    };
+
+    const member = new TeamMember({
+      business_id: businessId,
+      email,
+      role,
+      invited_by: invitedBy,
+      invite_token: inviteToken,
+      invite_status: "pending",
+      invited_at: new Date(),
+      permissions: permissions || defaultPermissions
+    });
+
+    await member.save();
+    return member.toObject();
+  }
+
+  async getTeamMembers(businessId: string): Promise<any[]> {
+    const members = await TeamMember.find({ business_id: businessId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Populate user info for accepted members
+    const memberIds = members
+      .filter(m => m.user_id)
+      .map(m => m.user_id);
+
+    const users = memberIds.length > 0
+      ? await User.find({ _id: { $in: memberIds } }).lean()
+      : [];
+
+    return members.map(member => {
+      const user = users.find(u => u._id.toString() === member.user_id);
+      return {
+        ...member,
+        user: user ? {
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+          email: user.email
+        } : undefined
+      };
+    });
+  }
+
+  async getTeamMemberByToken(token: string): Promise<any | undefined> {
+    const member = await TeamMember.findOne({ invite_token: token }).lean();
+    if (!member) return undefined;
+
+    // Also fetch business info
+    const business = await Business.findById(member.business_id).lean();
+
+    return {
+      ...member,
+      business: business ? {
+        business_name: business.business_name,
+        business_type: business.business_type,
+        logo_url: business.logo_url
+      } : undefined
+    };
+  }
+
+  async acceptInvite(token: string, userId: string): Promise<any> {
+    const member = await TeamMember.findOne({ invite_token: token });
+    if (!member) throw new Error("Invalid invite token");
+
+    if (member.invite_status === "accepted") {
+      throw new Error("Invite already accepted");
+    }
+
+    member.user_id = userId;
+    member.invite_status = "accepted";
+    member.accepted_at = new Date();
+    await member.save();
+
+    return member.toObject();
+  }
+
+  async updateTeamMember(businessId: string, memberId: string, updates: any): Promise<any> {
+    const member = await TeamMember.findOneAndUpdate(
+      { _id: memberId, business_id: businessId },
+      updates,
+      { new: true }
+    );
+
+    if (!member) throw new Error("Team member not found");
+    return member.toObject();
+  }
+
+  async removeTeamMember(businessId: string, memberId: string): Promise<void> {
+    const result = await TeamMember.findOneAndDelete({
+      _id: memberId,
+      business_id: businessId
+    });
+
+    if (!result) throw new Error("Team member not found");
+  }
+
+  async getUserBusinessMemberships(userId: string): Promise<any[]> {
+    const memberships = await TeamMember.find({
+      user_id: userId,
+      invite_status: "accepted"
+    })
+    .populate('business_id')
+    .lean();
+
+    return memberships;
   }
 }
 

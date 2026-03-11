@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
-import { LogOut, ChevronRight, Check, Edit2, X, Mail, Phone, Linkedin, Globe, Github, FileText, MapPin, Briefcase } from "lucide-react";
+import { LogOut, ChevronRight, Check, Edit2, X, Mail, Phone, Linkedin, Globe, Github, FileText, MapPin, Briefcase, Building2, Plus } from "lucide-react";
 import { ensureHttps } from "@/lib/utils";
+import { BusinessCard } from "@/components/business/BusinessCard";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -102,6 +103,17 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
 }) {
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
+  const [, navigate] = useLocation();
+
+  // Fetch user's businesses
+  const { data: businesses, isLoading: businessesLoading } = useQuery({
+    queryKey: ["businesses"],
+    queryFn: async () => {
+      const response = await fetch("/api/business", { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch businesses");
+      return response.json();
+    }
+  });
 
   // Core profile edit state (pre-fill from profile)
   const [companyName, setCompanyName] = useState(profile.company_name || "");
@@ -422,6 +434,44 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
               <p className="text-white/25 text-sm">No connection requests yet.</p>
             )}
           </div>
+
+          {/* ── Your Businesses ────────────────────────────────────────────── */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Your Businesses</h2>
+              <button
+                onClick={() => navigate("/business/create")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-white/70 hover:text-white transition-all text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Create Business
+              </button>
+            </div>
+
+            {businessesLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-5 h-5 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+              </div>
+            ) : businesses && businesses.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {businesses.map((business: any) => (
+                  <BusinessCard
+                    key={business._id}
+                    business={business}
+                    onClick={() => navigate(`/business/${business._id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 space-y-3">
+                <Building2 className="w-12 h-12 text-white/20 mx-auto" />
+                <div>
+                  <p className="text-white/50 text-sm">No businesses yet</p>
+                  <p className="text-white/25 text-xs mt-1">Create a business profile to manage campaigns and team members</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -435,6 +485,17 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 }) {
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
+  const [, navigate] = useLocation();
+
+  // Fetch user's businesses
+  const { data: businesses, isLoading: businessesLoading } = useQuery({
+    queryKey: ["businesses"],
+    queryFn: async () => {
+      const response = await fetch("/api/business", { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch businesses");
+      return response.json();
+    }
+  });
 
   // Form state
   const [fullName, setFullName] = useState(profile.full_name || "");
@@ -704,6 +765,44 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
             <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
           </div>
+
+          {/* ── Your Businesses ────────────────────────────────────────────── */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Your Businesses</h2>
+              <button
+                onClick={() => navigate("/business/create")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-white/70 hover:text-white transition-all text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Create Business
+              </button>
+            </div>
+
+            {businessesLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-5 h-5 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+              </div>
+            ) : businesses && businesses.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {businesses.map((business: any) => (
+                  <BusinessCard
+                    key={business._id}
+                    business={business}
+                    onClick={() => navigate(`/business/${business._id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 space-y-3">
+                <Building2 className="w-12 h-12 text-white/20 mx-auto" />
+                <div>
+                  <p className="text-white/50 text-sm">No businesses yet</p>
+                  <p className="text-white/25 text-xs mt-1">Create a business profile to manage campaigns and team members</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -719,6 +818,16 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
   const [, setLocation] = useLocation();
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
+
+  // Fetch user's businesses
+  const { data: businesses, isLoading: businessesLoading } = useQuery({
+    queryKey: ["businesses"],
+    queryFn: async () => {
+      const response = await fetch("/api/business", { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch businesses");
+      return response.json();
+    }
+  });
 
   // Form state
   const [companyName, setCompanyName] = useState(profile.company_name || "");
@@ -1074,6 +1183,44 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
               </div>
             </div>
           )}
+
+          {/* ── Your Businesses ────────────────────────────────────────────── */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Your Businesses</h2>
+              <button
+                onClick={() => setLocation("/business/create")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-white/70 hover:text-white transition-all text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Create Business
+              </button>
+            </div>
+
+            {businessesLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-5 h-5 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+              </div>
+            ) : businesses && businesses.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {businesses.map((business: any) => (
+                  <BusinessCard
+                    key={business._id}
+                    business={business}
+                    onClick={() => setLocation(`/business/${business._id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 space-y-3">
+                <Building2 className="w-12 h-12 text-white/20 mx-auto" />
+                <div>
+                  <p className="text-white/50 text-sm">No businesses yet</p>
+                  <p className="text-white/25 text-xs mt-1">Create a business profile to manage campaigns and team members</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -1088,6 +1235,16 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
 }) {
   const [, setLocation] = useLocation();
   const firstName = profile.full_name?.split(" ")[0] || "there";
+
+  // Fetch user's businesses
+  const { data: businesses, isLoading: businessesLoading } = useQuery({
+    queryKey: ["businesses"],
+    queryFn: async () => {
+      const response = await fetch("/api/business", { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch businesses");
+      return response.json();
+    }
+  });
 
   return (
     <div className="min-h-screen bg-black">
@@ -1205,6 +1362,44 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
                 >
                   Browse Startups
                 </button>
+              </div>
+            )}
+          </div>
+
+          {/* ── Your Businesses ────────────────────────────────────────────── */}
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Your Businesses</h2>
+              <button
+                onClick={() => setLocation("/business/create")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-white/70 hover:text-white transition-all text-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Create Business
+              </button>
+            </div>
+
+            {businessesLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="w-5 h-5 border-2 border-white/10 border-t-white/50 rounded-full animate-spin" />
+              </div>
+            ) : businesses && businesses.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {businesses.map((business: any) => (
+                  <BusinessCard
+                    key={business._id}
+                    business={business}
+                    onClick={() => setLocation(`/business/${business._id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 space-y-3">
+                <Building2 className="w-12 h-12 text-white/20 mx-auto" />
+                <div>
+                  <p className="text-white/50 text-sm">No businesses yet</p>
+                  <p className="text-white/25 text-xs mt-1">Create a business profile to manage campaigns and team members</p>
+                </div>
               </div>
             )}
           </div>
