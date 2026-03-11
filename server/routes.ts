@@ -4,6 +4,11 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { insertProfileSchema, updateProfileSchema } from "@shared/schema";
 import { z } from "zod";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 function ensureAuthenticated(req: Request, res: Response, next: any) {
   if (req.isAuthenticated()) {
@@ -281,6 +286,148 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== Intent Management Endpoints ====================
+
+  // AI Intent Parsing Helper
+  async function parseIntentWithAI(userText: string, profileType: string) {
+    const systemPrompt = `You are an intent parser for Prodizzy, a networking platform for startups, partners, and individuals.
+
+User's profile type: ${profileType}
+
+Parse the user's natural language description into a structured intent object.
+
+Possible intent types:
+- For Startups: hiring, fundraising, partnerships, promotions, validation
+- For Partners: clients, dealflow, partnerships
+- For Individuals: jobs, freelance, internship, collaboration
+
+Extract relevant metadata based on intent type. Be generous with interpretation - if information is missing, use reasonable defaults or mark as "not specified".
+
+IMPORTANT: Response must be valid JSON in this format:
+{
+  "intent_type": "...",
+  "confidence": 0-100,
+  "metadata": { ... intent-specific fields ... }
+}
+
+If you're unsure about the intent type (confidence < 60), return:
+{
+  "intent_type": "unclear",
+  "confidence": <score>,
+  "suggestions": ["possible intent 1", "possible intent 2"]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userText }
+      ],
+      response_format: { type: 'json_object' }
+    });
+
+    return JSON.parse(response.choices[0].message.content || '{}');
+  }
+
+  // POST /api/intents/parse-ai - Parse natural language into structured intent
+  app.post("/api/intents/parse-ai", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const { text, profile_type } = req.body;
+
+      if (!text || !profile_type) {
+        return res.status(400).json({ message: "text and profile_type are required" });
+      }
+
+      const parsed = await parseIntentWithAI(text, profile_type);
+      res.json(parsed);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // POST /api/intents - Create new intent
+  app.post("/api/intents", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const { profile_type, intent_type, metadata } = req.body;
+
+      if (!profile_type || !intent_type) {
+        return res.status(400).json({ message: "profile_type and intent_type are required" });
+      }
+
+      const intent = await storage.createIntent(userId, { profile_type, intent_type, metadata });
+      res.status(201).json(intent);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // GET /api/intents - Get user's intents
+  app.get("/api/intents", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const status = req.query.status as string | undefined;
+
+      const intents = await storage.getUserIntents(userId, status);
+      res.json(intents);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // PATCH /api/intents/:id - Update intent
+  app.patch("/api/intents/:id", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const intentId = req.params.id;
+
+      const intent = await storage.updateIntent(intentId, userId, req.body);
+      res.json(intent);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // DELETE /api/intents/:id - Delete intent
+  app.delete("/api/intents/:id", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const intentId = req.params.id;
+
+      await storage.deleteIntent(intentId, userId);
+      res.json({ message: "Intent deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // GET /api/matches/intents - Get matches for user's active intents
+  app.get("/api/matches/intents", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      const matches = await storage.getMatchesForUserIntents(userId, limit);
+      res.json(matches);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // GET /api/matches/intents/:intentId - Get matches for specific intent
+  app.get("/api/matches/intents/:intentId", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const intentId = req.params.intentId;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      const matches = await storage.getMatchesForIntent(intentId, userId, limit);
+      res.json(matches);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ==================== Matchmaking Endpoints ====================
 
   // GET /api/discover - Investor browse startups
@@ -306,23 +453,45 @@ export async function registerRoutes(
     }
   });
 
-  // POST /api/connections - Investor expresses interest
+  // POST /api/connections - Create connection (supports both legacy and generic)
   app.post("/api/connections", ensureAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user._id?.toString() || req.user.id;
-      const { startup_id, message } = req.body;
-
-      if (!startup_id) {
-        return res.status(400).json({ message: "startup_id is required" });
-      }
+      const { startup_id, target_id, message, intent_id } = req.body;
 
       const profile = await storage.getProfileByUserId(userId);
-      if (!profile || !canActAsInvestor(profile)) {
-        return res.status(403).json({ message: "Investor profile required" });
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
       }
 
-      const connection = await storage.createConnection(userId, startup_id, message);
-      res.status(201).json(connection);
+      // Legacy format (investor → startup)
+      if (startup_id && !target_id) {
+        if (!canActAsInvestor(profile)) {
+          return res.status(403).json({ message: "Investor profile required" });
+        }
+        const connection = await storage.createConnection(userId, startup_id, message);
+        return res.status(201).json(connection);
+      }
+
+      // New generic format (intent-based matching)
+      if (target_id) {
+        const targetProfile = await storage.getProfileByUserId(target_id);
+        if (!targetProfile) {
+          return res.status(404).json({ message: "Target profile not found" });
+        }
+
+        const connection = await storage.createGenericConnection(
+          userId,
+          target_id,
+          profile.type,
+          targetProfile.type,
+          message,
+          intent_id
+        );
+        return res.status(201).json(connection);
+      }
+
+      return res.status(400).json({ message: "Either startup_id or target_id is required" });
     } catch (error: any) {
       if (error.message === "Connection already exists") {
         return res.status(409).json({ message: error.message });
@@ -331,7 +500,7 @@ export async function registerRoutes(
     }
   });
 
-  // GET /api/connections - Get user's connections
+  // GET /api/connections - Get user's connections (supports all profile types)
   app.get("/api/connections", ensureAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user._id?.toString() || req.user.id;
@@ -341,13 +510,20 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Profile not found" });
       }
 
+      // Try generic connections first
+      const genericConnections = await storage.getConnectionsByUser(userId);
+      if (genericConnections && genericConnections.length > 0) {
+        return res.json(genericConnections);
+      }
+
+      // Fallback to legacy connections for backward compatibility
       let connections;
       if (canActAsInvestor(profile)) {
         connections = await storage.getConnectionsByInvestor(userId);
       } else if (profile.type === 'startup') {
         connections = await storage.getConnectionsByStartup(userId);
       } else {
-        return res.status(403).json({ message: "Only investors and startups can view connections" });
+        connections = [];
       }
 
       res.json(connections);
@@ -356,7 +532,53 @@ export async function registerRoutes(
     }
   });
 
-  // PATCH /api/connections/:id - Accept/decline connection
+  // GET /api/connections/received - Get received connection requests
+  app.get("/api/connections/received", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const connections = await storage.getReceivedConnectionRequests(userId);
+      res.json(connections);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // GET /api/connections/sent - Get sent connection requests
+  app.get("/api/connections/sent", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const connections = await storage.getSentConnectionRequests(userId);
+      res.json(connections);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // POST /api/connections/:id/accept - Accept connection
+  app.post("/api/connections/:id/accept", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const connectionId = req.params.id;
+      const connection = await storage.acceptConnection(connectionId, userId);
+      res.json(connection);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // POST /api/connections/:id/decline - Decline connection
+  app.post("/api/connections/:id/decline", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const connectionId = req.params.id;
+      const connection = await storage.declineConnection(connectionId, userId);
+      res.json(connection);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // PATCH /api/connections/:id - Accept/decline connection (legacy)
   app.patch("/api/connections/:id", ensureAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user._id?.toString() || req.user.id;

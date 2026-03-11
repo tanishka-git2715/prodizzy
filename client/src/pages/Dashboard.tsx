@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
 import { LogOut, ChevronRight, Check, Edit2, X, Mail, Phone, Linkedin, Globe, Github, FileText, MapPin, Briefcase } from "lucide-react";
 import { ensureHttps } from "@/lib/utils";
+import { IntentSection } from "@/components/intent";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -172,6 +173,9 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
           <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
           <p className="text-white/35 mt-1 text-sm">{profile.company_name} · {profile.role} · {profile.stage}</p>
         </div>
+
+        {/* Intent Section */}
+        <IntentSection profileType="startup" />
 
         <div className="flex flex-col gap-5">
           {/* ── Main startup profile card ──────────────────────────────────────── */}
@@ -507,6 +511,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
           <p className="text-white/35 mt-1 text-sm">{profile.profile_type} · {profile.experience_level}</p>
         </div>
 
+        {/* Intent Section */}
+        <IntentSection profileType="individual" />
+
         <div className="flex flex-col gap-5">
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
             <div className="flex items-center justify-between">
@@ -799,6 +806,9 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
           <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
           <p className="text-white/35 mt-1 text-sm">{profile.company_name} · {profile.partner_type}</p>
         </div>
+
+        {/* Intent Section */}
+        <IntentSection profileType="partner" />
 
         <div className="flex flex-col gap-5">
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
@@ -1117,6 +1127,9 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
             <h1 className="text-3xl font-bold text-white mb-2">{greeting}, {firstName} 👋</h1>
             <p className="text-white/50">Here are your recommended startup matches</p>
           </div>
+
+          {/* Intent Section */}
+          <IntentSection profileType="investor" />
 
           {/* Profile Card */}
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">

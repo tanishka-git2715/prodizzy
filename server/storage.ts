@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection } from "./models";
+import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection, Intent } from "./models";
 import type {
   InsertWaitlistEntry,
   WaitlistResponse,
@@ -31,7 +31,7 @@ export interface IStorage {
   getUserByGoogleId(googleId: string): Promise<any | undefined>;
   deleteProfile(type: string, id: string): Promise<void>;
 
-  // Connection Methods
+  // Connection Methods (Legacy - Investor/Startup only)
   createConnection(investorUserId: string, startupId: string, message?: string): Promise<any>;
   getConnectionById(connectionId: string): Promise<any>;
   getConnectionsByInvestor(investorUserId: string): Promise<any[]>;
@@ -39,11 +39,34 @@ export interface IStorage {
   updateConnectionStatus(connectionId: string, userId: string, status: 'accepted' | 'declined'): Promise<any>;
   checkExistingConnection(investorUserId: string, startupId: string): Promise<any>;
 
+  // Generic Connection Methods (Intent-based)
+  createGenericConnection(
+    fromUserId: string,
+    toUserId: string,
+    fromProfileType: string,
+    toProfileType: string,
+    message?: string,
+    intentId?: string
+  ): Promise<any>;
+  getConnectionsByUser(userId: string): Promise<any[]>;
+  getReceivedConnectionRequests(userId: string): Promise<any[]>;
+  getSentConnectionRequests(userId: string): Promise<any[]>;
+  acceptConnection(connectionId: string, userId: string): Promise<any>;
+  declineConnection(connectionId: string, userId: string): Promise<any>;
+
   // Discovery Methods
   getApprovedStartupsForInvestor(filters: DiscoverFilters): Promise<any[]>;
 
   // Matching Methods
   getMatchesForInvestor(investorUserId: string, limit?: number): Promise<any[]>;
+
+  // Intent Methods
+  createIntent(userId: string, intentData: any): Promise<any>;
+  getUserIntents(userId: string, status?: string): Promise<any[]>;
+  updateIntent(intentId: string, userId: string, updates: any): Promise<any>;
+  deleteIntent(intentId: string, userId: string): Promise<void>;
+  getMatchesForIntent(intentId: string, userId: string, limit?: number): Promise<any[]>;
+  getMatchesForUserIntents(userId: string, limit?: number): Promise<any[]>;
 
   // Analytics Methods
   getActiveUsersCount(days: number): Promise<number>;
@@ -408,6 +431,189 @@ export class DatabaseStorage implements IStorage {
     }).lean();
   }
 
+  // ==================== Generic Connection Methods (Intent-based) ====================
+
+  async createGenericConnection(
+    fromUserId: string,
+    toUserId: string,
+    fromProfileType: string,
+    toProfileType: string,
+    message?: string,
+    intentId?: string
+  ) {
+    const actualFromId = await this.getCanonicalUserId(fromUserId);
+    const actualToId = await this.getCanonicalUserId(toUserId);
+
+    // Check for existing connection (bidirectional)
+    const existing = await Connection.findOne({
+      $or: [
+        { from_user_id: actualFromId, to_user_id: actualToId },
+        { from_user_id: actualToId, to_user_id: actualFromId }
+      ]
+    });
+
+    if (existing) throw new Error("Connection already exists");
+
+    const connection = new Connection({
+      from_user_id: actualFromId,
+      to_user_id: actualToId,
+      from_profile_type: fromProfileType,
+      to_profile_type: toProfileType,
+      message: message || null,
+      status: 'pending',
+      intent_id: intentId || null,
+    });
+
+    await connection.save();
+    return connection.toObject();
+  }
+
+  async getConnectionsByUser(userId: string) {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    const connections = await Connection.find({
+      $or: [
+        { from_user_id: actualId },
+        { to_user_id: actualId }
+      ]
+    })
+      .populate('intent_id', 'intent_type metadata')
+      .sort({ created_at: -1 })
+      .lean();
+
+    // Populate profile info for each connection
+    const populated = await Promise.all(
+      connections.map(async (conn: any) => {
+        const isFrom = conn.from_user_id.toString() === actualId;
+        const otherUserId = isFrom ? conn.to_user_id : conn.from_user_id;
+        const otherProfileType = isFrom ? conn.to_profile_type : conn.from_profile_type;
+
+        // Get other user's profile
+        let otherProfile = null;
+        if (otherProfileType === 'startup') {
+          otherProfile = await StartupProfile.findOne({ user_id: otherUserId }).lean();
+        } else if (otherProfileType === 'individual') {
+          otherProfile = await IndividualProfile.findOne({ user_id: otherUserId }).lean();
+        } else if (otherProfileType === 'partner') {
+          otherProfile = await PartnerProfile.findOne({ user_id: otherUserId }).lean();
+        } else if (otherProfileType === 'investor') {
+          otherProfile = await InvestorProfile.findOne({ user_id: otherUserId }).lean();
+        }
+
+        return {
+          ...conn,
+          id: conn._id.toString(),
+          is_sender: isFrom,
+          other_profile: otherProfile,
+          other_profile_type: otherProfileType
+        };
+      })
+    );
+
+    return populated;
+  }
+
+  async getReceivedConnectionRequests(userId: string) {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    const connections = await Connection.find({
+      to_user_id: actualId,
+      status: 'pending'
+    })
+      .populate('intent_id', 'intent_type metadata')
+      .sort({ created_at: -1 })
+      .lean();
+
+    const populated = await Promise.all(
+      connections.map(async (conn: any) => {
+        let fromProfile = null;
+        if (conn.from_profile_type === 'startup') {
+          fromProfile = await StartupProfile.findOne({ user_id: conn.from_user_id }).lean();
+        } else if (conn.from_profile_type === 'individual') {
+          fromProfile = await IndividualProfile.findOne({ user_id: conn.from_user_id }).lean();
+        } else if (conn.from_profile_type === 'partner') {
+          fromProfile = await PartnerProfile.findOne({ user_id: conn.from_user_id }).lean();
+        } else if (conn.from_profile_type === 'investor') {
+          fromProfile = await InvestorProfile.findOne({ user_id: conn.from_user_id }).lean();
+        }
+
+        return {
+          ...conn,
+          id: conn._id.toString(),
+          from_profile: fromProfile,
+        };
+      })
+    );
+
+    return populated;
+  }
+
+  async getSentConnectionRequests(userId: string) {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    const connections = await Connection.find({
+      from_user_id: actualId,
+      status: 'pending'
+    })
+      .populate('intent_id', 'intent_type metadata')
+      .sort({ created_at: -1 })
+      .lean();
+
+    const populated = await Promise.all(
+      connections.map(async (conn: any) => {
+        let toProfile = null;
+        if (conn.to_profile_type === 'startup') {
+          toProfile = await StartupProfile.findOne({ user_id: conn.to_user_id }).lean();
+        } else if (conn.to_profile_type === 'individual') {
+          toProfile = await IndividualProfile.findOne({ user_id: conn.to_user_id }).lean();
+        } else if (conn.to_profile_type === 'partner') {
+          toProfile = await PartnerProfile.findOne({ user_id: conn.to_user_id }).lean();
+        } else if (conn.to_profile_type === 'investor') {
+          toProfile = await InvestorProfile.findOne({ user_id: conn.to_user_id }).lean();
+        }
+
+        return {
+          ...conn,
+          id: conn._id.toString(),
+          to_profile: toProfile,
+        };
+      })
+    );
+
+    return populated;
+  }
+
+  async acceptConnection(connectionId: string, userId: string) {
+    const actualId = await this.getCanonicalUserId(userId);
+    const connection = await Connection.findById(connectionId);
+
+    if (!connection) throw new Error("Connection not found");
+
+    const isReceiver = connection.to_user_id.toString() === actualId;
+    if (!isReceiver) throw new Error("Only the receiver can accept a connection");
+
+    connection.to_accepted = true;
+    connection.status = 'accepted';
+    await connection.save();
+
+    return connection.toObject();
+  }
+
+  async declineConnection(connectionId: string, userId: string) {
+    const actualId = await this.getCanonicalUserId(userId);
+    const connection = await Connection.findById(connectionId);
+
+    if (!connection) throw new Error("Connection not found");
+
+    const isReceiver = connection.to_user_id.toString() === actualId;
+    if (!isReceiver) throw new Error("Only the receiver can decline a connection");
+
+    connection.status = 'declined';
+    await connection.save();
+
+    return connection.toObject();
+  }
+
   // ==================== Discovery Methods ====================
 
   async getApprovedStartupsForInvestor(filters: DiscoverFilters) {
@@ -532,6 +738,344 @@ export class DatabaseStorage implements IStorage {
 
     // Check if ranges overlap
     return investorRange[1] >= startupRange[0] && investorRange[0] <= startupRange[1];
+  }
+
+  // ==================== Intent Management Methods ====================
+
+  async createIntent(userId: string, intentData: any): Promise<any> {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    const intent = new Intent({
+      user_id: actualId,
+      profile_type: intentData.profile_type,
+      intent_type: intentData.intent_type,
+      metadata: intentData.metadata || {},
+      status: 'open'
+    });
+
+    await intent.save();
+    return intent.toObject();
+  }
+
+  async getUserIntents(userId: string, status?: string): Promise<any[]> {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    const query: any = { user_id: actualId };
+    if (status) {
+      query.status = status;
+    }
+
+    const intents = await Intent.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return intents.map(intent => ({
+      ...intent,
+      id: intent._id.toString()
+    }));
+  }
+
+  async updateIntent(intentId: string, userId: string, updates: any): Promise<any> {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    // Verify the intent belongs to the user
+    const intent = await Intent.findOne({ _id: intentId, user_id: actualId });
+    if (!intent) throw new Error("Intent not found or unauthorized");
+
+    // Update allowed fields
+    const allowedUpdates = ['status', 'metadata'];
+    const updateData: any = {};
+
+    for (const key of allowedUpdates) {
+      if (updates[key] !== undefined) {
+        updateData[key] = updates[key];
+      }
+    }
+
+    updateData.updatedAt = new Date();
+
+    const updated = await Intent.findByIdAndUpdate(
+      intentId,
+      { $set: updateData },
+      { new: true }
+    ).lean();
+
+    return {
+      ...updated,
+      id: updated!._id.toString()
+    };
+  }
+
+  async deleteIntent(intentId: string, userId: string): Promise<void> {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    const result = await Intent.findOneAndDelete({
+      _id: intentId,
+      user_id: actualId
+    });
+
+    if (!result) throw new Error("Intent not found or unauthorized");
+  }
+
+  async getMatchesForIntent(intentId: string, userId: string, limit: number = 20): Promise<any[]> {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    // Verify the intent belongs to the user
+    const intent = await Intent.findOne({ _id: intentId, user_id: actualId }).lean();
+    if (!intent) throw new Error("Intent not found or unauthorized");
+
+    let candidatePool: any[] = [];
+
+    // Determine candidate pool based on intent type
+    switch (intent.intent_type) {
+      case 'hiring':
+        // Match with Individuals
+        candidatePool = await IndividualProfile.find({
+          looking_for: { $in: ['job', 'freelance', 'internship'] },
+          approved: true,
+          onboarding_completed: true
+        }).limit(100).lean();
+        break;
+
+      case 'partnerships':
+      case 'promotions':
+        // Match with Partners
+        candidatePool = await PartnerProfile.find({
+          approved: true,
+          onboarding_completed: true
+        }).limit(100).lean();
+        break;
+
+      case 'fundraising':
+        // Match with Investors
+        candidatePool = await InvestorProfile.find({
+          approved: true,
+          onboarding_completed: true
+        }).limit(100).lean();
+        break;
+
+      case 'clients':
+      case 'dealflow':
+        // Partner looking for clients -> match with Startups
+        candidatePool = await StartupProfile.find({
+          approved: true,
+          onboarding_completed: true
+        }).limit(100).lean();
+        break;
+
+      case 'jobs':
+      case 'freelance':
+      case 'internship':
+        // Individual looking for jobs -> match with Startups that have hiring intent
+        candidatePool = await StartupProfile.find({
+          approved: true,
+          onboarding_completed: true
+        }).limit(100).lean();
+        break;
+
+      default:
+        return [];
+    }
+
+    // Score each candidate
+    const scoredMatches = candidatePool.map(candidate => ({
+      profile: candidate,
+      score: this.calculateIntentMatchScore(intent, candidate)
+    }));
+
+    // Sort by score descending, filter score >= 40
+    const topMatches = scoredMatches
+      .filter(m => m.score >= 40)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+
+    return topMatches.map(({ profile, score }) => ({
+      ...profile,
+      id: profile._id.toString(),
+      match_score: score
+    }));
+  }
+
+  async getMatchesForUserIntents(userId: string, limit: number = 20): Promise<any[]> {
+    const actualId = await this.getCanonicalUserId(userId);
+
+    // Get user's active intents
+    const intents = await Intent.find({
+      user_id: actualId,
+      status: 'open'
+    }).lean();
+
+    if (intents.length === 0) return [];
+
+    // Get matches for each intent and aggregate
+    const allMatches = await Promise.all(
+      intents.map(intent => this.getMatchesForIntent(intent._id.toString(), userId, 10))
+    );
+
+    // Flatten and deduplicate by profile ID
+    const uniqueMatches = new Map();
+    for (const matches of allMatches) {
+      for (const match of matches) {
+        const existingMatch = uniqueMatches.get(match.id);
+        // Keep the match with the higher score
+        if (!existingMatch || match.match_score > existingMatch.match_score) {
+          uniqueMatches.set(match.id, match);
+        }
+      }
+    }
+
+    // Convert back to array and sort by score
+    return Array.from(uniqueMatches.values())
+      .sort((a, b) => b.match_score - a.match_score)
+      .slice(0, limit);
+  }
+
+  private calculateIntentMatchScore(intent: any, candidate: any): number {
+    let score = 0;
+
+    // Intent Compatibility (40 points)
+    score += this.scoreIntentAlignment(intent, candidate);
+
+    // Profile Alignment (30 points)
+    score += this.scoreProfileAlignment(intent, candidate);
+
+    // Budget/Compensation Match (20 points)
+    score += this.scoreBudgetMatch(intent, candidate);
+
+    // Availability & Urgency (10 points)
+    score += this.scoreAvailability(intent, candidate);
+
+    return Math.min(score, 100);
+  }
+
+  private scoreIntentAlignment(intent: any, candidate: any): number {
+    // Base alignment score based on intent type and candidate profile
+    let score = 0;
+
+    switch (intent.intent_type) {
+      case 'hiring':
+        // Check if candidate is looking for jobs
+        if (candidate.looking_for) {
+          const lookingFor = Array.isArray(candidate.looking_for)
+            ? candidate.looking_for
+            : [candidate.looking_for];
+
+          if (lookingFor.includes('job') || lookingFor.includes('freelance') || lookingFor.includes('internship')) {
+            score += 20;
+          }
+        }
+
+        // Check skill match
+        if (intent.metadata?.key_skills && candidate.skills) {
+          const intentSkills = intent.metadata.key_skills;
+          const candidateSkills = Array.isArray(candidate.skills) ? candidate.skills : [candidate.skills];
+
+          const hasMatch = intentSkills.some((skill: string) =>
+            candidateSkills.some((cSkill: string) =>
+              cSkill.toLowerCase().includes(skill.toLowerCase())
+            )
+          );
+
+          if (hasMatch) score += 20;
+        }
+        break;
+
+      case 'fundraising':
+        // Check sector match
+        if (candidate.sectors && intent.metadata?.industry) {
+          const sectorMatch = candidate.sectors.includes(intent.metadata.industry);
+          if (sectorMatch) score += 20;
+        }
+
+        // Check stage match
+        if (candidate.stages && intent.metadata?.stage) {
+          const stageMatch = candidate.stages.includes(intent.metadata.stage);
+          if (stageMatch) score += 20;
+        }
+        break;
+
+      case 'partnerships':
+      case 'promotions':
+        // Check service match
+        if (candidate.services_offered && intent.metadata?.service_type) {
+          const serviceMatch = candidate.services_offered.includes(intent.metadata.service_type);
+          if (serviceMatch) score += 40;
+        }
+        break;
+
+      default:
+        score += 20; // Base compatibility score
+    }
+
+    return score;
+  }
+
+  private scoreProfileAlignment(intent: any, candidate: any): number {
+    let score = 0;
+
+    // Industry/sector match (10 points)
+    if (intent.metadata?.preferred_industries && candidate.industry) {
+      const industries = Array.isArray(intent.metadata.preferred_industries)
+        ? intent.metadata.preferred_industries
+        : [intent.metadata.preferred_industries];
+
+      const candidateIndustry = Array.isArray(candidate.industry)
+        ? candidate.industry
+        : [candidate.industry];
+
+      const hasMatch = industries.some((ind: string) => candidateIndustry.includes(ind));
+      if (hasMatch) score += 10;
+    }
+
+    // Stage match (10 points)
+    if (intent.metadata?.stage && candidate.stages_served) {
+      const stageMatch = candidate.stages_served.includes(intent.metadata.stage);
+      if (stageMatch) score += 10;
+    }
+
+    // Location match (10 points)
+    if (intent.metadata?.location && candidate.location) {
+      const locationMatch = candidate.location.toLowerCase().includes(intent.metadata.location.toLowerCase());
+      if (locationMatch) score += 10;
+    }
+
+    return score;
+  }
+
+  private scoreBudgetMatch(intent: any, candidate: any): number {
+    let score = 0;
+
+    // Budget/compensation matching
+    if (intent.metadata?.budget_range && candidate.expected_pay) {
+      // Simple string comparison for now
+      // TODO: Implement proper range overlap logic
+      score += 10;
+    }
+
+    if (intent.metadata?.ticket_size && candidate.check_size) {
+      // Use existing check size matching logic
+      const match = this.matchCheckSize(candidate.check_size, intent.metadata.ticket_size);
+      if (match) score += 20;
+    }
+
+    return score;
+  }
+
+  private scoreAvailability(intent: any, candidate: any): number {
+    let score = 0;
+
+    // Availability match
+    if (intent.metadata?.availability && candidate.availability) {
+      const match = intent.metadata.availability === candidate.availability;
+      if (match) score += 5;
+    }
+
+    // Urgency bonus
+    if (intent.metadata?.urgency === 'high') {
+      score += 5;
+    }
+
+    return score;
   }
 
   // Analytics Methods Implementation
