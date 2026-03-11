@@ -134,11 +134,13 @@ export default function BusinessCreate() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Building2 className="w-8 h-8 text-blue-400" />
-            <h1 className="text-3xl font-bold">Create Business Profile</h1>
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-[#E63946]/10 border border-[#E63946]/20 flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-[#E63946]" />
+            </div>
           </div>
+          <h1 className="text-3xl font-bold mb-2">Create Business Profile</h1>
           <p className="text-white/60">
             Set up your company profile to start posting campaigns and inviting team members
           </p>
@@ -146,9 +148,9 @@ export default function BusinessCreate() {
 
         {/* Progress Indicator */}
         <div className="flex items-center gap-2 mb-8">
-          <div className={`flex-1 h-2 rounded-full ${step >= 1 ? 'bg-blue-500' : 'bg-white/10'}`} />
-          <div className={`flex-1 h-2 rounded-full ${step >= 2 ? 'bg-blue-500' : 'bg-white/10'}`} />
-          <div className={`flex-1 h-2 rounded-full ${step >= 3 ? 'bg-blue-500' : 'bg-white/10'}`} />
+          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 1 ? 'bg-[#E63946]' : 'bg-white/10'}`} />
+          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 2 ? 'bg-[#E63946]' : 'bg-white/10'}`} />
+          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 3 ? 'bg-[#E63946]' : 'bg-white/10'}`} />
         </div>
 
         <Card className="bg-white/5 border-white/10">
@@ -207,7 +209,7 @@ export default function BusinessCreate() {
                         onClick={() => handleIndustryToggle(industry)}
                         className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                           formData.industry.includes(industry)
-                            ? 'bg-blue-500/20 border-blue-500 text-blue-300'
+                            ? 'bg-[#E63946]/15 border-[#E63946]/30 text-[#E63946]'
                             : 'bg-white/5 border-white/10 text-white/70 hover:border-white/30'
                         }`}
                       >
@@ -329,8 +331,8 @@ export default function BusinessCreate() {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                  <p className="text-sm text-blue-300">
+                <div className="p-4 rounded-lg bg-[#E63946]/10 border border-[#E63946]/20">
+                  <p className="text-sm text-[#E63946]">
                     Your business profile will be reviewed by our admin team before going live.
                     You'll be notified via email once approved.
                   </p>
@@ -356,7 +358,7 @@ export default function BusinessCreate() {
                 <Button
                   type="button"
                   onClick={handleNext}
-                  className="ml-auto bg-blue-500 hover:bg-blue-600"
+                  className="ml-auto bg-[#E63946] hover:bg-[#E63946]/90 text-white"
                 >
                   Next
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -366,7 +368,7 @@ export default function BusinessCreate() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="ml-auto bg-blue-500 hover:bg-blue-600"
+                  className="ml-auto bg-[#E63946] hover:bg-[#E63946]/90 text-white disabled:opacity-50"
                 >
                   {submitting ? "Submitting..." : "Create Business"}
                 </Button>

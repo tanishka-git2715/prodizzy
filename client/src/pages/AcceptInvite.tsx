@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -76,9 +76,9 @@ export default function AcceptInvite() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 text-[#E63946] animate-spin mx-auto mb-4" />
           <p className="text-white/60">Loading invitation...</p>
         </div>
       </div>
@@ -87,14 +87,14 @@ export default function AcceptInvite() {
 
   if (error || !invite) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-black flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center">
-          <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <XCircle className="w-16 h-16 text-[#E63946] mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Invalid Invitation</h1>
           <p className="text-white/60 mb-6">
             {(error as Error)?.message || "This invitation link is invalid or has expired."}
           </p>
-          <Button onClick={() => setLocation("/dashboard")} variant="outline">
+          <Button onClick={() => setLocation("/dashboard")} variant="outline" className="bg-white/5 border-white/10">
             Go to Dashboard
           </Button>
         </div>
@@ -104,7 +104,7 @@ export default function AcceptInvite() {
 
   if (acceptMutation.isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-black flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center">
           <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Invitation Accepted!</h1>
@@ -118,11 +118,13 @@ export default function AcceptInvite() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-black flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-center">
-          <Building2 className="w-12 h-12 text-white mx-auto mb-3" />
+        <div className="bg-[#E63946] p-6 text-center">
+          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mx-auto mb-3">
+            <Building2 className="w-6 h-6 text-white" />
+          </div>
           <h1 className="text-2xl font-bold text-white">Team Invitation</h1>
         </div>
 
@@ -140,7 +142,7 @@ export default function AcceptInvite() {
             </p>
           </div>
 
-          <div className="bg-white/5 rounded-lg p-4 mb-6">
+          <div className="bg-white/5 rounded-lg p-4 mb-6 border border-white/10">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-white/60">Role:</span>
               <span className="text-white font-medium capitalize">{invite.role}</span>
@@ -160,8 +162,8 @@ export default function AcceptInvite() {
           )}
 
           {acceptMutation.isError && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
-              <p className="text-red-300 text-sm">
+            <div className="bg-[#E63946]/10 border border-[#E63946]/30 rounded-lg p-4 mb-6">
+              <p className="text-[#E63946] text-sm">
                 {(acceptMutation.error as Error)?.message || "Failed to accept invitation"}
               </p>
             </div>
@@ -170,7 +172,7 @@ export default function AcceptInvite() {
           <div className="flex gap-3">
             <Button
               onClick={handleAccept}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="flex-1 bg-[#E63946] hover:bg-[#E63946]/90 text-white"
               disabled={acceptMutation.isPending}
             >
               {acceptMutation.isPending ? (
@@ -185,6 +187,7 @@ export default function AcceptInvite() {
             <Button
               onClick={handleDecline}
               variant="outline"
+              className="bg-white/5 border-white/10"
               disabled={acceptMutation.isPending}
             >
               Decline

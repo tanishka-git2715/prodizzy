@@ -100,6 +100,7 @@ export class DatabaseStorage implements IStorage {
       case "investor": return InvestorProfile;
       case "partner": return PartnerProfile;
       case "individual": return IndividualProfile;
+      case "business": return Business;
       default: return StartupProfile;
     }
   }

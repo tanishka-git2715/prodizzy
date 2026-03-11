@@ -11,7 +11,7 @@ import { CohortTable } from "@/components/admin/CohortTable";
 import { FunnelChart } from "@/components/admin/FunnelChart";
 import { ensureHttps } from "@/lib/utils";
 
-type ProfileType = "startup" | "partner" | "individual";
+type ProfileType = "startup" | "partner" | "individual" | "business";
 type AdminTab = "overview" | "growth" | "marketplace" | "profiles" | ProfileType | "users";
 
 function authHeaders() {
@@ -630,6 +630,7 @@ export default function Admin() {
                   { type: "startup" as const, label: "Startups" },
                   { type: "partner" as const, label: "Partners" },
                   { type: "individual" as const, label: "Individuals" },
+                  { type: "business" as const, label: "Businesses" },
                   { type: "users" as const, label: "All Users" },
                 ].map(tab => (
                   <button

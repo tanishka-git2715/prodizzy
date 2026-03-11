@@ -90,9 +90,9 @@ export default function BusinessDashboard() {
 
   const getRoleBadge = (role: string) => {
     const badges = {
-      owner: { icon: Crown, color: "text-yellow-400 bg-yellow-500/20 border-yellow-500/30" },
-      admin: { icon: Shield, color: "text-blue-400 bg-blue-500/20 border-blue-500/30" },
-      member: { icon: UserCheck, color: "text-green-400 bg-green-500/20 border-green-500/30" }
+      owner: { icon: Crown, color: "text-yellow-400 bg-yellow-500/15 border-yellow-500/20" },
+      admin: { icon: Shield, color: "text-[#E63946] bg-[#E63946]/15 border-[#E63946]/20" },
+      member: { icon: UserCheck, color: "text-white/70 bg-white/5 border-white/10" }
     };
     const badge = badges[role as keyof typeof badges] || badges.member;
     const Icon = badge.icon;
@@ -152,8 +152,8 @@ export default function BusinessDashboard() {
             </Button>
 
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                <Building2 className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-xl bg-[#E63946]/10 border border-[#E63946]/20 flex items-center justify-center">
+                <Building2 className="w-8 h-8 text-[#E63946]" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold mb-1">{business.business_name}</h1>
