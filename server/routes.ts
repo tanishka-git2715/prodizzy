@@ -508,9 +508,13 @@ export async function registerRoutes(
   app.post("/api/business", ensureAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user._id?.toString() || req.user.id;
+      const ownerEmail = req.user.email;
+      if (!ownerEmail) {
+        return res.status(400).json({ message: "User email is required to create a business" });
+      }
       const input = insertBusinessSchema.parse(req.body);
 
-      const business = await storage.createBusiness(userId, input);
+      const business = await storage.createBusiness(userId, input, ownerEmail);
       res.status(201).json(business);
     } catch (err) {
       if (err instanceof z.ZodError) {

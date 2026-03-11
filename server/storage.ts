@@ -55,7 +55,7 @@ export interface IStorage {
   getMarketplaceHealth(): Promise<any>;
 
   // Business Methods
-  createBusiness(userId: string, businessData: any): Promise<any>;
+  createBusiness(userId: string, businessData: any, ownerEmail: string): Promise<any>;
   getUserBusinesses(userId: string): Promise<any[]>;
   getBusinessById(businessId: string): Promise<any | undefined>;
   updateBusiness(businessId: string, updates: any): Promise<any>;
@@ -812,7 +812,7 @@ export class DatabaseStorage implements IStorage {
   // BUSINESS METHODS
   // =============================================
 
-  async createBusiness(userId: string, businessData: any): Promise<any> {
+  async createBusiness(userId: string, businessData: any, ownerEmail: string): Promise<any> {
     const business = new Business({
       owner_user_id: userId,
       ...businessData,
@@ -821,10 +821,12 @@ export class DatabaseStorage implements IStorage {
     });
     await business.save();
 
+    const email = ownerEmail;
+
     // Create owner team member record
     await this.inviteTeamMember(
       business._id.toString(),
-      businessData.email || "",
+      email,
       userId,
       "owner",
       {
@@ -838,7 +840,7 @@ export class DatabaseStorage implements IStorage {
     // Auto-accept owner's team member record
     const ownerMember = await TeamMember.findOne({
       business_id: business._id,
-      email: businessData.email
+      email
     });
     if (ownerMember) {
       ownerMember.user_id = userId;
