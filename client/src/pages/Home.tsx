@@ -171,14 +171,23 @@ export default function Home() {
   };
 
 
-  // If user clicks "Join now": show auth modal gateway (sign-in box) first, unless already in dashboard
+  // If user clicks "Join now": 
+  // - If fully onboarded, go straight to dashboard
+  // - If logged in but not onboarded, go straight to role selection (no extra sign-in)
+  // - If not logged in, open auth modal
   const handleJoinNow = () => {
-    if (session && profileStatus?.hasCompletedProfile) {
-      setLocation("/dashboard");
+    if (session) {
+      if (profileStatus?.hasCompletedProfile) {
+        setLocation("/dashboard");
+        return;
+      }
+      // Logged-in but not yet onboarded: skip login, go to role selection
+      setPendingRole(null);
+      setShowRoleModal(true);
       return;
     }
 
-    // Always show Auth Modal as the gateway for un-onboarded users
+    // Not logged in: open auth modal and remember intent
     setPendingRole("intent_join");
     setShowAuthModal(true);
   };
@@ -189,12 +198,24 @@ export default function Home() {
   };
 
   const handleRoleCardClick = (role: "startup" | "partner" | "individual") => {
-    if (session && profileStatus?.hasCompletedProfile) {
-      setLocation("/dashboard");
+    if (session) {
+      if (profileStatus?.hasCompletedProfile) {
+        setLocation("/dashboard");
+        return;
+      }
+
+      // Logged-in but not yet onboarded: go directly into the relevant onboarding flow
+      if (role === "startup") {
+        setLocation("/join-startup");
+      } else if (role === "partner") {
+        setLocation("/partner-onboard");
+      } else if (role === "individual") {
+        setLocation("/individual-onboard");
+      }
       return;
     }
 
-    // Always show Auth Modal as the gateway
+    // Not logged in: open auth modal and remember chosen role
     setPendingRole(role);
     setShowAuthModal(true);
   };
