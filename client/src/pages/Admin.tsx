@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2, Users, TrendingUp, Activity, FileText } from "lucide-react";
-import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
+import type { StartupProfile, PartnerProfile, IndividualProfile, Business } from "@shared/schema";
 import { MetricCard } from "@/components/admin/MetricCard";
 import { GrowthChart } from "@/components/admin/GrowthChart";
 import { CohortTable } from "@/components/admin/CohortTable";
@@ -133,6 +133,139 @@ function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; 
                   {profile.linkedin_url && <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
                   {profile.deck_link && <a href={ensureHttps(profile.deck_link)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Deck</a>}
                   {profile.website && <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Website</a>}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function BusinessProfileRow({ profile, profileType }: { profile: Business; profileType: ProfileType }) {
+  const [expanded, setExpanded] = useState(false);
+  const qc = useQueryClient();
+
+  const approveMutation = useMutation({
+    mutationFn: (approved: boolean) =>
+      fetch(`/api/admin?id=${profile._id}&type=${profileType}`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ approved }),
+      }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () =>
+      fetch(`/api/admin?id=${profile._id}&type=${profileType}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      }).then(r => r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles", profileType] }),
+  });
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this business?")) {
+      deleteMutation.mutate();
+    }
+  };
+
+  return (
+    <div className={`border rounded-xl transition-colors ${profile.approved ? "border-green-500/20 bg-green-500/5" : "border-white/8 bg-white/[0.02]"}`}>
+      <div className="px-5 py-4 flex items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-white font-medium text-sm">{profile.business_name}</span>
+            <Tag label={profile.business_type} />
+            {profile.industry && profile.industry.length > 0 && (
+              Array.isArray(profile.industry)
+                ? profile.industry.map(ind => <Tag key={ind} label={ind} />)
+                : <Tag label={profile.industry as any} />
+            )}
+            {profile.approved
+              ? <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/15 text-green-400 border border-green-500/20">Approved</span>
+              : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Pending</span>
+            }
+          </div>
+          <p className="text-white/35 text-xs mt-0.5 truncate">
+            {profile.location || "Location —"}{profile.team_size ? ` · Team: ${profile.team_size}` : ""}{profile.founded_year ? ` · Founded ${profile.founded_year}` : ""}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {!profile.approved ? (
+            <button
+              onClick={() => approveMutation.mutate(true)}
+              disabled={approveMutation.isPending}
+              className="flex items-center gap-1 bg-green-500/15 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-green-500/25 transition-colors disabled:opacity-50"
+            >
+              <Check className="w-3 h-3" /> Approve
+            </button>
+          ) : (
+            <button
+              onClick={() => approveMutation.mutate(false)}
+              disabled={approveMutation.isPending}
+              className="flex items-center gap-1 bg-red-500/15 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-red-500/25 transition-colors disabled:opacity-50"
+            >
+              <X className="w-3 h-3" /> Revoke
+            </button>
+          )}
+          <button
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+            className="flex items-center gap-1.5 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
+          >
+            <Trash2 className="w-3 h-3" /> Delete
+          </button>
+          <button onClick={() => setExpanded(e => !e)} className="text-white/30 hover:text-white/60 transition-colors p-1">
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 border-t border-white/6 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              {profile.description && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Description</p>
+                  <p className="text-white/65 leading-relaxed">{profile.description}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Location</p>
+                <p className="text-white/65">{profile.location || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Team Size</p>
+                <p className="text-white/65">{profile.team_size || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Founded Year</p>
+                <p className="text-white/65">{profile.founded_year || "—"}</p>
+              </div>
+              <div className="sm:col-span-2 pt-2 border-t border-white/6">
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Links</p>
+                <div className="flex flex-wrap gap-4 text-xs text-white/50">
+                  {profile.website && (
+                    <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">
+                      Website
+                    </a>
+                  )}
+                  {profile.linkedin_url && (
+                    <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
+                      LinkedIn
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -688,7 +821,8 @@ export default function Admin() {
                   const pt = profileTab as ProfileType;
                   if (profileTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
                   if (profileTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
-                  return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                if (profileTab === "individual") return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                return <BusinessProfileRow key={p._id} profile={p as Business} profileType={pt} />;
                 })}
               </div>
             )}
@@ -701,7 +835,8 @@ export default function Admin() {
                   const pt = profileTab as ProfileType;
                   if (profileTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
                   if (profileTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
-                  return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                if (profileTab === "individual") return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                return <BusinessProfileRow key={p._id} profile={p as Business} profileType={pt} />;
                 })}
               </div>
             )}
