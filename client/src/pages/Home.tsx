@@ -173,11 +173,14 @@ export default function Home() {
 
   // If user clicks "Join now": 
   // - If fully onboarded, go straight to dashboard
+  // - If logged in but profile status is still loading/unknown, optimistically go to dashboard
   // - If logged in but not onboarded, go straight to role selection (no extra sign-in)
   // - If not logged in, open auth modal
   const handleJoinNow = () => {
     if (session) {
-      if (profileStatus?.hasCompletedProfile) {
+      // If we already know the user is fully onboarded OR profile check is still loading,
+      // just send them to the dashboard instead of re-triggering onboarding.
+      if (profileStatus?.hasCompletedProfile || loadingProfile || !profileStatus) {
         setLocation("/dashboard");
         return;
       }
@@ -199,7 +202,9 @@ export default function Home() {
 
   const handleRoleCardClick = (role: "startup" | "partner" | "individual") => {
     if (session) {
-      if (profileStatus?.hasCompletedProfile) {
+      // If user is fully onboarded OR we don't yet know (profile still loading),
+      // treat this as a dashboard entry instead of re-onboarding.
+      if (profileStatus?.hasCompletedProfile || loadingProfile || !profileStatus) {
         setLocation("/dashboard");
         return;
       }
