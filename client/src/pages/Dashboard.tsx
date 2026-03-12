@@ -720,37 +720,12 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 
                     {/* Column 2 */}
                     <div className="space-y-6">
-                      {!isShortPath && !isInvestor && (
-                        <div className="space-y-3">
-                          <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Requirements</h3>
-                          <div className="space-y-4">
-                            <div>
-                              <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {lookingFor.map(tag => (
-                                  <Tag key={tag} label={tag} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
-                                ))}
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <DetailRow label="Availability" value={availability} />
-                              <DetailRow label="Work Mode" value={workMode} />
-                            </div>
-                            {roles.includes("Founder") && (
-                              <div className="p-3 bg-red-500/5 rounded-xl border border-red-500/10">
-                                <p className="text-[10px] text-red-400/60 uppercase mb-1 font-bold">Founder Status</p>
-                                <p className="text-sm text-white/70">{founderStatus || "Exploring"}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
 
                       {/* Role Specific Details - Extended */}
                       {(roles.includes("Investor") || roles.includes("Student") || roles.includes("Working Professional") ||
                         roles.includes("Freelancer / Service Provider") || roles.includes("Consultant / Mentor / Advisor") ||
                         roles.includes("Content Creator / Community Admin")) && (
-                          <div className="space-y-3 pt-2">
+                          <div className="space-y-3">
                             <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Role-Specific Details</h3>
                             <div className="space-y-4 p-4 bg-white/[0.02] border border-white/5 rounded-xl">
                               {roles.includes("Investor") && investorData && (
@@ -1051,27 +1026,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                     </div>
                   )}
 
-                  {!isShortPath && !isInvestor && (
-                    <div className="space-y-4">
-                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Preferences</h3>
-                      <div className="space-y-6">
-                        <div className="space-y-2">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
-                          <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
-                            <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
-                          </div>
-                          <div className="space-y-2">
-                            <p className="text-xs text-white/35 uppercase tracking-wider">Work Mode</p>
-                            <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="pt-6 border-t border-white/10 flex gap-4">
                     <button
