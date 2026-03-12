@@ -26,13 +26,13 @@ function StepHeader({ step, total, title }: { step: number; total: number; title
   );
 }
 
-function Field({ label, value, onChange, placeholder, type = "text", multiline, optional }: {
+function Field({ label, value, onChange, placeholder, type = "text", multiline, optional, className }: {
   label: string; value: string; onChange: (v: string) => void;
-  placeholder?: string; type?: string; multiline?: boolean; optional?: boolean;
+  placeholder?: string; type?: string; multiline?: boolean; optional?: boolean; className?: string;
 }) {
   const base = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-white/30 transition-colors resize-none";
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className || ""}`}>
       <label className="block text-xs font-medium text-white/40 uppercase tracking-wider">
         {label} {optional && <span className="lowercase opacity-50 font-normal">(optional)</span>}
       </label>
@@ -596,7 +596,7 @@ export default function IndividualOnboard() {
 
   const steps = [
     <div key="0" className="space-y-6">
-      <StepHeader step={0} total={effectiveTotalSteps} title="Create Your Professional Profile" />
+      <StepHeader step={0} total={effectiveTotalSteps} title="Create Your Profile" />
       <div className="space-y-6">
         {/* Role Selection Moved to Top & Single Select Cards */}
         <div className="space-y-3">
@@ -641,9 +641,9 @@ export default function IndividualOnboard() {
 
         <div className="space-y-4 pt-4 border-t border-white/5">
           <Field label="Full Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Date of Birth" value={dob} onChange={setDob} type="date" />
-            <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="Mumbai, India" />
+          <div className="flex gap-4">
+            <Field label="Date of Birth" value={dob} onChange={setDob} type="date" className="w-[160px]" />
+            <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="Mumbai, India" className="flex-1" />
           </div>
           <Field label="Email" value={email} onChange={setEmail} placeholder="you@email.com" />
           <Field label="LinkedIn Profile" value={linkedinUrl} onChange={setLinkedinUrl} optional placeholder="https://linkedin.com/in/..." />
@@ -770,7 +770,7 @@ export default function IndividualOnboard() {
       <div className="min-h-screen bg-black flex items-center justify-center px-6">
         <div className="w-full max-w-sm text-center space-y-6">
           <img src="/logo.png" alt="Prodizzy" className="w-12 h-12 rounded-xl mx-auto mb-4" />
-          <h1 className="text-2xl font-semibold text-white">Professional Onboarding</h1>
+          <h1 className="text-2xl font-semibold text-white">Onboarding</h1>
           <p className="text-white/40 text-sm mt-2">Please sign in with Google to begin your onboarding.</p>
           <button onClick={() => window.location.href = "/api/auth/google"}
             className="w-full bg-white text-black font-semibold py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-white/90 transition-colors">

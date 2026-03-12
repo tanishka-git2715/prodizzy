@@ -681,16 +681,13 @@ export default function Admin() {
         {/* Overview Tab */}
         {activeTab === "overview" && overviewData && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <MetricCard title="Total Users" value={overviewData.totalUsers} subtitle="All registered users" />
+              <MetricCard title="Individuals" value={overviewData.individualCount} subtitle="Total individual profiles" />
+              <MetricCard title="Businesses" value={overviewData.businessCount} subtitle="Total business profiles" />
               <MetricCard title="Monthly Active Users" value={overviewData.mau} subtitle={`${overviewData.engagementRate}% engagement rate`} />
               <MetricCard title="Total Connections" value={overviewData.totalConnections} subtitle={`${overviewData.acceptanceRate}% acceptance rate`} />
               <MetricCard title="Daily Active Users" value={overviewData.dau} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <MetricCard title="Individuals" value={overviewData.individualCount} subtitle="Total individual profiles" />
-              <MetricCard title="Businesses" value={overviewData.businessCount} subtitle="Total business profiles" />
             </div>
 
             {engagementData && <FunnelChart data={engagementData} />}

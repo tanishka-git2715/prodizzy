@@ -59,9 +59,9 @@ function PickMany({ options, value, onChange }: { options: string[]; value: stri
   );
 }
 
-function FormField({ label, value, onChange, placeholder, type = "text" }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+function FormField({ label, value, onChange, placeholder, type = "text", className }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; className?: string }) {
   return (
-    <div className="space-y-1.5 flex-1">
+    <div className={`space-y-1.5 ${className || "flex-1"}`}>
       <p className="text-[10px] text-white/25 uppercase tracking-wider ml-1">{label}</p>
       <input
         type={type}
@@ -664,7 +664,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                         <FormField label="Email" value={email} onChange={setEmail} type="email" />
                         <FormField label="Phone Number" value={phone} onChange={setPhone} />
                         <FormField label="Location" value={location} onChange={setLocationState} />
-                        <FormField label="Date of Birth" value={dob} onChange={setDob} placeholder="DD/MM/YYYY" />
+                        <div className="flex gap-6">
+                          <FormField label="Date of Birth" value={dob} onChange={setDob} placeholder="DD/MM/YYYY" className="w-[160px]" />
+                        </div>
                       </div>
                     </div>
 
