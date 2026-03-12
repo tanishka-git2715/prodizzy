@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { ChevronLeft, LogIn, Check, ChevronDown, X, Search, Upload, Rocket, Gem, GraduationCap, Briefcase, Palette, Brain, Video, Sparkles } from "lucide-react";
+import { ChevronLeft, LogIn, Check, ChevronDown, X, Search, Upload } from "lucide-react";
 
 const TOTAL_STEPS = 3;
 
@@ -423,35 +423,33 @@ export default function IndividualOnboard() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { id: "Founder", icon: Rocket },
-              { id: "Investor", icon: Gem },
-              { id: "Student", icon: GraduationCap },
-              { id: "Working Professional", icon: Briefcase },
-              { id: "Freelancer / Service Provider", icon: Palette },
-              { id: "Consultant / Mentor / Advisor", icon: Brain },
-              { id: "Content Creator / Community Admin", icon: Video },
-              { id: "Other (Specify)", icon: Sparkles }
-            ].map((role) => {
-              const Icon = role.icon;
-              return (
-                <button
-                  key={role.id}
-                  onClick={() => setRoles([role.id])}
-                  className={`relative flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${roles.includes(role.id)
-                      ? "bg-red-500/10 border-red-500/50 text-white"
-                      : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
-                    }`}
-                >
-                  <Icon className={`w-6 h-6 mb-3 transition-colors ${roles.includes(role.id) ? "text-red-500" : "text-white/20"}`} />
-                  <span className="text-[11px] font-medium leading-tight text-center">{role.id}</span>
-                  {roles.includes(role.id) && (
-                    <motion.div layoutId="active-role" className="absolute top-2 right-2">
-                      <Check className="w-3 h-3 text-red-500" />
-                    </motion.div>
-                  )}
-                </button>
-              );
-            })}
+              { id: "Founder" },
+              { id: "Investor" },
+              { id: "Student" },
+              { id: "Working Professional" },
+              { id: "Freelancer / Service Provider" },
+              { id: "Consultant / Mentor / Advisor" },
+              { id: "Content Creator / Community Admin" },
+              { id: "Other (Specify)" }
+            ].map((role) => (
+              <button
+                key={role.id}
+                onClick={() => setRoles([role.id])}
+                className={`relative flex flex-col items-center justify-center p-6 min-h-[100px] rounded-2xl border transition-all ${roles.includes(role.id)
+                    ? "bg-red-500/10 border-red-500/50 text-white"
+                    : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
+                  }`}
+              >
+                <span className="text-[13px] font-semibold leading-tight text-center tracking-tight">
+                  {role.id}
+                </span>
+                {roles.includes(role.id) && (
+                  <motion.div layoutId="active-role" className="absolute top-3 right-3">
+                    <Check className="w-3.5 h-3.5 text-red-500" />
+                  </motion.div>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
