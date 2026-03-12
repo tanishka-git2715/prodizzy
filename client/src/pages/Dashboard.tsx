@@ -596,6 +596,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   }
 
   const isFounder = (profile as any).roles?.includes("Founder");
+  const isInvestor = (profile as any).roles?.includes("Investor");
+  const isOther = (profile as any).roles?.includes("Other (Specify)");
+  const isShortPath = isFounder || isOther;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
@@ -694,50 +697,54 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                         </div>
                       </div>
 
-                      <div className="space-y-3">
-                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Profile & Expertise</h3>
-                        <div className="space-y-4">
-                          <div>
-                            <p className="text-[10px] text-white/20 uppercase mb-1">Roles</p>
-                            <p className="text-sm text-white/70">{roles.join(", ")}</p>
-                          </div>
-                          {skills.length > 0 && (
+                      {!isShortPath && !isInvestor && (
+                        <div className="space-y-3">
+                          <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Profile & Expertise</h3>
+                          <div className="space-y-4">
                             <div>
-                              <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
-                              <div className="flex flex-wrap gap-1.5 pt-1">
-                                {skills.map(s => <Tag key={s} label={s} />)}
-                              </div>
+                              <p className="text-[10px] text-white/20 uppercase mb-1">Roles</p>
+                              <p className="text-sm text-white/70">{roles.join(", ")}</p>
                             </div>
-                          )}
+                            {skills.length > 0 && (
+                              <div>
+                                <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                  {skills.map(s => <Tag key={s} label={s} />)}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Column 2 */}
                     <div className="space-y-6">
-                      <div className="space-y-3">
-                        <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Requirements</h3>
-                        <div className="space-y-4">
-                          <div>
-                            <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {lookingFor.map(tag => (
-                                <Tag key={tag} label={tag} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
-                              ))}
+                      {!isShortPath && !isInvestor && (
+                        <div className="space-y-3">
+                          <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Requirements</h3>
+                          <div className="space-y-4">
+                            <div>
+                              <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {lookingFor.map(tag => (
+                                  <Tag key={tag} label={tag} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <DetailRow label="Availability" value={availability} />
-                            <DetailRow label="Work Mode" value={workMode} />
-                          </div>
-                          {roles.includes("Founder") && (
-                            <div className="p-3 bg-red-500/5 rounded-xl border border-red-500/10">
-                              <p className="text-[10px] text-red-400/60 uppercase mb-1 font-bold">Founder Status</p>
-                              <p className="text-sm text-white/70">{founderStatus || "Exploring"}</p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <DetailRow label="Availability" value={availability} />
+                              <DetailRow label="Work Mode" value={workMode} />
                             </div>
-                          )}
+                            {roles.includes("Founder") && (
+                              <div className="p-3 bg-red-500/5 rounded-xl border border-red-500/10">
+                                <p className="text-[10px] text-red-400/60 uppercase mb-1 font-bold">Founder Status</p>
+                                <p className="text-sm text-white/70">{founderStatus || "Exploring"}</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Role Specific Details - Extended */}
                       {(roles.includes("Investor") || roles.includes("Student") || roles.includes("Working Professional") ||
