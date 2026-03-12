@@ -270,7 +270,6 @@ export class DatabaseStorage implements IStorage {
     if (Model === IndividualProfile) {
       if (type === "startup") query = { roles: "Founder" };
       else if (type === "partner") query = { roles: "Service Partner / Agency" };
-      else if (type === "individual") query = { roles: { $nin: ["Founder", "Service Partner / Agency"] } };
     }
 
     const docs = await (Model as any).find(query, projection).sort({ createdAt: -1 }).lean();
@@ -889,6 +888,8 @@ export class DatabaseStorage implements IStorage {
     const startupCount = await StartupProfile.countDocuments({ approved: true });
     const investorCount = await InvestorProfile.countDocuments({});
     const partnerCount = await PartnerProfile.countDocuments({ approved: true });
+    const individualCount = await IndividualProfile.countDocuments({});
+    const businessCount = await Business.countDocuments({});
 
     // Startup to investor ratio
     const startupToInvestorRatio = investorCount > 0
@@ -910,6 +911,8 @@ export class DatabaseStorage implements IStorage {
       startupCount,
       investorCount,
       partnerCount,
+      individualCount,
+      businessCount,
       startupToInvestorRatio: parseFloat(startupToInvestorRatio),
       activeSellers: activeInvestors.length,
       totalSellers,

@@ -688,10 +688,9 @@ export default function Admin() {
               <MetricCard title="Daily Active Users" value={overviewData.dau} />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <MetricCard title="Startups" value={overviewData.startupCount} subtitle="Approved profiles" />
-              <MetricCard title="Investors" value={overviewData.investorCount} subtitle="Active on platform" />
-              <MetricCard title="Partners" value={overviewData.partnerCount} subtitle="Approved profiles" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <MetricCard title="Individuals" value={overviewData.individualCount} subtitle="Total individual profiles" />
+              <MetricCard title="Businesses" value={overviewData.businessCount} subtitle="Total business profiles" />
             </div>
 
             {engagementData && <FunnelChart data={engagementData} />}
@@ -782,6 +781,8 @@ export default function Admin() {
               <div className="flex gap-4 overflow-x-auto no-scrollbar">
                 {[
                   { type: "individual" as const, label: "Individuals" },
+                  { type: "startup" as const, label: "Founders" },
+                  { type: "partner" as const, label: "Partners" },
                   { type: "business" as const, label: "Businesses" },
                   { type: "users" as const, label: "All Users" },
                 ].map(tab => (
@@ -839,7 +840,8 @@ export default function Admin() {
                   <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
                   {pending.map(p => {
                     const pt = profileTab as ProfileType;
-                    if (profileTab === "individual") return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                    if (profileTab === "individual" || profileTab === "startup" || profileTab === "partner") 
+                      return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
                     return <BusinessProfileRow key={p._id} profile={p as Business} profileType={pt} />;
                   })}
                 </div>
@@ -851,7 +853,8 @@ export default function Admin() {
                   <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Approved ({approved.length})</h2>
                   {approved.map(p => {
                     const pt = profileTab as ProfileType;
-                    if (profileTab === "individual") return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                    if (profileTab === "individual" || profileTab === "startup" || profileTab === "partner") 
+                      return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
                     return <BusinessProfileRow key={p._id} profile={p as Business} profileType={pt} />;
                   })}
                 </div>
