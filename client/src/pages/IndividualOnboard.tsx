@@ -435,9 +435,9 @@ export default function IndividualOnboard() {
               <button
                 key={role.id}
                 onClick={() => setRoles([role.id])}
-                className={`relative flex flex-col items-center justify-center p-6 min-h-[100px] rounded-2xl border transition-all ${roles.includes(role.id)
-                    ? "bg-red-500/10 border-red-500/50 text-white"
-                    : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
+                className={`relative flex flex-col items-center justify-center p-3 sm:p-4 min-h-[64px] rounded-xl border transition-all ${roles.includes(role.id)
+                  ? "bg-red-500/10 border-red-500/50 text-white"
+                  : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
                   }`}
               >
                 <span className="text-[13px] font-semibold leading-tight text-center tracking-tight">
