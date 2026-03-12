@@ -96,12 +96,12 @@ export class DatabaseStorage implements IStorage {
 
   private getModelByType(type: string) {
     switch (type) {
-      case "startup": return StartupProfile;
-      case "investor": return InvestorProfile;
-      case "partner": return PartnerProfile;
+      case "startup":
+      case "partner":
       case "individual": return IndividualProfile;
+      case "investor": return InvestorProfile;
       case "business": return Business;
-      default: return StartupProfile;
+      default: return IndividualProfile;
     }
   }
 
@@ -131,10 +131,10 @@ export class DatabaseStorage implements IStorage {
 
     // 3. Robust fallback: search all potential profile models
     const models = [
+      { model: IndividualProfile, type: "individual" },
+      { model: InvestorProfile, type: "investor" },
       { model: StartupProfile, type: "startup" },
       { model: PartnerProfile, type: "partner" },
-      { model: IndividualProfile, type: "individual" },
-      { model: InvestorProfile, type: "investor" }
     ];
 
     const results = await Promise.all(
@@ -264,7 +264,15 @@ export class DatabaseStorage implements IStorage {
       intent_promotions: 0,
       intent_fundraising: 0
     };
-    const docs = await (Model as any).find({}, projection).sort({ createdAt: -1 }).lean();
+
+    let query: any = {};
+    if (Model === IndividualProfile) {
+      if (type === "startup") query = { roles: "Founder" };
+      else if (type === "partner") query = { roles: "Service Partner / Agency" };
+      else if (type === "individual") query = { roles: { $nin: ["Founder", "Service Partner / Agency"] } };
+    }
+
+    const docs = await (Model as any).find(query, projection).sort({ createdAt: -1 }).lean();
     return docs.map((d: any) => ({
       ...d,
       id: d._id.toString()
@@ -304,6 +312,30 @@ export class DatabaseStorage implements IStorage {
       $or: [{ user_id: actualId }, { user_id: userId }]
     });
     if (investorProfile) return investorProfile;
+
+    // Check IndividualProfile for "Investor" role
+    const indivProfile = await IndividualProfile.findOne({
+      $or: [{ user_id: actualId }, { user_id: userId }],
+      roles: "Investor",
+      onboarding_completed: true
+    });
+    if (indivProfile && indivProfile.investor_data) {
+      investorProfile = await InvestorProfile.create({
+        user_id: actualId,
+        email: indivProfile.email || "",
+        full_name: indivProfile.full_name || "",
+        firm_name: "NA",
+        investor_type: indivProfile.investor_data.investor_types?.[0] || "Angel",
+        check_size: indivProfile.investor_data.ticket_size || "<$50k",
+        sectors: indivProfile.investor_data.industries || [],
+        stages: indivProfile.investor_data.investment_stages || [],
+        geography: indivProfile.investor_data.geography || "",
+        onboarding_completed: true,
+        approved: !!indivProfile.approved,
+      });
+      return investorProfile;
+    }
+
     const partnerProfile = await PartnerProfile.findOne({
       $or: [{ user_id: actualId }, { user_id: userId }],
       partner_type: "Investor",
@@ -399,6 +431,9 @@ export class DatabaseStorage implements IStorage {
     const actualId = await this.getCanonicalUserId(startupUserId);
     const startupProfile = await StartupProfile.findOne({
       $or: [{ user_id: actualId }, { user_id: startupUserId }]
+    }) || await IndividualProfile.findOne({
+      $or: [{ user_id: actualId }, { user_id: startupUserId }],
+      roles: "Founder"
     });
     if (!startupProfile) return [];
 
@@ -482,7 +517,10 @@ export class DatabaseStorage implements IStorage {
 
   async getApprovedStartupsForInvestor(filters: DiscoverFilters) {
     const query: any = {
-      approved: true,
+      $or: [
+        { approved: true, roles: "Founder" },
+        { approved: true, type: "startup" } // Compatibility
+      ]
     };
 
     if (filters.industry) {
@@ -507,16 +545,20 @@ export class DatabaseStorage implements IStorage {
       phone: 0
     };
 
-    const startups = await StartupProfile.find(query, projection)
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
+    // Search both StartupProfile and IndividualProfile (Founder role)
+    const [legacyStartups, newStartups] = await Promise.all([
+      StartupProfile.find(query, projection).sort({ createdAt: -1 }).limit(100).lean(),
+      IndividualProfile.find(query, projection).sort({ createdAt: -1 }).limit(100).lean()
+    ]);
+
+    const startups = [...legacyStartups, ...newStartups];
 
     // Add founder_label for anonymization and id for frontend
-    return startups.map(s => ({
+    return startups.map((s: any) => ({
       ...s,
+      startup_data: s.startup_data, // Ensure startup_data is present for unified profiles
       id: s._id.toString(),
-      founder_label: s.role || "Founder"
+      founder_label: s.role || s.startup_data?.role || (s.roles?.includes("Founder") ? "Founder" : "Startup")
     }));
   }
 
@@ -528,9 +570,13 @@ export class DatabaseStorage implements IStorage {
     if (!investorProfile) return [];
 
     // Get approved startups (fundraising is optional)
-    const startups = await StartupProfile.find({
-      approved: true,
-    }).limit(100).lean();
+    // Get approved startups from both collections
+    const [legacyStartups, newStartups] = await Promise.all([
+      StartupProfile.find({ approved: true }).limit(50).lean(),
+      IndividualProfile.find({ approved: true, roles: "Founder" }).limit(50).lean()
+    ]);
+
+    const startups = [...legacyStartups, ...newStartups];
 
     // Score each startup
     const scoredStartups = startups.map(startup => {
@@ -543,9 +589,9 @@ export class DatabaseStorage implements IStorage {
 
     return scoredStartups.slice(0, limit).map(({ startup, score }) => ({
       ...startup,
-      id: startup._id.toString(),
+      id: (startup as any)._id.toString(),
       match_score: score,
-      founder_label: startup.role || "Founder",
+      founder_label: (startup as any).role || (startup as any).startup_data?.role || ((startup as any).roles?.includes("Founder") ? "Founder" : "Startup"),
       // Anonymize
       email: undefined,
       full_name: undefined,
@@ -560,16 +606,18 @@ export class DatabaseStorage implements IStorage {
     let score = 0;
 
     // Sector match (40 points max)
-    if (investor.sectors && startup.industry) {
+    const industry = startup.industry || startup.startup_data?.industry;
+    if (investor.sectors && industry) {
       const investorSectors = investor.sectors;
-      const startupIndustries = Array.isArray(startup.industry) ? startup.industry : [startup.industry];
+      const startupIndustries = Array.isArray(industry) ? industry : [industry];
       const sectorMatch = investorSectors.some((s: string) => startupIndustries.includes(s));
       if (sectorMatch) score += 40;
     }
 
     // Stage match (30 points max)
-    if (investor.stages && startup.stage) {
-      const stageMatch = investor.stages.includes(startup.stage);
+    const stage = startup.stage || startup.startup_data?.stage;
+    if (investor.stages && stage) {
+      const stageMatch = investor.stages.includes(stage);
       if (stageMatch) score += 30;
     }
 

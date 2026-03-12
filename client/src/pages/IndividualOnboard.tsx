@@ -201,7 +201,7 @@ function MultiSelectDropdown({
 }
 
 // --- Options ---
-const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
+const ROLE_OPTIONS = ["Founder", "Investor", "Service Partner / Agency", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
 
 const FOUNDER_STATUS_OPTIONS = ["Exploring an idea", "Currently working on an MVP", "Already building a product", "Generating early revenue / Growing", "Scaling an established business"];
 const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
@@ -209,6 +209,15 @@ const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early 
 const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
 const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Open to All"];
 const GEO_OPTIONS = ["India", "Global", "Specific Regions (Specify)"];
+
+const STARTUP_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
+const TEAM_SIZE_OPTIONS = ["Solo", "2–10", "11–50", "51–500", "500–1000", "1000+"];
+const REGISTERED_OPTIONS = ["Yes", "No"];
+
+const PARTNER_TYPE_OPTIONS = ["Agency", "Investor", "Service Provider", "Institutional Firm"];
+const PRICING_MODEL_OPTIONS = ["Fixed Price", "Monthly Retainer", "Hourly", "Equity-based", "Mixed"];
+const CAPACITY_OPTIONS = ["0-1 Project/mo", "2-5 Projects/mo", "6-10 Projects/mo", "Unlimited"];
+
 
 const STUDY_YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Final Year", "Postgraduate", "Recent Graduate"];
 const EXP_OPTIONS = ["0–2 years", "2–4 years", "4–8 years", "8+ years"];
@@ -321,6 +330,37 @@ export default function IndividualOnboard() {
   // Founder details
   const [founderStatus, setFounderStatus] = useState("");
 
+  // --- State: Startup (Founder) ---
+  const [startupCompanyName, setStartupCompanyName] = useState("");
+  const [startupRole, setStartupRole] = useState("");
+  const [startupStage, setStartupStage] = useState("");
+  const [startupIndustry, setStartupIndustry] = useState<string[]>([]);
+  const [startupTeamSize, setStartupTeamSize] = useState("");
+  const [isRegistered, setIsRegistered] = useState("");
+  const [productDesc, setProductDesc] = useState("");
+  const [targetAudience, setTargetAudience] = useState("");
+  const [numUsers, setNumUsers] = useState("");
+  const [monthlyRevenue, setMonthlyRevenue] = useState("");
+  const [tractionHighlights, setTractionHighlights] = useState("");
+  const [startupWebsite, setStartupWebsite] = useState("");
+
+  // --- State: Partner (Service Partner / Agency) ---
+  const [partnerCompanyName, setPartnerCompanyName] = useState("");
+  const [partnerRole, setPartnerRole] = useState("");
+  const [partnerType, setPartnerType] = useState("");
+  const [partnerServices, setPartnerServices] = useState<string[]>([]);
+  const [partnerStages, setPartnerStages] = useState<string[]>([]);
+  const [pricingModel, setPricingModel] = useState("");
+  const [avgDealSize, setAvgDealSize] = useState("");
+  const [partnerYearsExp, setPartnerYearsExp] = useState("");
+  const [partnerTools, setPartnerTools] = useState("");
+  const [partnerCaseStudies, setPartnerCaseStudies] = useState("");
+  const [partnerClients, setPartnerClients] = useState("");
+  const [partnerCertifications, setPartnerCertifications] = useState("");
+  const [partnerCapacity, setPartnerCapacity] = useState("");
+  const [partnerBudget, setPartnerBudget] = useState("");
+  const [partnerWebsite, setPartnerWebsite] = useState("");
+
   // --- State: Step 3 (Skills & Availability) ---
   const [skills, setSkills] = useState<string[]>([]);
   const [availability, setAvailability] = useState("");
@@ -328,7 +368,7 @@ export default function IndividualOnboard() {
   const [lookingFor, setLookingFor] = useState<string[]>([]);
 
   const effectiveTotalSteps = roles.includes("Other (Specify)") ? 1
-    : (roles.includes("Founder") || roles.includes("Investor")) ? 2
+    : (roles.includes("Founder") || roles.includes("Investor") || roles.includes("Service Partner / Agency")) ? 2
       : 3;
 
   // --- Logic ---
@@ -370,6 +410,33 @@ export default function IndividualOnboard() {
     setProfileLinks("");
     setOtherRoleSpec("");
     setFounderStatus("");
+    setStartupCompanyName("");
+    setStartupRole("");
+    setStartupStage("");
+    setStartupIndustry([]);
+    setStartupTeamSize("");
+    setIsRegistered("");
+    setProductDesc("");
+    setTargetAudience("");
+    setNumUsers("");
+    setMonthlyRevenue("");
+    setTractionHighlights("");
+    setStartupWebsite("");
+    setPartnerCompanyName("");
+    setPartnerRole("");
+    setPartnerType("");
+    setPartnerServices([]);
+    setPartnerStages([]);
+    setPricingModel("");
+    setAvgDealSize("");
+    setPartnerYearsExp("");
+    setPartnerTools("");
+    setPartnerCaseStudies("");
+    setPartnerClients("");
+    setPartnerCertifications("");
+    setPartnerCapacity("");
+    setPartnerBudget("");
+    setPartnerWebsite("");
   }, [roles]);
 
   const toggle = (set: any, val: string) => set((curr: string[]) => curr.includes(val) ? curr.filter(x => x !== val) : [...curr, val]);
@@ -382,8 +449,9 @@ export default function IndividualOnboard() {
       return fullName.trim() && roles.length > 0 && userLocation.trim() && isEmailValid;
     }
     if (step === 1) {
-      if (roles.includes("Founder") && !founderStatus) return false;
+      if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || !startupStage || startupIndustry.length === 0 || !startupTeamSize || !isRegistered || !productDesc)) return false;
       if (roles.includes("Investor") && (!investorType || !ticketSize || preferredIndustries.length === 0)) return false;
+      if (roles.includes("Service Partner / Agency") && (!partnerCompanyName || !partnerRole || !partnerType || partnerServices.length === 0 || partnerStages.length === 0 || !pricingModel || !partnerYearsExp || !partnerCapacity)) return false;
       if (roles.includes("Student") && (!institution || !course || !studyYear)) return false;
       if (roles.includes("Working Professional") && (!currentCompany || !jobTitle || !totalExp || !noticePeriod)) return false;
       if (roles.includes("Freelancer / Service Provider") && (!freelanceExp || !engagementModel || !budgetRange)) return false;
@@ -399,25 +467,50 @@ export default function IndividualOnboard() {
     setSubmitting(true);
     setError("");
 
-    const payload = {
-      type: "individual",
+    const selectedRoles = roles; // Use the existing roles state
+    const isInvestor = selectedRoles.includes("Investor");
+    const isStudent = selectedRoles.includes("Student");
+    const isProfessional = selectedRoles.includes("Working Professional");
+    const isFreelancer = selectedRoles.includes("Freelancer / Service Provider");
+    const isConsultant = selectedRoles.includes("Consultant / Mentor / Advisor");
+    const isCreator = selectedRoles.includes("Content Creator / Community Admin");
+    const isFounderRole = selectedRoles.includes("Founder");
+    const isPartnerRole = selectedRoles.includes("Service Partner / Agency");
+
+    // NEW Profile structure for IndividualProfile
+    const payload: any = {
       full_name: fullName,
+      email,
       dob,
       location: userLocation,
-      email,
       linkedin_url: linkedinUrl || undefined,
       portfolio_url: portfolioUrl || undefined,
-      roles,
-      founder_status: roles.includes("Founder") ? founderStatus : undefined,
-      investor_data: roles.includes("Investor") ? {
-        investor_types: [investorType],
+      roles: selectedRoles,
+
+      founder_status: isFounderRole ? founderStatus : undefined,
+      skills: skills, // Using existing skills state
+      looking_for: lookingFor, // Using existing lookingFor state
+      availability, // Using existing availability state
+      work_mode: workMode, // Using existing workMode state
+
+      onboarding_completed: true,
+      type: "individual", // Always send as individual to the generic endpoint
+      other_role_details: roles.includes("Other (Specify)") ? otherRoleSpec : undefined,
+    };
+
+    if (isInvestor) {
+      payload.investor_data = {
+        investor_types: [investorType], // Using existing investorType
         investment_stages: investmentStages,
         ticket_size: ticketSize,
-        industries: preferredIndustries,
-        geography: geoFocus,
+        industries: preferredIndustries, // Using existing preferredIndustries
+        geography: geoFocus, // Using existing geoFocus
         specific_regions: geoFocus === "Specific Regions (Specify)" ? specificRegions : undefined,
-      } : undefined,
-      student_data: roles.includes("Student") ? {
+      };
+    }
+
+    if (isStudent) {
+      payload.student_data = {
         institution,
         course,
         year: studyYear,
@@ -426,38 +519,81 @@ export default function IndividualOnboard() {
           links: studentCommunities === "Yes" ? communityLinks.split(",").map(s => s.trim()) : [],
           admin_contact: adminContact,
         }
-      } : undefined,
-      professional_data: roles.includes("Working Professional") ? {
-        company: currentCompany,
-        title: jobTitle,
-        experience_years: totalExp,
+      };
+    }
+
+    if (isProfessional) {
+      payload.professional_data = {
+        company: currentCompany, // Using existing currentCompany
+        title: jobTitle, // Using existing jobTitle
+        experience_years: totalExp, // Using existing totalExp
         notice_period: noticePeriod,
-      } : undefined,
-      freelancer_data: roles.includes("Freelancer / Service Provider") ? {
-        service_areas: preferredIndustries, // Reuse industries or skills? List says Service Area
+      };
+    }
+
+    if (isFreelancer) {
+      payload.freelancer_data = {
+        service_areas: preferredIndustries, // Reusing preferredIndustries for now, or skills
         experience_years: freelanceExp,
         notable_clients: notableClients,
         engagement_model: engagementModel,
         budget_range: budgetRange,
-      } : undefined,
-      consultant_data: roles.includes("Consultant / Mentor / Advisor") ? {
-        expertise_areas: niche,
+      };
+    }
+
+    if (isConsultant) {
+      payload.consultant_data = {
+        expertise_areas: niche, // Using existing niche
         experience_level: consultantExp,
         support_types: supportTypes,
-      } : undefined,
-      creator_data: roles.includes("Content Creator / Community Admin") ? {
-        platforms,
+      };
+    }
+
+    if (isCreator) {
+      payload.creator_data = {
+        platforms: platforms, // Using existing platforms
         audience_size: audienceSize,
-        niches: niche,
-        profile_links: profileLinks.split(",").map(s => s.trim()),
-      } : undefined,
-      skills,
-      availability,
-      work_mode: workMode,
-      looking_for: lookingFor,
-      other_role_details: roles.includes("Other (Specify)") ? otherRoleSpec : undefined,
-      onboarding_completed: true,
-    };
+        niches: niche, // Using existing niche
+        profile_links: profileLinks.split(",").map(l => l.trim()).filter(Boolean),
+      };
+    }
+
+    if (isFounderRole) {
+      payload.startup_data = {
+        company_name: startupCompanyName,
+        role: startupRole,
+        stage: startupStage,
+        industry: startupIndustry,
+        team_size: startupTeamSize,
+        is_registered: isRegistered,
+        product_description: productDesc,
+        target_audience: targetAudience,
+        num_users: numUsers,
+        monthly_revenue: monthlyRevenue,
+        traction_highlights: tractionHighlights,
+        website: startupWebsite,
+      };
+    }
+
+    if (isPartnerRole) {
+      payload.partner_data = {
+        partner_type: partnerType,
+        services_offered: partnerServices,
+        stages_served: partnerStages,
+        pricing_model: pricingModel,
+        average_deal_size: avgDealSize,
+        years_experience: partnerYearsExp,
+        tools_tech_stack: partnerTools,
+        case_studies: partnerCaseStudies,
+        past_clients: partnerClients,
+        certifications: partnerCertifications,
+        monthly_capacity: partnerCapacity,
+        preferred_budget_range: partnerBudget,
+        website: partnerWebsite,
+        company_name: partnerCompanyName,
+        role: partnerRole,
+      };
+    }
 
     const res = await fetch("/api/profile", {
       method: "PUT",
@@ -490,6 +626,7 @@ export default function IndividualOnboard() {
             {[
               { id: "Founder" },
               { id: "Investor" },
+              { id: "Service Partner / Agency" },
               { id: "Student" },
               { id: "Working Professional" },
               { id: "Freelancer / Service Provider" },
@@ -541,11 +678,43 @@ export default function IndividualOnboard() {
 
         {roles.includes("Founder") && (
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Founder Info</h3>
+            <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Startup Info</h3>
             <Dropdown label="Current Status" options={FOUNDER_STATUS_OPTIONS} value={founderStatus} onChange={setFounderStatus} />
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
-              <p className="text-white/40 text-xs italic">Note: You will be asked to create your Business Dashboard after landing on the main dashboard.</p>
+            <Field label="Company Name" value={startupCompanyName} onChange={setStartupCompanyName} placeholder="e.g. Acme Inc." />
+            <Field label="Your Role" value={startupRole} onChange={setStartupRole} placeholder="e.g. CEO, Founder" />
+            <Dropdown label="Startup Stage" options={STARTUP_STAGE_OPTIONS} value={startupStage} onChange={setStartupStage} />
+            <MultiSelectDropdown label="Industry" options={INDUSTRY_OPTIONS} selected={startupIndustry} onToggle={(v) => toggle(setStartupIndustry, v)} />
+            <Dropdown label="Team Size" options={TEAM_SIZE_OPTIONS} value={startupTeamSize} onChange={setStartupTeamSize} />
+            <Dropdown label="Is your startup registered?" options={REGISTERED_OPTIONS} value={isRegistered} onChange={setIsRegistered} />
+            <Field label="Product Description" value={productDesc} onChange={setProductDesc} placeholder="What are you building?" multiline />
+            <Field label="Target Audience" value={targetAudience} onChange={setTargetAudience} placeholder="Who is it for?" />
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="No. of Users" value={numUsers} onChange={setNumUsers} placeholder="e.g. 500" optional />
+              <Field label="Monthly Revenue" value={monthlyRevenue} onChange={setMonthlyRevenue} placeholder="e.g. $5k" optional />
             </div>
+            <Field label="Traction Highlights" value={tractionHighlights} onChange={setTractionHighlights} placeholder="Any milestones?" multiline optional />
+            <Field label="Company Website" value={startupWebsite} onChange={setStartupWebsite} placeholder="https://..." optional />
+          </div>
+        )}
+
+        {roles.includes("Service Partner / Agency") && (
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Partner Info</h3>
+            <Field label="Company / Agency Name" value={partnerCompanyName} onChange={setPartnerCompanyName} placeholder="e.g. Design Studio" />
+            <Field label="Your Role" value={partnerRole} onChange={setPartnerRole} placeholder="e.g. Director, Partner" />
+            <Dropdown label="Partner Type" options={PARTNER_TYPE_OPTIONS} value={partnerType} onChange={setPartnerType} />
+            <MultiSelectDropdown label="Services Offered" options={SKILL_OPTIONS} selected={partnerServices} onToggle={(v) => toggle(setPartnerServices, v)} />
+            <MultiSelectDropdown label="Stages You Serve" options={STARTUP_STAGE_OPTIONS} selected={partnerStages} onToggle={(v) => toggle(setPartnerStages, v)} />
+            <Dropdown label="Pricing Model" options={PRICING_MODEL_OPTIONS} value={pricingModel} onChange={setPricingModel} />
+            <Field label="Average Deal Size" value={avgDealSize} onChange={setAvgDealSize} placeholder="e.g. ₹5 Lakhs" optional />
+            <Dropdown label="Years of Experience" options={EXP_OPTIONS} value={partnerYearsExp} onChange={setPartnerYearsExp} />
+            <Field label="Tools / Tech Stack" value={partnerTools} onChange={setPartnerTools} placeholder="e.g. Figma, React, AWS" optional />
+            <Field label="Portfolio / Case Studies" value={partnerCaseStudies} onChange={setPartnerCaseStudies} placeholder="Links..." optional />
+            <Field label="Notable Past Clients" value={partnerClients} onChange={setPartnerClients} placeholder="e.g. Google, Airtel" optional />
+            <Field label="Certifications" value={partnerCertifications} onChange={setPartnerCertifications} placeholder="Any relevant certs?" optional />
+            <Dropdown label="Monthly Capacity" options={CAPACITY_OPTIONS} value={partnerCapacity} onChange={setPartnerCapacity} />
+            <Field label="Preferred Budget Range" value={partnerBudget} onChange={setPartnerBudget} placeholder="e.g. ₹1L - ₹5L" optional />
+            <Field label="Business Website" value={partnerWebsite} onChange={setPartnerWebsite} placeholder="https://..." optional />
           </div>
         )}
 

@@ -276,6 +276,10 @@ export const insertIndividualSchema = z.object({
   consultant_data: z.any().optional(),
   creator_data: z.any().optional(),
 
+  // Consolidated data for merged profiles
+  startup_data: z.any().optional(),
+  partner_data: z.any().optional(),
+
   founder_status: z.string().optional(),
   skills: z.array(z.string()).default([]),
   experience_level: z.string().optional(),

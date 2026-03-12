@@ -147,12 +147,12 @@ export function setupAuth(app: Express) {
 
                     console.log(`[Auth Google Callback] userId: ${userId}, profileFound: ${!!profile}, onboardingCompleted: ${profile?.onboarding_completed}`);
 
-                    if ((req.user as any).role === "admin") {
-                        return res.redirect("/admin");
-                    }
-
                     if (profile && profile.onboarding_completed) {
                         return res.redirect("/dashboard");
+                    }
+
+                    if ((req.user as any).role === "admin") {
+                        return res.redirect("/admin");
                     }
                 }
             } catch (error) {
