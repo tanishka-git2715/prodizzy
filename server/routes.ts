@@ -30,7 +30,7 @@ async function ensureBusinessOwner(req: Request, res: Response, next: any) {
   const userId = (req.user as any)._id?.toString() || (req.user as any).id;
 
   try {
-    const business = await storage.getBusinessById(businessId);
+    const business = await storage.getBusinessById(businessId as string);
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
@@ -55,7 +55,7 @@ async function ensureBusinessAdmin(req: Request, res: Response, next: any) {
   const userId = (req.user as any)._id?.toString() || (req.user as any).id;
 
   try {
-    const business = await storage.getBusinessById(businessId);
+    const business = await storage.getBusinessById(businessId as string);
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
@@ -68,7 +68,7 @@ async function ensureBusinessAdmin(req: Request, res: Response, next: any) {
     }
 
     // Check if admin/member
-    const members = await storage.getTeamMembers(businessId);
+    const members = await storage.getTeamMembers(businessId as string);
     const member = members.find(m => m.user_id === userId);
 
     if (!member || member.invite_status !== "accepted") {
@@ -97,7 +97,7 @@ async function ensureBusinessMember(req: Request, res: Response, next: any) {
   const userId = (req.user as any)._id?.toString() || (req.user as any).id;
 
   try {
-    const business = await storage.getBusinessById(businessId);
+    const business = await storage.getBusinessById(businessId as string);
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
@@ -110,7 +110,7 @@ async function ensureBusinessMember(req: Request, res: Response, next: any) {
     }
 
     // Check if member
-    const members = await storage.getTeamMembers(businessId);
+    const members = await storage.getTeamMembers(businessId as string);
     const member = members.find(m => m.user_id === userId);
 
     if (!member || member.invite_status !== "accepted") {
@@ -280,6 +280,16 @@ export async function registerRoutes(
 
       await storage.deleteProfile(type, id);
       res.json({ message: "Profile deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // POST /api/admin/purge-legacy - Bulk delete all old Startup and Partner profiles
+  app.post("/api/admin/purge-legacy", ensureAdmin, async (req, res) => {
+    try {
+      const result = await storage.purgeLegacyProfiles();
+      res.json({ message: "Legacy profiles purged", ...result });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

@@ -203,14 +203,13 @@ function MultiSelectDropdown({
 // --- Options ---
 const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
 
-const FOUNDER_STATUS_OPTIONS = ["Exploring an idea", "Currently working on an MVP", "Already building a product", "Generating early revenue / Growing", "Scaling an established business"];
+const FOUNDER_STATUS_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
 const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
 const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
 const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
 const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Open to All"];
 const GEO_OPTIONS = ["India", "Global", "Specific Regions (Specify)"];
 
-const STARTUP_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
 const TEAM_SIZE_OPTIONS = ["Solo", "2–10", "11–50", "51–500", "500–1000", "1000+"];
 const REGISTERED_OPTIONS = ["Yes", "No"];
 
@@ -333,7 +332,6 @@ export default function IndividualOnboard() {
   // --- State: Startup (Founder) ---
   const [startupCompanyName, setStartupCompanyName] = useState("");
   const [startupRole, setStartupRole] = useState("");
-  const [startupStage, setStartupStage] = useState("");
   const [startupIndustry, setStartupIndustry] = useState<string[]>([]);
   const [startupTeamSize, setStartupTeamSize] = useState("");
   const [isRegistered, setIsRegistered] = useState("");
@@ -412,7 +410,6 @@ export default function IndividualOnboard() {
     setFounderStatus("");
     setStartupCompanyName("");
     setStartupRole("");
-    setStartupStage("");
     setStartupIndustry([]);
     setStartupTeamSize("");
     setIsRegistered("");
@@ -449,7 +446,7 @@ export default function IndividualOnboard() {
       return fullName.trim() && roles.length > 0 && userLocation.trim() && isEmailValid;
     }
     if (step === 1) {
-      if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || !startupStage || startupIndustry.length === 0 || !startupTeamSize || !isRegistered || !productDesc)) return false;
+      if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || startupIndustry.length === 0 || !startupTeamSize || !isRegistered || !productDesc)) return false;
       if (roles.includes("Investor") && (!investorType || !ticketSize || preferredIndustries.length === 0)) return false;
       if (roles.includes("Student") && (!institution || !course || !studyYear)) return false;
       if (roles.includes("Working Professional") && (!currentCompany || !jobTitle || !totalExp || !noticePeriod)) return false;
@@ -560,7 +557,7 @@ export default function IndividualOnboard() {
       payload.startup_data = {
         company_name: startupCompanyName,
         role: startupRole,
-        stage: startupStage,
+        stage: founderStatus,
         industry: startupIndustry,
         team_size: startupTeamSize,
         is_registered: isRegistered,
@@ -660,7 +657,6 @@ export default function IndividualOnboard() {
             <Dropdown label="Current Status" options={FOUNDER_STATUS_OPTIONS} value={founderStatus} onChange={setFounderStatus} />
             <Field label="Company Name" value={startupCompanyName} onChange={setStartupCompanyName} placeholder="e.g. Acme Inc." />
             <Field label="Your Role" value={startupRole} onChange={setStartupRole} placeholder="e.g. CEO, Founder" />
-            <Dropdown label="Startup Stage" options={STARTUP_STAGE_OPTIONS} value={startupStage} onChange={setStartupStage} />
             <MultiSelectDropdown label="Industry" options={INDUSTRY_OPTIONS} selected={startupIndustry} onToggle={(v) => toggle(setStartupIndustry, v)} />
             <Dropdown label="Team Size" options={TEAM_SIZE_OPTIONS} value={startupTeamSize} onChange={setStartupTeamSize} />
             <Dropdown label="Is your startup registered?" options={REGISTERED_OPTIONS} value={isRegistered} onChange={setIsRegistered} />
@@ -800,11 +796,14 @@ export default function IndividualOnboard() {
 
       <div className="flex-1 flex items-start justify-center px-6 pt-10 pb-32">
         <div className="w-full max-w-lg">
-          <AnimatePresence mode="wait" initial={false} custom={dir}>
-            <motion.div key={step} custom={dir} variants={slideVariants(dir)} initial="initial" animate="animate" exit="exit">
-              {steps[step]}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: dir > 0 ? 40 : -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {steps[step]}
+          </motion.div>
           {error && <p className="mt-4 text-xs text-red-500 text-center">{error}</p>}
         </div>
       </div>

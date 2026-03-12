@@ -521,7 +521,7 @@ export default function Admin() {
   const { session, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
-  const [profileTab, setProfileTab] = useState<ProfileType | "users">("startup");
+  const [profileTab, setProfileTab] = useState<ProfileType | "users">("individual");
   const [selectedRole, setSelectedRole] = useState<string>("All");
 
   const INDIVIDUAL_ROLES = [
@@ -778,11 +778,9 @@ export default function Admin() {
         {activeTab === "profiles" && (
           <>
             {/* Profile Sub-Tabs */}
-            <div className="border-b border-white/5">
+            <div className="border-b border-white/5 flex items-center justify-between">
               <div className="flex gap-4 overflow-x-auto no-scrollbar">
                 {[
-                  { type: "startup" as const, label: "Startups" },
-                  { type: "partner" as const, label: "Partners" },
                   { type: "individual" as const, label: "Individuals" },
                   { type: "business" as const, label: "Businesses" },
                   { type: "users" as const, label: "All Users" },
@@ -799,6 +797,19 @@ export default function Admin() {
                   </button>
                 ))}
               </div>
+              <button
+                onClick={() => {
+                  if (confirm("This will permanently delete ALL old Startup and Partner profiles. Cannot be undone. Continue?")) {
+                    fetch("/api/admin/purge-legacy", { method: "POST", headers: { "Content-Type": "application/json" } })
+                      .then(r => r.json())
+                      .then(d => alert(`Purged: ${d.startups} startup(s), ${d.partners} partner(s) deleted.`))
+                      .catch(() => alert("Error purging legacy data."));
+                  }
+                }}
+                className="shrink-0 flex items-center gap-1.5 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ml-4"
+              >
+                <Trash2 className="w-3 h-3" /> Purge Old Data
+              </button>
             </div>
 
             {/* Stats */}
@@ -841,8 +852,6 @@ export default function Admin() {
                   <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
                   {pending.map(p => {
                     const pt = profileTab as ProfileType;
-                    if (profileTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
-                    if (profileTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
                     if (profileTab === "individual") return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
                     return <BusinessProfileRow key={p._id} profile={p as Business} profileType={pt} />;
                   })}
@@ -855,8 +864,6 @@ export default function Admin() {
                   <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Approved ({approved.length})</h2>
                   {approved.map(p => {
                     const pt = profileTab as ProfileType;
-                    if (profileTab === "startup") return <StartupProfileRow key={p.id} profile={p as StartupProfile} profileType={pt} />;
-                    if (profileTab === "partner") return <PartnerProfileRow key={p.id} profile={p as PartnerProfile} profileType={pt} />;
                     if (profileTab === "individual") return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
                     return <BusinessProfileRow key={p._id} profile={p as Business} profileType={pt} />;
                   })}
