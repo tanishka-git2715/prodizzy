@@ -311,6 +311,10 @@ export default function IndividualOnboard() {
     if (session?.user?.email && !email) setEmail(session.user.email);
   }, [session, email]);
 
+  useEffect(() => {
+    setError(""); // Clear any errors when switching roles
+  }, [roles]);
+
   const toggle = (set: any, val: string) => set((curr: string[]) => curr.includes(val) ? curr.filter(x => x !== val) : [...curr, val]);
 
   function go(next: number) { setDir(next > step ? 1 : -1); setStep(next); }
