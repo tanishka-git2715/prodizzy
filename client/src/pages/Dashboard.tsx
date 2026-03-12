@@ -664,9 +664,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                         <FormField label="Email" value={email} onChange={setEmail} type="email" />
                         <FormField label="Phone Number" value={phone} onChange={setPhone} />
                         <FormField label="Location" value={location} onChange={setLocationState} />
-                        <div className="flex gap-6">
-                          <FormField label="Date of Birth" value={dob} onChange={setDob} placeholder="DD/MM/YYYY" className="w-[160px]" />
-                        </div>
                       </div>
                     </div>
 

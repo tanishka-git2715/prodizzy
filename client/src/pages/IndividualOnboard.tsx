@@ -641,10 +641,7 @@ export default function IndividualOnboard() {
 
         <div className="space-y-4 pt-4 border-t border-white/5">
           <Field label="Full Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
-          <div className="flex gap-4">
-            <Field label="Date of Birth" value={dob} onChange={setDob} type="date" className="w-[130px] shrink-0" />
-            <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="Mumbai, India" className="flex-1 min-w-0" />
-          </div>
+          <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="Mumbai, India" />
           <Field label="Email" value={email} onChange={setEmail} placeholder="you@email.com" />
           <Field label="LinkedIn Profile" value={linkedinUrl} onChange={setLinkedinUrl} optional placeholder="https://linkedin.com/in/..." />
           <Field label="Portfolio / Resume Link" value={portfolioUrl} onChange={setPortfolioUrl} optional placeholder="https://yoursite.com" />
