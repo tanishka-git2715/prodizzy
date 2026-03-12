@@ -24,6 +24,7 @@ export default function Home() {
   const [location, setLocation] = useLocation();
   const { session, loginWithGoogle } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authMode, setAuthMode] = useState<"signup" | "signin">("signup");
   const [pendingRole, setPendingRole] = useState<"startup" | "partner" | "individual" | "intent_join" | null>(() => {
@@ -130,10 +131,9 @@ export default function Home() {
     if (session && !loadingProfile && profileStatus) {
       if (profileStatus.hasCompletedProfile) {
         if (location === "/") setLocation("/dashboard");
-      } else if (profileStatus.needsOnboarding && !showAuthModal) {
-        // If logged in but no profile, send to unified onboarding
-        setLocation("/individual-onboard");
       }
+      // REMOVED: Automatic redirect to /individual-onboard. 
+      // This allows users to remain on the landing page if they choose.
 
       // Cleanup any pending intents for returning users
       if (profileStatus.hasCompletedProfile && pendingRole) setPendingRole(null);
@@ -536,6 +536,58 @@ export default function Home() {
         </motion.footer>
       </div>
 
+
+      {/* ── ROLE SELECTION MODAL ── */}
+      {showRoleModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center px-6"
+          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+          onClick={() => setShowRoleModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-2xl rounded-3xl p-8 sm:p-12 overflow-hidden relative"
+            style={{ background: "#0D0E0F", border: "1px solid rgba(255,255,255,0.1)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
+
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-white mb-3">Choose Your Path</h2>
+              <p className="text-white/40 text-sm">Select how you want to experience Prodizzy</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { id: "individual", label: "Individual", desc: "For professionals, students, and mentors", icon: "👤", path: "/individual-onboard" },
+                { id: "startup", label: "Startup", desc: "For founders seeking talent & fundraising", icon: "🚀", path: "/join-startup" },
+                { id: "partner", label: "Partner", desc: "For venture firms, studios & ecosystems", icon: "🤝", path: "/partner-onboard" }
+              ].map((role) => (
+                <button
+                  key={role.id}
+                  onClick={() => {
+                    setLocation(role.path);
+                    setShowRoleModal(false);
+                  }}
+                  className="group relative flex flex-col items-center text-center p-6 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 transition-all"
+                >
+                  <span className="text-4xl mb-4 group-hover:scale-110 transition-transform">{role.icon}</span>
+                  <p className="text-[15px] font-semibold text-white mb-1">{role.label}</p>
+                  <p className="text-[11px] text-white/30 leading-relaxed">{role.desc}</p>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowRoleModal(false)}
+              className="mt-10 w-full py-3 text-white/30 hover:text-white/60 text-xs font-medium uppercase tracking-widest transition-colors"
+            >
+              Cancel
+            </button>
+          </motion.div>
+        </div>
+      )}
 
       {/* ── AUTH MODAL ── */}
       {showAuthModal && (
