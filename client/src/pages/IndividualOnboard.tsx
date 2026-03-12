@@ -219,7 +219,7 @@ export default function IndividualOnboard() {
   const [email, setEmail] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
-  const [roles, setRoles] = useState<string[]>([]); // Multi-select: Founder, Investor, Student, Working Professional, Freelancer, Consultant, Content Creator, Other
+  const [roles, setRoles] = useState<string[]>([]); // We enforce single select in UI now
 
   // --- State: Step 2 (Conditional) ---
   // Investor Focus
@@ -314,7 +314,10 @@ export default function IndividualOnboard() {
   function go(next: number) { setDir(next > step ? 1 : -1); setStep(next); }
 
   function canProceed() {
-    if (step === 0) return fullName.trim() && roles.length > 0 && userLocation.trim();
+    if (step === 0) {
+      const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      return fullName.trim() && roles.length > 0 && userLocation.trim() && isEmailValid;
+    }
     if (step === 1) {
       if (roles.includes("Founder") && !founderStatus) return false;
       if (roles.includes("Investor") && (!ticketSize || preferredIndustries.length === 0)) return false;
@@ -412,25 +415,57 @@ export default function IndividualOnboard() {
   const steps = [
     <div key="0" className="space-y-6">
       <StepHeader step={0} total={3} title="Create Your Professional Profile" />
-      <div className="space-y-4">
-        <Field label="Full Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Date of Birth" value={dob} onChange={setDob} type="date" />
-          <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="Mumbai, India" />
+      <div className="space-y-6">
+        {/* Role Selection Moved to Top & Single Select Cards */}
+        <div className="space-y-3">
+          <label className="block text-xs font-medium text-white/40 uppercase tracking-wider">
+            What describes you best?
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { id: "Founder", icon: "🚀" },
+              { id: "Investor", icon: "💎" },
+              { id: "Student", icon: "🎓" },
+              { id: "Working Professional", icon: "💼" },
+              { id: "Freelancer / Service Provider", icon: "🎨" },
+              { id: "Consultant / Mentor / Advisor", icon: "🧠" },
+              { id: "Content Creator / Community Admin", icon: "📹" },
+              { id: "Other (Specify)", icon: "✨" }
+            ].map((role) => (
+              <button
+                key={role.id}
+                onClick={() => setRoles([role.id])}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${roles.includes(role.id)
+                    ? "bg-red-500/10 border-red-500/50 text-white"
+                    : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-white/20"
+                  }`}
+              >
+                <span className="text-2xl mb-2">{role.icon}</span>
+                <span className="text-[11px] font-medium leading-tight text-center">{role.id}</span>
+                {roles.includes(role.id) && (
+                  <motion.div layoutId="active-role" className="absolute top-2 right-2">
+                    <Check className="w-3 h-3 text-red-500" />
+                  </motion.div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-        <Field label="Email" value={email} onChange={() => { }} optional placeholder="you@email.com" />
-        <Field label="LinkedIn Profile" value={linkedinUrl} onChange={setLinkedinUrl} optional placeholder="https://linkedin.com/in/..." />
-        <Field label="Portfolio / Resume Link" value={portfolioUrl} onChange={setPortfolioUrl} optional placeholder="https://yoursite.com" />
-        <MultiSelectDropdown
-          label="What describes you best?"
-          options={ROLE_OPTIONS}
-          selected={roles}
-          onToggle={(v) => toggle(setRoles, v)}
-          placeholder="Select one or more roles"
-        />
+
         {roles.includes("Other (Specify)") && (
           <Field label="Specify Role" value={otherRoleSpec} onChange={setOtherRoleSpec} placeholder="E.g. Artist, Researcher..." />
         )}
+
+        <div className="space-y-4 pt-4 border-t border-white/5">
+          <Field label="Full Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Date of Birth" value={dob} onChange={setDob} type="date" />
+            <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="Mumbai, India" />
+          </div>
+          <Field label="Email" value={email} onChange={setEmail} placeholder="you@email.com" />
+          <Field label="LinkedIn Profile" value={linkedinUrl} onChange={setLinkedinUrl} optional placeholder="https://linkedin.com/in/..." />
+          <Field label="Portfolio / Resume Link" value={portfolioUrl} onChange={setPortfolioUrl} optional placeholder="https://yoursite.com" />
+        </div>
       </div>
     </div>,
 

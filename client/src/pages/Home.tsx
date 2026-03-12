@@ -140,11 +140,12 @@ export default function Home() {
     }
   }, [session, profileStatus, loadingProfile, location, setLocation, pendingRole, showAuthModal]);
 
-  // 2. Intent Processing: Handles role-selection redirects for NEW users immediately after auth
+  // 2. Intent Processing: Handles redirections for NEW users immediately after auth
   useEffect(() => {
     if (!session || showAuthModal || loadingProfile || !profileStatus || profileStatus.hasCompletedProfile) return;
 
     if (pendingRole && authSuccess) {
+      // All paths now go to Individual Onboarding first for new users
       setLocation("/individual-onboard");
       setPendingRole(null);
       setAuthSuccess(false);
@@ -163,15 +164,11 @@ export default function Home() {
   // - If not logged in, open auth modal
   const handleJoinNow = () => {
     if (session) {
-      // If we already know the user is fully onboarded OR profile check is still loading,
-      // just send them to the dashboard instead of re-triggering onboarding.
-      if (profileStatus?.hasCompletedProfile || loadingProfile || !profileStatus) {
+      if (profileStatus?.hasCompletedProfile) {
         setLocation("/dashboard");
-        return;
+      } else {
+        setLocation("/individual-onboard");
       }
-      // Logged-in but not yet onboarded: skip login, go to role selection
-      setPendingRole(null);
-      setShowRoleModal(true);
       return;
     }
 
@@ -194,14 +191,8 @@ export default function Home() {
         return;
       }
 
-      // Logged-in but not yet onboarded: go directly into the relevant onboarding flow
-      if (role === "startup") {
-        setLocation("/join-startup");
-      } else if (role === "partner") {
-        setLocation("/partner-onboard");
-      } else if (role === "individual") {
-        setLocation("/individual-onboard");
-      }
+      // Logged-in but not yet onboarded: always go to individual onboarding
+      setLocation("/individual-onboard");
       return;
     }
 
@@ -501,7 +492,7 @@ export default function Home() {
                 <a href="https://whatsapp.com/channel/0029Vb7CsZ9545uqrfyUch0a" target="_blank" rel="noreferrer"
                   className="transition-opacity hover:opacity-80" style={{ color: "rgba(255,255,255,0.5)" }}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                    <path d="M12.001 2C6.478 2 2.001 6.477 2.001 12c0 1.89.528 3.655 1.436 5.163L2 22l4.987-1.407A9.952 9.952 0 0 0 12.001 22C17.524 22 22 17.523 22 12S17.524 2 12.001 2zm0 18c-1.677 0-3.245-.49-4.562-1.33l-.325-.196-3.363.947.901-3.275-.214-.338A7.946 7.946 0 0 1 4.001 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8zm4.39-5.859c-.241-.121-1.427-.703-1.648-.784-.221-.08-.382-.12-.543.12-.16.241-.623.784-.764.944-.14.16-.281.181-.522.06-.241-.12-1.018-.375-1.939-1.197-.716-.64-1.2-1.43-1.34-1.671-.14-.241-.015-.371.105-.491.109-.108.241-.281.362-.422.12-.14.16-.24.241-.4.08-.16.04-.301-.02-.422-.06-.12-.543-1.31-.744-1.793-.196-.47-.396-.407-.543-.414l-.462-.009a.887.887 0 0 0-.643.301c-.221.241-.844.825-.844 2.012 0 1.186.864 2.334 1.005 2.494.12.16 1.7 2.596 4.12 3.641.576.249 1.025.397 1.374.509.577.184 1.103.158 1.519.096.463-.069 1.427-.584 1.628-1.148.2-.562.2-1.044.14-1.144-.06-.1-.221-.16-.462-.281z" />
+                    <path d="M12.001 2C6.478 2 2.001 6.477 2.001 12c0 1.89.528 3.655 1.436 5.163L2 22l4.987-1.407A9.952 9.952 0 0 0 12.001 22C17.524 22 22 17.523 22 12S17.524 2 12.001 2zm0 18c-1.677 0-3.245-.49-4.562-1.33l-.325-.196-3.363.947.901-3.275-.214-.338A7.946 7.946 0 0 1 4.001 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8zm4.39-5.859c-.241-.121-1.427-.703-1.648-.784-.221-.08-.382-.12-.543.12-.16.241-.623.784-.764.944-.14.16-.281.181-.522.06-.241-.12-1.018-.375-1.939-1.197-.716-.64-1.2-1.43-1.34-1.671-.14-.241-.015-.371.105-.491.109-.108.241-.281.362-.422.12-.14.16-.24.241-.4.08-.16.04-.301-.02-.422-.06-.12-.543-1.31-.744-1.793-.196-.47-.396-.407-.543-.414l-.462-.009a.887 0 0 0-.643.301c-.221.241-.844.825-.844 2.012 0 1.186.864 2.334 1.005 2.494.12.16 1.7 2.596 4.12 3.641.576.249 1.025.397 1.374.509.577.184 1.103.158 1.519.096.463-.069 1.427-.584 1.628-1.148.2-.562.2-1.044.14-1.144-.06-.1-.221-.16-.462-.281z" />
                   </svg>
                 </a>
                 <a href="https://www.linkedin.com/company/prodizzy/" target="_blank" rel="noreferrer"
@@ -536,58 +527,6 @@ export default function Home() {
         </motion.footer>
       </div>
 
-
-      {/* ── ROLE SELECTION MODAL ── */}
-      {showRoleModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center px-6"
-          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
-          onClick={() => setShowRoleModal(false)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-2xl rounded-3xl p-8 sm:p-12 overflow-hidden relative"
-            style={{ background: "#0D0E0F", border: "1px solid rgba(255,255,255,0.1)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
-
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-white mb-3">Choose Your Path</h2>
-              <p className="text-white/40 text-sm">Select how you want to experience Prodizzy</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { id: "individual", label: "Individual", desc: "For professionals, students, and mentors", icon: "👤", path: "/individual-onboard" },
-                { id: "startup", label: "Startup", desc: "For founders seeking talent & fundraising", icon: "🚀", path: "/join-startup" },
-                { id: "partner", label: "Partner", desc: "For venture firms, studios & ecosystems", icon: "🤝", path: "/partner-onboard" }
-              ].map((role) => (
-                <button
-                  key={role.id}
-                  onClick={() => {
-                    setLocation(role.path);
-                    setShowRoleModal(false);
-                  }}
-                  className="group relative flex flex-col items-center text-center p-6 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 transition-all"
-                >
-                  <span className="text-4xl mb-4 group-hover:scale-110 transition-transform">{role.icon}</span>
-                  <p className="text-[15px] font-semibold text-white mb-1">{role.label}</p>
-                  <p className="text-[11px] text-white/30 leading-relaxed">{role.desc}</p>
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setShowRoleModal(false)}
-              className="mt-10 w-full py-3 text-white/30 hover:text-white/60 text-xs font-medium uppercase tracking-widest transition-colors"
-            >
-              Cancel
-            </button>
-          </motion.div>
-        </div>
-      )}
 
       {/* ── AUTH MODAL ── */}
       {showAuthModal && (
