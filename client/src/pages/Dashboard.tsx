@@ -705,14 +705,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                               <p className="text-[10px] text-white/20 uppercase mb-1">Roles</p>
                               <p className="text-sm text-white/70">{roles.join(", ")}</p>
                             </div>
-                            {skills.length > 0 && (
-                              <div>
-                                <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
-                                <div className="flex flex-wrap gap-1.5 pt-1">
-                                  {skills.map(s => <Tag key={s} label={s} />)}
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </div>
                       )}
@@ -727,9 +719,23 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                         roles.includes("Content Creator / Community Admin")) && (
                           <div className="space-y-3">
                             <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Role-Specific Details</h3>
-                            <div className="space-y-4 p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-                              {roles.includes("Investor") && investorData && (
+                            <div className="space-y-6 p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                              {roles.includes("Founder") && (
                                 <div className="space-y-3">
+                                  <p className="text-[10px] text-red-400/60 uppercase font-bold">Founder Status</p>
+                                  <p className="text-sm text-white/70">{founderStatus || "Exploring"}</p>
+                                  {skills.length > 0 && (
+                                    <div className="pt-1">
+                                      <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {skills.map(s => <Tag key={s} label={s} />)}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {roles.includes("Investor") && investorData && (
+                                <div className="space-y-3 pt-4 border-t border-white/5">
                                   <p className="text-[10px] text-red-400/60 uppercase font-bold">Investor Profile</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Type" value={investorData.investor_types} />
@@ -738,11 +744,19 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                                     <DetailRow label="Focus Area" value={investorData.industries} />
                                     <DetailRow label="Geography" value={investorData.geography === "Specific Regions (Specify)" ? investorData.specific_regions : investorData.geography} />
                                   </div>
+                                  {skills.length > 0 && (
+                                    <div className="pt-1">
+                                      <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {skills.map(s => <Tag key={s} label={s} />)}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
                               {roles.includes("Student") && studentData && (
-                                <div className="space-y-3">
+                                <div className="space-y-3 pt-4 border-t border-white/5">
                                   <p className="text-[10px] text-blue-400/60 uppercase font-bold">Academic Info</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Institution" value={studentData.institution} />
@@ -750,11 +764,19 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                                     <DetailRow label="Year" value={studentData.year} />
                                     <DetailRow label="Community" value={studentData.communities?.is_member ? "Member" : "No"} />
                                   </div>
+                                  {skills.length > 0 && (
+                                    <div className="pt-1">
+                                      <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {skills.map(s => <Tag key={s} label={s} />)}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
                               {roles.includes("Working Professional") && professionalData && (
-                                <div className="space-y-3">
+                                <div className="space-y-3 pt-4 border-t border-white/5">
                                   <p className="text-[10px] text-green-400/60 uppercase font-bold">Professional Path</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Company" value={professionalData.company} />
@@ -762,11 +784,19 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                                     <DetailRow label="Experience" value={professionalData.experience_years} />
                                     <DetailRow label="Notice Period" value={professionalData.notice_period} />
                                   </div>
+                                  {skills.length > 0 && (
+                                    <div className="pt-1">
+                                      <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {skills.map(s => <Tag key={s} label={s} />)}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
                               {roles.includes("Freelancer / Service Provider") && freelancerData && (
-                                <div className="space-y-3">
+                                <div className="space-y-3 pt-4 border-t border-white/5">
                                   <p className="text-[10px] text-purple-400/60 uppercase font-bold">Freelance Details</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Experience" value={freelancerData.experience_years} />
@@ -776,22 +806,38 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                                   {freelancerData.notable_clients && (
                                     <DetailRow label="Notable Clients" value={freelancerData.notable_clients} />
                                   )}
+                                  {skills.length > 0 && (
+                                    <div className="pt-1">
+                                      <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {skills.map(s => <Tag key={s} label={s} />)}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
                               {roles.includes("Consultant / Mentor / Advisor") && consultantData && (
-                                <div className="space-y-3">
+                                <div className="space-y-3 pt-4 border-t border-white/5">
                                   <p className="text-[10px] text-orange-400/60 uppercase font-bold">Advisory Profile</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Expertise" value={consultantData.expertise_areas} />
                                     <DetailRow label="Level" value={consultantData.experience_level} />
                                     <DetailRow label="Support Type" value={consultantData.support_types} />
                                   </div>
+                                  {skills.length > 0 && (
+                                    <div className="pt-1">
+                                      <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {skills.map(s => <Tag key={s} label={s} />)}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
                               {roles.includes("Content Creator / Community Admin") && creatorData && (
-                                <div className="space-y-3">
+                                <div className="space-y-3 pt-4 border-t border-white/5">
                                   <p className="text-[10px] text-pink-400/60 uppercase font-bold">Creator Presence</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Platforms" value={creatorData.platforms} />
@@ -800,6 +846,14 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                                   </div>
                                   {creatorData.profile_links && (
                                     <DetailRow label="Links" value={creatorData.profile_links} />
+                                  )}
+                                  {skills.length > 0 && (
+                                    <div className="pt-1">
+                                      <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {skills.map(s => <Tag key={s} label={s} />)}
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -834,25 +888,21 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Roles & Skills</h3>
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">What describes you best?</p>
-                        <PickMany options={ROLE_OPTIONS} value={roles} onChange={setRoles} />
-                      </div>
-                      {!isShortPath && !isInvestor && (
-                        <div className="space-y-2">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
-                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
-                        </div>
-                      )}
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Roles</h3>
+                    <div className="space-y-2">
+                      <p className="text-xs text-white/35 uppercase tracking-wider">What describes you best?</p>
+                      <PickMany options={ROLE_OPTIONS} value={roles} onChange={setRoles} />
                     </div>
                   </div>
 
                   {roles.includes("Founder") && (
-                    <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
                       <p className="text-xs text-white/35 uppercase tracking-wider">Founder Status</p>
                       <PickOne options={FOUNDER_STATUS_OPTIONS} value={founderStatus} onChange={setFounderStatus} />
+                      <div className="space-y-2 pt-2">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                        <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                      </div>
                     </div>
                   )}
 
@@ -891,6 +941,10 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <FormField label="Specify Regions" value={investorData.specific_regions || ""} onChange={(v) => setInvestorData({ ...investorData, specific_regions: v })} />
                           )}
                         </div>
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -924,6 +978,10 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             })} />
                           </div>
                         )}
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -943,6 +1001,10 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <p className="text-xs text-white/35 uppercase tracking-wider">Notice Period</p>
                             <PickOne options={NOTICE_OPTIONS} value={professionalData.notice_period || ""} onChange={(v) => setProfessionalData({ ...professionalData, notice_period: v })} />
                           </div>
+                        </div>
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
                         </div>
                       </div>
                     </div>
@@ -967,6 +1029,10 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <PickOne options={BUDGET_RANGE_OPTIONS} value={freelancerData.budget_range || ""} onChange={(v) => setFreelancerData({ ...freelancerData, budget_range: v })} />
                           </div>
                         </div>
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -990,6 +1056,10 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                           <PickMany options={SUPPORT_TYPE_OPTIONS} value={consultantData.support_types || []} onChange={(next) => {
                             setConsultantData({ ...consultantData, support_types: next });
                           }} />
+                        </div>
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
                         </div>
                       </div>
                     </div>
@@ -1016,13 +1086,21 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                           }} />
                         </div>
                         <TextArea label="Profile / Community Links (comma separated)" value={Array.isArray(creatorData.profile_links) ? creatorData.profile_links.join(", ") : ""} onChange={(v) => setCreatorData({ ...creatorData, profile_links: v.split(",").map(s => s.trim()) })} />
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                        </div>
                       </div>
                     </div>
                   )}
 
                   {roles.includes("Other (Specify)") && (
-                    <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
                       <FormField label="Specify Other Role" value={otherRoleSpec} onChange={setOtherRoleSpec} />
+                      <div className="space-y-2 pt-2 border-t border-white/5">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                        <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                      </div>
                     </div>
                   )}
 
