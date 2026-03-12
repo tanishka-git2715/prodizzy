@@ -223,7 +223,7 @@ export default function IndividualOnboard() {
 
   // --- State: Step 2 (Conditional) ---
   // Investor Focus
-  const [investorTypes, setInvestorTypes] = useState<string[]>([]);
+  const [investorType, setInvestorType] = useState("");
   const [investmentStages, setInvestmentStages] = useState<string[]>([]);
   const [ticketSize, setTicketSize] = useState("");
   const [preferredIndustries, setPreferredIndustries] = useState<string[]>([]);
@@ -320,7 +320,7 @@ export default function IndividualOnboard() {
     }
     if (step === 1) {
       if (roles.includes("Founder") && !founderStatus) return false;
-      if (roles.includes("Investor") && (!ticketSize || preferredIndustries.length === 0)) return false;
+      if (roles.includes("Investor") && (!investorType || !ticketSize || preferredIndustries.length === 0)) return false;
       if (roles.includes("Student") && (!institution || !course || !studyYear)) return false;
       if (roles.includes("Working Professional") && (!currentCompany || !jobTitle || !totalExp || !noticePeriod)) return false;
       if (roles.includes("Freelancer / Service Provider") && (!freelanceExp || !engagementModel || !budgetRange)) return false;
@@ -346,7 +346,7 @@ export default function IndividualOnboard() {
       roles,
       founder_status: roles.includes("Founder") ? founderStatus : undefined,
       investor_data: roles.includes("Investor") ? {
-        investor_types: investorTypes,
+        investor_types: [investorType],
         investment_stages: investmentStages,
         ticket_size: ticketSize,
         industries: preferredIndustries,
@@ -487,7 +487,7 @@ export default function IndividualOnboard() {
         {roles.includes("Investor") && (
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Investor Info</h3>
-            <MultiSelectDropdown label="Investor Type" options={INVESTOR_TYPE_OPTIONS} selected={investorTypes} onToggle={(v) => toggle(setInvestorTypes, v)} />
+            <Dropdown label="Investor Type" options={INVESTOR_TYPE_OPTIONS} value={investorType} onChange={setInvestorType} />
             <MultiSelectDropdown label="Investment Stage Focus" options={INVESTOR_STAGE_OPTIONS} selected={investmentStages} onToggle={(v) => toggle(setInvestmentStages, v)} />
             <Dropdown label="Typical Investment Ticket Size" options={TICKET_SIZE_OPTIONS} value={ticketSize} onChange={setTicketSize} />
             <MultiSelectDropdown label="Preferred Industries" options={INDUSTRY_OPTIONS} selected={preferredIndustries} onToggle={(v) => toggle(setPreferredIndustries, v)} />
