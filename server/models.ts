@@ -100,21 +100,70 @@ const IndividualProfileSchema = new Schema({
     user_id: { type: String, required: true, unique: true },
     email: { type: String, required: true },
     full_name: String,
+    profile_photo: String,
+    dob: String,
+    location: String,
     phone: String,
     linkedin_url: String,
-    profile_type: String,
+    portfolio_url: String,
+    resume_url: String,
+    profile_type: String, // Legacy, kept for compatibility
+    roles: [String], // New multi-select roles
+
+    // Role-specific nested data
+    investor_data: {
+        investor_types: [String],
+        investment_stages: [String],
+        ticket_size: String,
+        industries: [String],
+        geography: String,
+        specific_regions: String,
+    },
+    student_data: {
+        institution: String,
+        course: String,
+        year: String,
+        communities: {
+            is_member: Boolean,
+            links: [String],
+            admin_contact: String,
+        }
+    },
+    professional_data: {
+        company: String,
+        title: String,
+        experience_years: String,
+        notice_period: String,
+    },
+    freelancer_data: {
+        service_areas: [String],
+        experience_years: String,
+        notable_clients: String,
+        engagement_model: String,
+        budget_range: String,
+    },
+    consultant_data: {
+        expertise_areas: [String],
+        experience_level: String,
+        support_types: [String],
+    },
+    creator_data: {
+        platforms: [String],
+        audience_size: String,
+        niches: [String],
+        profile_links: [String],
+    },
+
+    founder_status: String,
     skills: [String],
     experience_level: String,
-    portfolio_url: String,
     tools_used: String,
-    looking_for: String,
+    looking_for: [String], // Changed to array for multi-select
     preferred_roles: String,
     preferred_industries: String,
     availability: String,
     work_mode: String,
     expected_pay: String,
-    location: String,
-    resume_url: String,
     projects: String,
     achievements: String,
     github_url: String,
@@ -134,6 +183,7 @@ const UserSchema = new Schema({
     avatarUrl: String,
     role: { type: String, default: "user", enum: ["user", "admin"] },
     profileType: { type: String, enum: ["startup", "investor", "partner", "individual"] },
+    availableProfiles: { type: [String], default: [] },
     otp: { type: String },
     otpExpiresAt: { type: Date },
     createdAt: { type: Date, default: Date.now },

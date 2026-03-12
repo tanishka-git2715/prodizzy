@@ -148,14 +148,19 @@ export class DatabaseStorage implements IStorage {
     if (!user) throw new Error("User not found");
     const actualId = user._id.toString();
 
-    // Update user's profileType and profile in parallel
+    // Update user's profileType, availableProfiles and profile in parallel
+    const updatedAvailableProfiles = Array.from(new Set([...(user.availableProfiles || []), type]));
+
     const [doc] = await Promise.all([
       (Model as any).findOneAndUpdate(
         { $or: [{ user_id: userId }, { user_id: user.googleId }] },
-        { user_id: actualId, email, ...profile, onboarding_completed: true },
+        { user_id: actualId, email, ...profile, onboarding_completed: true, type: type },
         { upsert: true, new: true }
       ).lean(),
-      User.findByIdAndUpdate(actualId, { profileType: type })
+      User.findByIdAndUpdate(actualId, {
+        profileType: type,
+        availableProfiles: updatedAvailableProfiles
+      })
     ]);
 
     return { ...doc, type: type };

@@ -24,15 +24,6 @@ export default function Home() {
   const [location, setLocation] = useLocation();
   const { session, loginWithGoogle } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showRoleModal, setShowRoleModal] = useState(false);
-  const [roleModalDismissed, setRoleModalDismissed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.localStorage.getItem("prodizzy-role-modal-dismissed") === "true";
-    } catch {
-      return false;
-    }
-  });
   const [authError, setAuthError] = useState("");
   const [authMode, setAuthMode] = useState<"signup" | "signin">("signup");
   const [pendingRole, setPendingRole] = useState<"startup" | "partner" | "individual" | "intent_join" | null>(() => {
@@ -134,33 +125,27 @@ export default function Home() {
     return false;
   });
 
-  // 1. PRIORITY: Redirect returning users to dashboard immediately
+  // 1. PRIORITY: Redirect returning users to dashboard or onboarding
   useEffect(() => {
-    // If we have a session and the profile check is done
-    if (session && profileStatus?.hasCompletedProfile) {
-      if (location === "/") {
-        setLocation("/dashboard");
+    if (session && !loadingProfile && profileStatus) {
+      if (profileStatus.hasCompletedProfile) {
+        if (location === "/") setLocation("/dashboard");
+      } else if (profileStatus.needsOnboarding && !showAuthModal) {
+        // If logged in but no profile, send to unified onboarding
+        setLocation("/individual-onboard");
       }
-      // Cleanup any pending intents for returning users
-      if (pendingRole) setPendingRole(null);
-    }
-  }, [session, profileStatus, location, setLocation, pendingRole]);
 
-  // 2. Intent Processing: Handles role-selection or specific form redirects for NEW users
+      // Cleanup any pending intents for returning users
+      if (profileStatus.hasCompletedProfile && pendingRole) setPendingRole(null);
+    }
+  }, [session, profileStatus, loadingProfile, location, setLocation, pendingRole, showAuthModal]);
+
+  // 2. Intent Processing: Handles role-selection redirects for NEW users immediately after auth
   useEffect(() => {
-    // This part IS gated by the auth modal being closed and loading being finished
     if (!session || showAuthModal || loadingProfile || !profileStatus || profileStatus.hasCompletedProfile) return;
 
     if (pendingRole && authSuccess) {
-      if (pendingRole === "intent_join") {
-        setShowRoleModal(true);
-      } else if (pendingRole === "startup") {
-        setLocation("/join-startup");
-      } else if (pendingRole === "partner") {
-        setLocation("/partner-onboard");
-      } else if (pendingRole === "individual") {
-        setLocation("/individual-onboard");
-      }
+      setLocation("/individual-onboard");
       setPendingRole(null);
       setAuthSuccess(false);
     }
@@ -549,88 +534,6 @@ export default function Home() {
               initialTab={authMode}
               pendingRole={pendingRole}
             />
-          </motion.div>
-        </div>
-      )}
-
-      {/* ── ROLE SELECTION MODAL ── */}
-      {showRoleModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center px-6"
-          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
-          onClick={() => {
-            setShowRoleModal(false);
-            setRoleModalDismissed(true);
-            if (typeof window !== "undefined") {
-              try {
-                window.localStorage.setItem("prodizzy-role-modal-dismissed", "true");
-              } catch {
-                // ignore storage errors
-              }
-            }
-          }}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-3xl rounded-2xl p-8"
-            style={{ background: "#0D0E0F", border: "1px solid rgba(255,255,255,0.1)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2
-              className="text-2xl font-bold mb-2 text-center"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              Choose your role
-            </h2>
-            <p className="text-center text-[14px] mb-8" style={{ color: "rgba(255,255,255,0.4)" }}>
-              Select the option that best describes you
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {[
-                { title: "Startup", desc: "Register your startup to find right people and partners", action: () => setLocation("/join-startup") },
-                { title: "Partner", desc: "For agency, investor, service provider or firm", action: () => setLocation("/partner-onboard") },
-                { title: "Individual", desc: "For job seeker, freelancer, or content creator", action: () => setLocation("/individual-onboard") },
-              ].map((role, i) => (
-                <button
-                  key={i}
-                  onClick={role.action}
-                  className="px-6 py-6 rounded-xl text-left transition-all"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(230,57,70,0.4)";
-                    e.currentTarget.style.background = "rgba(230,57,70,0.05)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                  }}
-                >
-                  <h3 className="text-lg font-semibold mb-1">{role.title}</h3>
-                  <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.4)" }}>{role.desc}</p>
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => {
-                setShowRoleModal(false);
-                setRoleModalDismissed(true);
-                if (typeof window !== "undefined") {
-                  try {
-                    window.localStorage.setItem("prodizzy-role-modal-dismissed", "true");
-                  } catch {
-                    // ignore storage errors
-                  }
-                }
-              }}
-              className="w-full py-3 rounded-lg text-[14px] font-medium transition-colors"
-              style={{ color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
-            >
-              Cancel
-            </button>
           </motion.div>
         </div>
       )}

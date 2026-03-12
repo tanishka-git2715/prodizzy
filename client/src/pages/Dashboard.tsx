@@ -432,60 +432,103 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   profile: IndividualProfile; session: any; signOut: () => void;
   patchMutation: any; connections: any[]; greeting: string;
 }) {
+  const [, setLocation] = useLocation();
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
 
   // Form state
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [email, setEmail] = useState(profile.email || "");
+  const [dob, setDob] = useState((profile as any).dob || "");
   const [phone, setPhone] = useState(profile.phone || "");
   const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
   const [portfolioUrl, setPortfolioUrl] = useState(profile.portfolio_url || "");
-  const [profileType, setProfileType] = useState<"Student" | "Freelancer" | "Professional" | "Content Creator" | "Community Admin">(profile.profile_type as any);
+  const [roles, setRoles] = useState<string[]>((profile as any).roles || []);
+
+  // Role-specific states
+  const [investorData, setInvestorData] = useState((profile as any).investor_data || {});
+  const [studentData, setStudentData] = useState((profile as any).student_data || {});
+  const [professionalData, setProfessionalData] = useState((profile as any).professional_data || {});
+  const [freelancerData, setFreelancerData] = useState((profile as any).freelancer_data || {});
+  const [consultantData, setConsultantData] = useState((profile as any).consultant_data || {});
+  const [creatorData, setCreatorData] = useState((profile as any).creator_data || {});
+  const [otherRoleSpec, setOtherRoleSpec] = useState((profile as any).other_role_spec || "");
+
+  const [founderStatus, setFounderStatus] = useState((profile as any).founder_status || "");
   const [skills, setSkills] = useState<string[]>(profile.skills || []);
-  const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
-  const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
-  const [lookingFor, setLookingFor] = useState(profile.looking_for?.[0] || "");
-  const [preferredRoles, setPreferredRoles] = useState(profile.preferred_roles || "");
-  const [preferredIndustries, setPreferredIndustries] = useState<string[]>(profile.preferred_industries?.split(", ") || []);
+  const [lookingFor, setLookingFor] = useState<string[]>(Array.isArray(profile.looking_for) ? profile.looking_for : []);
   const [availability, setAvailability] = useState(profile.availability || "");
   const [workMode, setWorkMode] = useState(profile.work_mode || "");
-  const [expectedPay, setExpectedPay] = useState(profile.expected_pay || "");
-  const [location, setLocation] = useState(profile.location || "");
+  const [location, setLocationState] = useState(profile.location || "");
   const [resumeUrl, setResumeUrl] = useState(profile.resume_url || "");
-  const [projects, setProjects] = useState(profile.projects || "");
-  const [achievements, setAchievements] = useState(profile.achievements || "");
-  const [githubUrl, setGithubUrl] = useState(profile.github_url || "");
 
   // Constants
-  const PROFILE_TYPES = ["Student", "Freelancer", "Professional", "Content Creator", "Community Admin"];
-  const EXPERIENCE_LEVELS = ["Fresher", "0-2 years", "2-4 years", "4+ years"];
-  const LOOKING_FOR_OPTIONS = ["Job", "Internship", "Freelance", "Collaboration"];
-  const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Project-based"];
-  const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "Onsite"];
+  const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
+  const FOUNDER_STATUS_OPTIONS = ["Exploring an idea", "Currently working on an MVP", "Already building a product", "Generating early revenue / Growing", "Scaling an established business"];
+  const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
+  const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
+  const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
+  const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Open to All"];
+  const GEO_OPTIONS = ["India", "Global", "Specific Regions (Specify)"];
+  const STUDY_YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Final Year", "Postgraduate", "Recent Graduate"];
+  const EXP_OPTIONS = ["0–2 years", "2–4 years", "4–8 years", "8+ years"];
+  const NOTICE_OPTIONS = ["Immediate", "< 1 month", "1–3 months", "3+ months"];
+  const FREELANCE_EXP_OPTIONS = ["0-1 years", "1-3 years", "3-5 years", "5+ years"];
+  const ENGAGEMENT_OPTIONS = ["Hourly", "Project-based", "Monthly Retainer", "Equity-based (for startups)"];
+  const BUDGET_RANGE_OPTIONS = ["Below ₹10K", "₹10K–50K", "₹50K–2L", "₹2L+", "Depends on scope"];
+  const EXPERTISE_OPTIONS = ["Business Strategy", "Product Strategy & Management", "Growth & Marketing", "Fundraising & Investor Readiness", "Sales & Go-to-Market", "Operations & Scaling", "Finance & Startup Metrics", "Career Guidance / Leadership Coaching", "Technology / AI Advisory", "Community & Ecosystem Building", "Other"];
+  const CONSULTANT_EXP_OPTIONS = ["5–10 years", "10–15 years", "15–20 years", "20+ years"];
+  const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Board / investor advisory", "Other"];
+  const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other"];
+  const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
+  const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other"];
+  const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other"];
+  const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
+  const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
+  const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
+
+  function DetailRow({ label, value }: { label: string; value: string | string[] | undefined | null }) {
+    if (!value || (Array.isArray(value) && value.length === 0)) return null;
+    const displayValue = Array.isArray(value) ? value.join(", ") : value;
+    return (
+      <div>
+        <p className="text-[10px] text-white/20 uppercase mb-1">{label}</p>
+        <p className="text-sm text-white/70">{displayValue}</p>
+      </div>
+    );
+  }
 
   function saveCore() {
     patchMutation.mutate({
       full_name: fullName,
       email,
+      dob,
       phone,
       location,
       linkedin_url: linkedinUrl,
       portfolio_url: portfolioUrl,
       resume_url: resumeUrl,
-      profile_type: profileType,
-      preferred_roles: preferredRoles,
-      experience_level: experienceLevel,
-      looking_for: lookingFor ? [lookingFor] : [],
+      roles,
+      founder_status: roles.includes("Founder") ? founderStatus : undefined,
+      investor_data: roles.includes("Investor") ? investorData : undefined,
+      student_data: roles.includes("Student") ? studentData : undefined,
+      professional_data: roles.includes("Working Professional") ? professionalData : undefined,
+      freelancer_data: roles.includes("Freelancer / Service Provider") ? freelancerData : undefined,
+      consultant_data: roles.includes("Consultant / Mentor / Advisor") ? consultantData : undefined,
+      creator_data: roles.includes("Content Creator / Community Admin") ? creatorData : undefined,
+      other_role_spec: roles.includes("Other (Specify)") ? otherRoleSpec : undefined,
+      skills,
+      looking_for: lookingFor,
       availability,
       work_mode: workMode,
-      expected_pay: expectedPay,
     });
     setEditingCore(false);
   }
 
+  const isFounder = (profile as any).roles?.includes("Founder");
+
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white font-sans">
       <nav className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -499,9 +542,25 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       </nav>
 
       <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
-          <p className="text-white/35 mt-1 text-sm">{profile.profile_type} · {profile.experience_level}</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
+            <p className="text-white/35 mt-1 text-sm">
+              {(profile as any).roles?.join(" · ") || "User"} · {profile.location}
+            </p>
+          </div>
+
+          {isFounder && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => setLocation("/join-startup")}
+              className="bg-red-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-red-600 transition-colors shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+            >
+              Create Business Dashboard
+            </motion.button>
+          )}
         </div>
 
         <div className="flex flex-col gap-5">
@@ -523,15 +582,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                     <div className="space-y-1">
                       <h2 className="text-2xl font-semibold tracking-tight text-white">{profile.full_name}</h2>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-white/45 text-sm">
-                        <span>{profile.profile_type}</span>
+                        <span>{roles.join(", ")}</span>
                         <span className="w-1 h-1 rounded-full bg-white/20" />
-                        <span>{profile.experience_level}</span>
-                        {profile.location && (
-                          <>
-                            <span className="w-1 h-1 rounded-full bg-white/20" />
-                            <span>{profile.location}</span>
-                          </>
-                        )}
+                        <span>{location}</span>
                       </div>
                     </div>
                   </div>
@@ -575,17 +628,17 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                         <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Profile & Expertise</h3>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-[10px] text-white/20 uppercase mb-1">You are</p>
-                            <p className="text-sm text-white/70">{profile.profile_type}</p>
+                            <p className="text-[10px] text-white/20 uppercase mb-1">Roles</p>
+                            <p className="text-sm text-white/70">{roles.join(", ")}</p>
                           </div>
-                          <div>
-                            <p className="text-[10px] text-white/20 uppercase mb-1">Role / Services</p>
-                            <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{profile.preferred_roles || "Not specified"}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-white/20 uppercase mb-1">Experience</p>
-                            <p className="text-sm text-white/70">{profile.experience_level}</p>
-                          </div>
+                          {skills.length > 0 && (
+                            <div>
+                              <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                {skills.map(s => <Tag key={s} label={s} />)}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -598,97 +651,363 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                           <div>
                             <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
                             <div className="flex flex-wrap gap-1.5">
-                              {profile.looking_for && profile.looking_for.length > 0 && (
-                                <Tag label={profile.looking_for[0]} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
-                              )}
+                              {lookingFor.map(tag => (
+                                <Tag key={tag} label={tag} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
+                              ))}
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <p className="text-[10px] text-white/20 uppercase mb-1">Availability</p>
-                              <p className="text-sm text-white/70">{profile.availability || "Not specified"}</p>
+                              <DetailRow label="Availability" value={availability} />
                             </div>
                             <div>
-                              <p className="text-[10px] text-white/20 uppercase mb-1">Work Mode</p>
-                              <p className="text-sm text-white/70">{profile.work_mode || "Not specified"}</p>
+                              <DetailRow label="Work Mode" value={workMode} />
                             </div>
-                            <div>
-                              <p className="text-[10px] text-white/20 uppercase mb-1">Location</p>
-                              <p className="text-sm text-white/70">{profile.location || "Not specified"}</p>
-                            </div>
-                            {profile.expected_pay && (
-                              <div>
-                                <p className="text-[10px] text-white/20 uppercase mb-1">Expected Pay</p>
-                                <p className="text-sm text-white/70">{profile.expected_pay}</p>
-                              </div>
-                            )}
                           </div>
+                          {roles.includes("Founder") && (
+                            <div className="p-3 bg-red-500/5 rounded-xl border border-red-500/10">
+                              <p className="text-[10px] text-red-400/60 uppercase mb-1 font-bold">Founder Status</p>
+                              <p className="text-sm text-white/70">{founderStatus || "Exploring"}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
+
+                      {/* Role Specific Details - Extended */}
+                      {(roles.includes("Investor") || roles.includes("Student") || roles.includes("Working Professional") ||
+                        roles.includes("Freelancer / Service Provider") || roles.includes("Consultant / Mentor / Advisor") ||
+                        roles.includes("Content Creator / Community Admin")) && (
+                          <div className="space-y-3 pt-2">
+                            <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Role-Specific Details</h3>
+                            <div className="space-y-4 p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                              {roles.includes("Investor") && investorData && (
+                                <div className="space-y-3">
+                                  <p className="text-[10px] text-red-400/60 uppercase font-bold">Investor Profile</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <DetailRow label="Type" value={investorData.investor_types} />
+                                    <DetailRow label="Stages" value={investorData.investment_stages} />
+                                    <DetailRow label="Ticket Size" value={investorData.ticket_size} />
+                                    <DetailRow label="Focus Area" value={investorData.industries} />
+                                    <DetailRow label="Geography" value={investorData.geography === "Specific Regions (Specify)" ? investorData.specific_regions : investorData.geography} />
+                                  </div>
+                                </div>
+                              )}
+
+                              {roles.includes("Student") && studentData && (
+                                <div className="space-y-3">
+                                  <p className="text-[10px] text-blue-400/60 uppercase font-bold">Academic Info</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <DetailRow label="Institution" value={studentData.institution} />
+                                    <DetailRow label="Course" value={studentData.course} />
+                                    <DetailRow label="Year" value={studentData.year} />
+                                    <DetailRow label="Community" value={studentData.communities?.is_member ? "Member" : "No"} />
+                                  </div>
+                                </div>
+                              )}
+
+                              {roles.includes("Working Professional") && professionalData && (
+                                <div className="space-y-3">
+                                  <p className="text-[10px] text-green-400/60 uppercase font-bold">Professional Path</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <DetailRow label="Company" value={professionalData.company} />
+                                    <DetailRow label="Title" value={professionalData.title} />
+                                    <DetailRow label="Experience" value={professionalData.experience_years} />
+                                    <DetailRow label="Notice Period" value={professionalData.notice_period} />
+                                  </div>
+                                </div>
+                              )}
+
+                              {roles.includes("Freelancer / Service Provider") && freelancerData && (
+                                <div className="space-y-3">
+                                  <p className="text-[10px] text-purple-400/60 uppercase font-bold">Freelance Details</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <DetailRow label="Experience" value={freelancerData.experience_years} />
+                                    <DetailRow label="Model" value={freelancerData.engagement_model} />
+                                    <DetailRow label="Project Budget" value={freelancerData.budget_range} />
+                                  </div>
+                                  {freelancerData.notable_clients && (
+                                    <DetailRow label="Notable Clients" value={freelancerData.notable_clients} />
+                                  )}
+                                </div>
+                              )}
+
+                              {roles.includes("Consultant / Mentor / Advisor") && consultantData && (
+                                <div className="space-y-3">
+                                  <p className="text-[10px] text-orange-400/60 uppercase font-bold">Advisory Profile</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <DetailRow label="Expertise" value={consultantData.expertise_areas} />
+                                    <DetailRow label="Level" value={consultantData.experience_level} />
+                                    <DetailRow label="Support Type" value={consultantData.support_types} />
+                                  </div>
+                                </div>
+                              )}
+
+                              {roles.includes("Content Creator / Community Admin") && creatorData && (
+                                <div className="space-y-3">
+                                  <p className="text-[10px] text-pink-400/60 uppercase font-bold">Creator Presence</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <DetailRow label="Platforms" value={creatorData.platforms} />
+                                    <DetailRow label="Audience" value={creatorData.audience_size} />
+                                    <DetailRow label="Niches" value={creatorData.niches} />
+                                  </div>
+                                  {creatorData.profile_links && (
+                                    <DetailRow label="Links" value={creatorData.profile_links} />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </motion.div>
               ) : (
                 <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-                  {/* Section: Basic Details */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Basic Details</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField label="Full Name" value={fullName} onChange={setFullName} />
-                      <FormField label="Email" value={email} onChange={setEmail} type="email" />
-                      <FormField label="Phone Number" value={phone} onChange={setPhone} />
-                      <FormField label="Location" value={location} onChange={setLocation} placeholder="City, Country" />
-                      <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} />
-                      <FormField label="Portfolio URL" value={portfolioUrl} onChange={setPortfolioUrl} />
-                      <FormField label="Resume URL" value={resumeUrl} onChange={setResumeUrl} />
-                    </div>
-                  </div>
-
-                  {/* Section: Profile & Expertise */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Individual Profile</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="space-y-1.5">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">You are</p>
-                        <PickOne options={PROFILE_TYPES} value={profileType} onChange={(v) => setProfileType(v as any)} />
-                      </div>
-                      <div className="space-y-1.5">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Experience Level</p>
-                        <PickOne options={EXPERIENCE_LEVELS} value={experienceLevel} onChange={setExperienceLevel} />
-                      </div>
-                    </div>
-                    <TextArea label="Preferred role / Services you provide" value={preferredRoles} onChange={setPreferredRoles} placeholder="Describe your core expertise..." />
-                  </div>
-
-                  {/* Section: Requirements */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Requirements</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <div className="space-y-1.5">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
-                        <PickOne options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Basic Details</h3>
+                      <div className="space-y-3">
+                        <FormField label="Full Name" value={fullName} onChange={setFullName} />
+                        <FormField label="Email" value={email} onChange={setEmail} type="email" />
+                        <FormField label="Phone Number" value={phone} onChange={setPhone} />
+                        <FormField label="Location" value={location} onChange={setLocationState} />
+                        <FormField label="Date of Birth" value={dob} onChange={setDob} placeholder="DD/MM/YYYY" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                      <div className="space-y-1.5">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
-                        <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Professional Links</h3>
+                      <div className="space-y-3">
+                        <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} />
+                        <FormField label="Portfolio URL" value={portfolioUrl} onChange={setPortfolioUrl} />
+                        <FormField label="Resume URL" value={resumeUrl} onChange={setResumeUrl} />
                       </div>
-                      <div className="space-y-1.5">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Work Mode</p>
-                        <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
-                      </div>
-                      <FormField label="Expected Pay" value={expectedPay} onChange={setExpectedPay} placeholder="$X/hr or $X/year" />
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-white/8 flex gap-3">
-                    <button onClick={saveCore} disabled={patchMutation.isPending}
-                      className="flex items-center gap-2 bg-white text-black text-xs font-bold px-6 py-3 rounded-xl hover:bg-white/90 transition-all active:scale-95 disabled:opacity-50">
-                      {patchMutation.isPending ? "Saving..." : <><Check className="w-3.5 h-3.5" /> Save Profile</>}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Roles & Skills</h3>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">What describes you best?</p>
+                        <PickMany options={ROLE_OPTIONS} value={roles} onChange={setRoles} />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                        <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {roles.includes("Founder") && (
+                    <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                      <p className="text-xs text-white/35 uppercase tracking-wider">Founder Status</p>
+                      <PickOne options={FOUNDER_STATUS_OPTIONS} value={founderStatus} onChange={setFounderStatus} />
+                    </div>
+                  )}
+
+                  {roles.includes("Investor") && (
+                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                      <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Investor Info</h3>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Investor Type</p>
+                          <PickMany options={INVESTOR_TYPE_OPTIONS} value={investorData.investor_types || []} onChange={(next) => {
+                            setInvestorData({ ...investorData, investor_types: next });
+                          }} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Stage Focus</p>
+                          <PickMany options={INVESTOR_STAGE_OPTIONS} value={investorData.investment_stages || []} onChange={(next) => {
+                            setInvestorData({ ...investorData, investment_stages: next });
+                          }} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Ticket Size</p>
+                          <PickOne options={TICKET_SIZE_OPTIONS} value={investorData.ticket_size || ""} onChange={(v) => setInvestorData({ ...investorData, ticket_size: v })} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Preferred Industries</p>
+                          <PickMany options={INDUSTRY_OPTIONS} value={investorData.industries || []} onChange={(next) => {
+                            setInvestorData({ ...investorData, industries: next });
+                          }} />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Geographic Focus</p>
+                            <PickOne options={GEO_OPTIONS} value={investorData.geography || ""} onChange={(v) => setInvestorData({ ...investorData, geography: v })} />
+                          </div>
+                          {investorData.geography === "Specific Regions (Specify)" && (
+                            <FormField label="Specify Regions" value={investorData.specific_regions || ""} onChange={(v) => setInvestorData({ ...investorData, specific_regions: v })} />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {roles.includes("Student") && (
+                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                      <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Student Info</h3>
+                      <div className="space-y-4">
+                        <FormField label="University Name" value={studentData.institution || ""} onChange={(v) => setStudentData({ ...studentData, institution: v })} />
+                        <FormField label="Course" value={studentData.course || ""} onChange={(v) => setStudentData({ ...studentData, course: v })} />
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Year of Study</p>
+                          <PickOne options={STUDY_YEAR_OPTIONS} value={studentData.year || ""} onChange={(v) => setStudentData({ ...studentData, year: v })} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Student Communities?</p>
+                          <PickOne options={["Yes", "No"]} value={studentData.communities?.is_member ? "Yes" : "No"} onChange={(v) => setStudentData({
+                            ...studentData,
+                            communities: { ...studentData.communities, is_member: v === "Yes" }
+                          })} />
+                        </div>
+                        {studentData.communities?.is_member && (
+                          <div className="space-y-4 pt-2">
+                            <FormField label="Community Links (comma separated)" value={Array.isArray(studentData.communities?.links) ? studentData.communities.links.join(", ") : ""} onChange={(v) => setStudentData({
+                              ...studentData,
+                              communities: { ...studentData.communities, links: v.split(",").map(s => s.trim()) }
+                            })} />
+                            <FormField label="Admin Contact" value={studentData.communities?.admin_contact || ""} onChange={(v) => setStudentData({
+                              ...studentData,
+                              communities: { ...studentData.communities, admin_contact: v }
+                            })} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {roles.includes("Working Professional") && (
+                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                      <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Professional Info</h3>
+                      <div className="space-y-4">
+                        <FormField label="Company Name" value={professionalData.company || ""} onChange={(v) => setProfessionalData({ ...professionalData, company: v })} />
+                        <FormField label="Job Title" value={professionalData.title || ""} onChange={(v) => setProfessionalData({ ...professionalData, title: v })} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Years of Experience</p>
+                            <PickOne options={EXP_OPTIONS} value={professionalData.experience_years || ""} onChange={(v) => setProfessionalData({ ...professionalData, experience_years: v })} />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Notice Period</p>
+                            <PickOne options={NOTICE_OPTIONS} value={professionalData.notice_period || ""} onChange={(v) => setProfessionalData({ ...professionalData, notice_period: v })} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {roles.includes("Freelancer / Service Provider") && (
+                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                      <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Freelancer Info</h3>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Freelance Experience</p>
+                          <PickOne options={FREELANCE_EXP_OPTIONS} value={freelancerData.experience_years || ""} onChange={(v) => setFreelancerData({ ...freelancerData, experience_years: v })} />
+                        </div>
+                        <TextArea label="Notable Clients / Projects" value={freelancerData.notable_clients || ""} onChange={(v) => setFreelancerData({ ...freelancerData, notable_clients: v })} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Engagement Model</p>
+                            <PickOne options={ENGAGEMENT_OPTIONS} value={freelancerData.engagement_model || ""} onChange={(v) => setFreelancerData({ ...freelancerData, engagement_model: v })} />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Typical Budget Range</p>
+                            <PickOne options={BUDGET_RANGE_OPTIONS} value={freelancerData.budget_range || ""} onChange={(v) => setFreelancerData({ ...freelancerData, budget_range: v })} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {roles.includes("Consultant / Mentor / Advisor") && (
+                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                      <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Consultant Info</h3>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Primary Expertise</p>
+                          <PickMany options={EXPERTISE_OPTIONS} value={consultantData.expertise_areas || []} onChange={(next) => {
+                            setConsultantData({ ...consultantData, expertise_areas: next });
+                          }} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Experience Level</p>
+                          <PickOne options={CONSULTANT_EXP_OPTIONS} value={consultantData.experience_level || ""} onChange={(v) => setConsultantData({ ...consultantData, experience_level: v })} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Support Type</p>
+                          <PickMany options={SUPPORT_TYPE_OPTIONS} value={consultantData.support_types || []} onChange={(next) => {
+                            setConsultantData({ ...consultantData, support_types: next });
+                          }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {roles.includes("Content Creator / Community Admin") && (
+                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                      <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Creator Info</h3>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Platforms</p>
+                          <PickMany options={PLATFORM_OPTIONS} value={creatorData.platforms || []} onChange={(next) => {
+                            setCreatorData({ ...creatorData, platforms: next });
+                          }} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Audience Size</p>
+                          <PickOne options={AUDIENCE_SIZE_OPTIONS} value={creatorData.audience_size || ""} onChange={(v) => setCreatorData({ ...creatorData, audience_size: v })} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Niches</p>
+                          <PickMany options={NICHE_OPTIONS} value={creatorData.niches || []} onChange={(next) => {
+                            setCreatorData({ ...creatorData, niches: next });
+                          }} />
+                        </div>
+                        <TextArea label="Profile / Community Links (comma separated)" value={Array.isArray(creatorData.profile_links) ? creatorData.profile_links.join(", ") : ""} onChange={(v) => setCreatorData({ ...creatorData, profile_links: v.split(",").map(s => s.trim()) })} />
+                      </div>
+                    </div>
+                  )}
+
+                  {roles.includes("Other (Specify)") && (
+                    <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                      <FormField label="Specify Other Role" value={otherRoleSpec} onChange={setOtherRoleSpec} />
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Preferences</h3>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
+                        <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
+                          <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Work Mode</p>
+                          <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-white/10 flex gap-4">
+                    <button
+                      onClick={saveCore}
+                      disabled={patchMutation.isPending}
+                      className="px-8 py-3 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {patchMutation.isPending ? "Saving..." : "Save Profile"}
                     </button>
-                    <button onClick={() => setEditingCore(false)}
-                      className="text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-4 py-3">
+                    <button
+                      onClick={() => setEditingCore(false)}
+                      className="px-6 py-3 text-white/40 hover:text-white/70 text-sm font-medium transition-colors"
+                    >
                       Cancel
                     </button>
                   </div>
