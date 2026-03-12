@@ -846,12 +846,10 @@ export class DatabaseStorage implements IStorage {
   async getEngagementFunnel(): Promise<any> {
     const totalSignups = await User.countDocuments({});
 
-    // Profile completion
+    // Profile completion - counting all actual profiles created
     const completedProfiles = await Promise.all([
-      StartupProfile.countDocuments({ onboarding_completed: true }),
-      PartnerProfile.countDocuments({ onboarding_completed: true }),
-      IndividualProfile.countDocuments({ onboarding_completed: true }),
-      InvestorProfile.countDocuments({ onboarding_completed: true })
+      IndividualProfile.countDocuments({}),
+      Business.countDocuments({})
     ]);
     const totalCompleted = completedProfiles.reduce((sum, count) => sum + count, 0);
 

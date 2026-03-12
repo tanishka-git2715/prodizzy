@@ -320,6 +320,8 @@ export async function registerRoutes(
         engagementRate: totalUsers.length > 0 ? ((mau / totalUsers.length) * 100).toFixed(2) : "0.00",
         totalConnections: connectionMetrics.total,
         acceptanceRate: connectionMetrics.acceptanceRate,
+        individualCount: marketplaceHealth.individualCount,
+        businessCount: marketplaceHealth.businessCount,
         startupCount: marketplaceHealth.startupCount,
         investorCount: marketplaceHealth.investorCount,
         partnerCount: marketplaceHealth.partnerCount
