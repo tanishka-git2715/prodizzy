@@ -207,7 +207,7 @@ const FOUNDER_STATUS_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early 
 const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
 const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
 const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
-const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Open to All"];
+const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Other (Specify)"];
 const GEO_OPTIONS = ["India", "Global", "Specific Regions (Specify)"];
 
 const TEAM_SIZE_OPTIONS = ["Solo", "2–10", "11–50", "51–500", "500–1000", "1000+"];
@@ -332,7 +332,8 @@ export default function IndividualOnboard() {
   // --- State: Startup (Founder) ---
   const [startupCompanyName, setStartupCompanyName] = useState("");
   const [startupRole, setStartupRole] = useState("");
-  const [startupIndustry, setStartupIndustry] = useState<string[]>([]);
+  const [startupIndustry, setStartupIndustry] = useState("");
+  const [startupIndustryOther, setStartupIndustryOther] = useState("");
   const [startupTeamSize, setStartupTeamSize] = useState("");
   const [isRegistered, setIsRegistered] = useState("");
   const [productDesc, setProductDesc] = useState("");
@@ -366,7 +367,7 @@ export default function IndividualOnboard() {
   const [lookingFor, setLookingFor] = useState<string[]>([]);
 
   const effectiveTotalSteps = roles.includes("Other (Specify)") ? 1
-    : (roles.includes("Founder") || roles.includes("Investor")) ? 2
+    : (roles.includes("Founder") || roles.includes("Investor") || roles.includes("Consultant / Mentor / Advisor") || roles.includes("Content Creator / Community Admin")) ? 2
       : 3;
 
   // --- Logic ---
@@ -410,7 +411,8 @@ export default function IndividualOnboard() {
     setFounderStatus("");
     setStartupCompanyName("");
     setStartupRole("");
-    setStartupIndustry([]);
+    setStartupIndustry("");
+    setStartupIndustryOther("");
     setStartupTeamSize("");
     setIsRegistered("");
     setProductDesc("");
@@ -446,7 +448,7 @@ export default function IndividualOnboard() {
       return fullName.trim() && roles.length > 0 && userLocation.trim() && isEmailValid;
     }
     if (step === 1) {
-      if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || startupIndustry.length === 0 || !startupTeamSize || !isRegistered || !productDesc)) return false;
+      if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || !startupIndustry || !startupTeamSize || !isRegistered || !productDesc)) return false;
       if (roles.includes("Investor") && (!investorType || !ticketSize || preferredIndustries.length === 0)) return false;
       if (roles.includes("Student") && (!institution || !course || !studyYear)) return false;
       if (roles.includes("Working Professional") && (!currentCompany || !jobTitle || !totalExp || !noticePeriod)) return false;
@@ -455,7 +457,7 @@ export default function IndividualOnboard() {
       if (roles.includes("Content Creator / Community Admin") && (platforms.length === 0 || !audienceSize || niche.length === 0)) return false;
       return true;
     }
-    if (step === 2) return skills.length > 0 && lookingFor.length > 0 && availability && workMode;
+    if (step === 2) return skills.length > 0 && availability && workMode;
     return true;
   }
 
@@ -558,7 +560,7 @@ export default function IndividualOnboard() {
         company_name: startupCompanyName,
         role: startupRole,
         stage: founderStatus,
-        industry: startupIndustry,
+        industry: startupIndustry === "Other (Specify)" ? (startupIndustryOther || "Other") : startupIndustry,
         team_size: startupTeamSize,
         is_registered: isRegistered,
         product_description: productDesc,
@@ -657,17 +659,20 @@ export default function IndividualOnboard() {
             <Dropdown label="Current Status" options={FOUNDER_STATUS_OPTIONS} value={founderStatus} onChange={setFounderStatus} />
             <Field label="Company Name" value={startupCompanyName} onChange={setStartupCompanyName} placeholder="e.g. Acme Inc." />
             <Field label="Your Role" value={startupRole} onChange={setStartupRole} placeholder="e.g. CEO, Founder" />
-            <MultiSelectDropdown label="Industry" options={INDUSTRY_OPTIONS} selected={startupIndustry} onToggle={(v) => toggle(setStartupIndustry, v)} />
+            <Dropdown label="Industry" options={INDUSTRY_OPTIONS} value={startupIndustry} onChange={setStartupIndustry} />
+            {startupIndustry === "Other (Specify)" && (
+              <Field label="Please specify your industry" value={startupIndustryOther} onChange={setStartupIndustryOther} placeholder="e.g. Space Tech, AgriTech..." />
+            )}
             <Dropdown label="Team Size" options={TEAM_SIZE_OPTIONS} value={startupTeamSize} onChange={setStartupTeamSize} />
             <Dropdown label="Is your startup registered?" options={REGISTERED_OPTIONS} value={isRegistered} onChange={setIsRegistered} />
             <Field label="Product Description" value={productDesc} onChange={setProductDesc} placeholder="What are you building?" multiline />
             <Field label="Target Audience" value={targetAudience} onChange={setTargetAudience} placeholder="Who is it for?" />
+            <Field label="Company Website" value={startupWebsite} onChange={setStartupWebsite} placeholder="https://..." optional />
             <div className="grid grid-cols-2 gap-4">
               <Field label="No. of Users" value={numUsers} onChange={setNumUsers} placeholder="e.g. 500" optional />
               <Field label="Monthly Revenue" value={monthlyRevenue} onChange={setMonthlyRevenue} placeholder="e.g. $5k" optional />
             </div>
             <Field label="Traction Highlights" value={tractionHighlights} onChange={setTractionHighlights} placeholder="Any milestones?" multiline optional />
-            <Field label="Company Website" value={startupWebsite} onChange={setStartupWebsite} placeholder="https://..." optional />
           </div>
         )}
 
@@ -692,13 +697,6 @@ export default function IndividualOnboard() {
             <Field label="School / College / University Name" value={institution} onChange={setInstitution} />
             <Field label="Course / Degree" value={course} onChange={setCourse} placeholder="E.g. B.Tech CSE, BBA" />
             <Dropdown label="Year of Study" options={STUDY_YEAR_OPTIONS} value={studyYear} onChange={setStudyYear} />
-            <Dropdown label="Are you part of any student communities?" options={["Yes", "No"]} value={studentCommunities} onChange={setStudentCommunities} />
-            {studentCommunities === "Yes" && (
-              <>
-                <Field label="Community Links" value={communityLinks} onChange={setCommunityLinks} placeholder="Comma separated URLs" />
-                <Field label="Admin Contact" value={adminContact} onChange={setAdminContact} placeholder="Email or Phone" />
-              </>
-            )}
           </div>
         )}
 
@@ -753,7 +751,6 @@ export default function IndividualOnboard() {
       <StepHeader step={2} total={effectiveTotalSteps} title="Final Details" />
       <div className="space-y-5">
         <MultiSelectDropdown label="Primary Skills" options={SKILL_OPTIONS} selected={skills} onToggle={(v) => toggle(setSkills, v)} enableSearch />
-        <MultiSelectDropdown label="What are you looking for?" options={LOOKING_FOR_OPTIONS} selected={lookingFor} onToggle={(v) => toggle(setLookingFor, v)} />
         <Dropdown label="Availability" options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
         <Dropdown label="Preferred Work Mode" options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">

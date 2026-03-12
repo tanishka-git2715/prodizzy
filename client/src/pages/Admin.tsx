@@ -778,7 +778,7 @@ export default function Admin() {
         {activeTab === "profiles" && (
           <>
             {/* Profile Sub-Tabs */}
-            <div className="border-b border-white/5 flex items-center justify-between">
+            <div className="border-b border-white/5">
               <div className="flex gap-4 overflow-x-auto no-scrollbar">
                 {[
                   { type: "individual" as const, label: "Individuals" },
@@ -797,19 +797,6 @@ export default function Admin() {
                   </button>
                 ))}
               </div>
-              <button
-                onClick={() => {
-                  if (confirm("This will permanently delete ALL old Startup, Partner, and Individual profiles. User accounts are kept. Cannot be undone. Continue?")) {
-                    fetch("/api/admin/purge-legacy", { method: "POST", headers: { "Content-Type": "application/json" } })
-                      .then(r => r.json())
-                      .then(d => alert(`Purged: ${d.startups} startup(s), ${d.partners} partner(s), ${d.individuals} individual(s) deleted.`))
-                      .catch(() => alert("Error purging legacy data."));
-                  }
-                }}
-                className="shrink-0 flex items-center gap-1.5 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ml-4"
-              >
-                <Trash2 className="w-3 h-3" /> Purge Old Data
-              </button>
             </div>
 
             {/* Stats */}
