@@ -201,7 +201,7 @@ function MultiSelectDropdown({
 }
 
 // --- Options ---
-const ROLE_OPTIONS = ["Founder", "Investor", "Service Partner / Agency", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
+const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
 
 const FOUNDER_STATUS_OPTIONS = ["Exploring an idea", "Currently working on an MVP", "Already building a product", "Generating early revenue / Growing", "Scaling an established business"];
 const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
@@ -368,7 +368,7 @@ export default function IndividualOnboard() {
   const [lookingFor, setLookingFor] = useState<string[]>([]);
 
   const effectiveTotalSteps = roles.includes("Other (Specify)") ? 1
-    : (roles.includes("Founder") || roles.includes("Investor") || roles.includes("Service Partner / Agency")) ? 2
+    : (roles.includes("Founder") || roles.includes("Investor")) ? 2
       : 3;
 
   // --- Logic ---
@@ -451,7 +451,6 @@ export default function IndividualOnboard() {
     if (step === 1) {
       if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || !startupStage || startupIndustry.length === 0 || !startupTeamSize || !isRegistered || !productDesc)) return false;
       if (roles.includes("Investor") && (!investorType || !ticketSize || preferredIndustries.length === 0)) return false;
-      if (roles.includes("Service Partner / Agency") && (!partnerCompanyName || !partnerRole || !partnerType || partnerServices.length === 0 || partnerStages.length === 0 || !pricingModel || !partnerYearsExp || !partnerCapacity)) return false;
       if (roles.includes("Student") && (!institution || !course || !studyYear)) return false;
       if (roles.includes("Working Professional") && (!currentCompany || !jobTitle || !totalExp || !noticePeriod)) return false;
       if (roles.includes("Freelancer / Service Provider") && (!freelanceExp || !engagementModel || !budgetRange)) return false;
@@ -475,7 +474,6 @@ export default function IndividualOnboard() {
     const isConsultant = selectedRoles.includes("Consultant / Mentor / Advisor");
     const isCreator = selectedRoles.includes("Content Creator / Community Admin");
     const isFounderRole = selectedRoles.includes("Founder");
-    const isPartnerRole = selectedRoles.includes("Service Partner / Agency");
 
     // NEW Profile structure for IndividualProfile
     const payload: any = {
@@ -575,25 +573,6 @@ export default function IndividualOnboard() {
       };
     }
 
-    if (isPartnerRole) {
-      payload.partner_data = {
-        partner_type: partnerType,
-        services_offered: partnerServices,
-        stages_served: partnerStages,
-        pricing_model: pricingModel,
-        average_deal_size: avgDealSize,
-        years_experience: partnerYearsExp,
-        tools_tech_stack: partnerTools,
-        case_studies: partnerCaseStudies,
-        past_clients: partnerClients,
-        certifications: partnerCertifications,
-        monthly_capacity: partnerCapacity,
-        preferred_budget_range: partnerBudget,
-        website: partnerWebsite,
-        company_name: partnerCompanyName,
-        role: partnerRole,
-      };
-    }
 
     const res = await fetch("/api/profile", {
       method: "PUT",
@@ -626,7 +605,6 @@ export default function IndividualOnboard() {
             {[
               { id: "Founder" },
               { id: "Investor" },
-              { id: "Service Partner / Agency" },
               { id: "Student" },
               { id: "Working Professional" },
               { id: "Freelancer / Service Provider" },
@@ -697,26 +675,6 @@ export default function IndividualOnboard() {
           </div>
         )}
 
-        {roles.includes("Service Partner / Agency") && (
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Partner Info</h3>
-            <Field label="Company / Agency Name" value={partnerCompanyName} onChange={setPartnerCompanyName} placeholder="e.g. Design Studio" />
-            <Field label="Your Role" value={partnerRole} onChange={setPartnerRole} placeholder="e.g. Director, Partner" />
-            <Dropdown label="Partner Type" options={PARTNER_TYPE_OPTIONS} value={partnerType} onChange={setPartnerType} />
-            <MultiSelectDropdown label="Services Offered" options={SKILL_OPTIONS} selected={partnerServices} onToggle={(v) => toggle(setPartnerServices, v)} />
-            <MultiSelectDropdown label="Stages You Serve" options={STARTUP_STAGE_OPTIONS} selected={partnerStages} onToggle={(v) => toggle(setPartnerStages, v)} />
-            <Dropdown label="Pricing Model" options={PRICING_MODEL_OPTIONS} value={pricingModel} onChange={setPricingModel} />
-            <Field label="Average Deal Size" value={avgDealSize} onChange={setAvgDealSize} placeholder="e.g. ₹5 Lakhs" optional />
-            <Dropdown label="Years of Experience" options={EXP_OPTIONS} value={partnerYearsExp} onChange={setPartnerYearsExp} />
-            <Field label="Tools / Tech Stack" value={partnerTools} onChange={setPartnerTools} placeholder="e.g. Figma, React, AWS" optional />
-            <Field label="Portfolio / Case Studies" value={partnerCaseStudies} onChange={setPartnerCaseStudies} placeholder="Links..." optional />
-            <Field label="Notable Past Clients" value={partnerClients} onChange={setPartnerClients} placeholder="e.g. Google, Airtel" optional />
-            <Field label="Certifications" value={partnerCertifications} onChange={setPartnerCertifications} placeholder="Any relevant certs?" optional />
-            <Dropdown label="Monthly Capacity" options={CAPACITY_OPTIONS} value={partnerCapacity} onChange={setPartnerCapacity} />
-            <Field label="Preferred Budget Range" value={partnerBudget} onChange={setPartnerBudget} placeholder="e.g. ₹1L - ₹5L" optional />
-            <Field label="Business Website" value={partnerWebsite} onChange={setPartnerWebsite} placeholder="https://..." optional />
-          </div>
-        )}
 
         {roles.includes("Investor") && (
           <div className="space-y-4">
