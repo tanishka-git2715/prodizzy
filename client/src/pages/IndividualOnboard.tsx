@@ -219,7 +219,31 @@ export default function IndividualOnboard() {
   const [email, setEmail] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
-  const [roles, setRoles] = useState<string[]>([]); // We enforce single select in UI now
+  const [roles, setRoles] = useState<string[]>(() => {
+    // Try to restore from URL or sessionStorage
+    const params = new URLSearchParams(window.location.search);
+    let roleParam = params.get("role");
+
+    // Fallback to sessionStorage (set by AuthForm before Google redirect)
+    if (!roleParam) {
+      try {
+        roleParam = sessionStorage.getItem("prodizzy-pending-role");
+      } catch { /* ignore */ }
+    }
+
+    if (roleParam) {
+      const normalized = roleParam === "individual" ? "individual" : roleParam; // handle legacy
+      // Map simple strings back to full role names if needed
+      const mapping: Record<string, string> = {
+        "startup": "Founder",
+        "partner": "Partner",
+        "individual": "Student", // default to Student for general individual intent
+      };
+      const mapped = mapping[normalized] || normalized;
+      if (ROLE_OPTIONS.includes(mapped)) return [mapped];
+    }
+    return [];
+  });
 
   // --- State: Step 2 (Conditional) ---
   // Investor Focus
@@ -429,6 +453,7 @@ export default function IndividualOnboard() {
       availability,
       work_mode: workMode,
       looking_for: lookingFor,
+      other_role_details: roles.includes("Other (Specify)") ? otherRoleSpec : undefined,
       onboarding_completed: true,
     };
 
@@ -591,6 +616,12 @@ export default function IndividualOnboard() {
           </div>
         )}
       </div>
+      {/* Fallback to prevent blank screen if role is somehow lost or mismatched */}
+      {!roles.some(r => ROLE_OPTIONS.includes(r)) && (
+        <div className="text-center py-12 text-white/30 italic">
+          Please select a valid role to continue.
+        </div>
+      )}
     </div>,
 
     <div key="2" className="space-y-6">

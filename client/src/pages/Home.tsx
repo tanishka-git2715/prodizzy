@@ -128,9 +128,10 @@ export default function Home() {
   useEffect(() => {
     if (!session || showAuthModal || loadingProfile || !profileStatus || profileStatus.hasCompletedProfile) return;
 
-    if (pendingRole && authSuccess) {
+    if (authSuccess) {
       // All paths now go to Individual Onboarding first for new users
-      setLocation("/individual-onboard");
+      const roleParam = pendingRole ? `?role=${encodeURIComponent(pendingRole)}` : "";
+      setLocation(`/individual-onboard${roleParam}`);
       setPendingRole(null);
       setAuthSuccess(false);
     }

@@ -147,6 +147,10 @@ export function setupAuth(app: Express) {
 
                     console.log(`[Auth Google Callback] userId: ${userId}, profileFound: ${!!profile}, onboardingCompleted: ${profile?.onboarding_completed}`);
 
+                    if ((req.user as any).role === "admin") {
+                        return res.redirect("/admin");
+                    }
+
                     if (profile && profile.onboarding_completed) {
                         return res.redirect("/dashboard");
                     }
@@ -154,7 +158,7 @@ export function setupAuth(app: Express) {
             } catch (error) {
                 console.error("Error in Google Auth callback redirect logic:", error);
             }
-            res.redirect("/");
+            res.redirect("/individual-onboard");
         }
     );
 

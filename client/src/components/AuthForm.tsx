@@ -48,20 +48,8 @@ export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: Auth
         const res = await verifyOtp({ email, otp });
 
         if (res.success) {
-            try {
-                const profileRes = await fetch("/api/profile");
-                if (profileRes.ok && profileRes.status !== 404) {
-                    const data = await profileRes.json();
-                    if (data?.onboarding_completed) {
-                        window.location.href = "/dashboard";
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to check profile status on login", e);
-            }
-            setIsLoading(false);
-            if (onSuccess) onSuccess();
+            // Speed up: don't wait for profile check here, the landing page or onboarding page will handle it
+            window.location.href = "/individual-onboard";
         } else {
             setIsLoading(false);
             setLocalError(res.message || "Invalid code");
