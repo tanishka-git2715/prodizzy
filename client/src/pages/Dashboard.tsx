@@ -865,10 +865,12 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                         <p className="text-xs text-white/35 uppercase tracking-wider">What describes you best?</p>
                         <PickMany options={ROLE_OPTIONS} value={roles} onChange={setRoles} />
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
-                        <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
-                      </div>
+                      {!isShortPath && !isInvestor && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
+                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1049,25 +1051,27 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                     </div>
                   )}
 
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Preferences</h3>
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
-                        <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {!isShortPath && !isInvestor && (
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Preferences</h3>
+                      <div className="space-y-6">
                         <div className="space-y-2">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
-                          <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
+                          <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
                         </div>
-                        <div className="space-y-2">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Work Mode</p>
-                          <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
+                            <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Work Mode</p>
+                            <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="pt-6 border-t border-white/10 flex gap-4">
                     <button
