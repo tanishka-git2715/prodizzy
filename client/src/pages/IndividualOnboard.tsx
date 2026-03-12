@@ -373,6 +373,7 @@ export default function IndividualOnboard() {
     setError("");
 
     const payload = {
+      type: "individual",
       full_name: fullName,
       dob,
       location: userLocation,
