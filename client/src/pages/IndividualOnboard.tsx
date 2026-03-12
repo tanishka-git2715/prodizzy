@@ -301,7 +301,8 @@ export default function IndividualOnboard() {
   const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
   const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
   const NOTICE_OPTIONS = ["Immediate", "< 1 month", "1–3 months", "3+ months"];
-  const isShortPath = roles.includes("Founder") || roles.includes("Other (Specify)");
+  const effectiveTotalSteps = (roles.includes("Founder") || roles.includes("Other (Specify)")) ? 1
+    : roles.includes("Investor") ? 2 : 3;
 
   // --- Logic ---
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
@@ -415,7 +416,7 @@ export default function IndividualOnboard() {
 
   const steps = [
     <div key="0" className="space-y-6">
-      <StepHeader step={0} total={isShortPath ? 1 : 3} title="Create Your Professional Profile" />
+      <StepHeader step={0} total={effectiveTotalSteps} title="Create Your Professional Profile" />
       <div className="space-y-6">
         {/* Role Selection Moved to Top & Single Select Cards */}
         <div className="space-y-3">
@@ -472,7 +473,7 @@ export default function IndividualOnboard() {
     </div>,
 
     <div key="1" className="space-y-6">
-      <StepHeader step={1} total={3} title="Role-specific Details" />
+      <StepHeader step={1} total={effectiveTotalSteps} title="Role-specific Details" />
       <div className="space-y-8">
 
         {roles.includes("Founder") && (
@@ -557,7 +558,7 @@ export default function IndividualOnboard() {
     </div>,
 
     <div key="2" className="space-y-6">
-      <StepHeader step={2} total={3} title="Final Details" />
+      <StepHeader step={2} total={effectiveTotalSteps} title="Final Details" />
       <div className="space-y-5">
         <MultiSelectDropdown label="Primary Skills" options={SKILL_OPTIONS} selected={skills} onToggle={(v) => toggle(setSkills, v)} enableSearch />
         <MultiSelectDropdown label="What are you looking for?" options={LOOKING_FOR_OPTIONS} selected={lookingFor} onToggle={(v) => toggle(setLookingFor, v)} />
@@ -591,7 +592,7 @@ export default function IndividualOnboard() {
   return (
     <div className="min-h-screen bg-black flex flex-col font-sans">
       <div className="fixed top-0 left-0 right-0 h-0.5 bg-white/5 z-50">
-        <motion.div className="h-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" animate={{ width: `${((step + 1) / 3) * 100}%` }} transition={{ duration: 0.4 }} />
+        <motion.div className="h-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" animate={{ width: `${((step + 1) / effectiveTotalSteps) * 100}%` }} transition={{ duration: 0.4 }} />
       </div>
 
       <div className="flex items-center justify-between px-6 pt-8 pb-4">
@@ -619,7 +620,7 @@ export default function IndividualOnboard() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           )}
-          {step < 2 && !isShortPath ? (
+          {step < effectiveTotalSteps - 1 ? (
             <button onClick={() => { if (canProceed()) go(step + 1); }} disabled={!canProceed()}
               className="flex-1 bg-white text-black font-semibold py-3 rounded-xl text-sm hover:opacity-90 transition-opacity disabled:opacity-20">
               Continue
