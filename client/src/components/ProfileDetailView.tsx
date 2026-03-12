@@ -118,14 +118,6 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                     <div className="space-y-3">
                                         <p className="text-[10px] text-red-400/60 uppercase font-bold">Founder Status</p>
                                         <p className="text-sm text-white/70">{founderStatus || "Exploring"}</p>
-                                        {skills.length > 0 && (
-                                            <div className="pt-1">
-                                                <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {skills.map(s => <Tag key={s} label={s} />)}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                                 {roles.includes("Investor") && investorData && (
@@ -138,14 +130,6 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                             <DetailRow label="Focus Area" value={investorData.industries} />
                                             <DetailRow label="Geography" value={investorData.geography === "Specific Regions (Specify)" ? investorData.specific_regions : investorData.geography} />
                                         </div>
-                                        {skills.length > 0 && (
-                                            <div className="pt-1">
-                                                <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {skills.map(s => <Tag key={s} label={s} />)}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
 
@@ -219,14 +203,6 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                             <DetailRow label="Level" value={consultantData.experience_level} />
                                             <DetailRow label="Support Type" value={consultantData.support_types} />
                                         </div>
-                                        {skills.length > 0 && (
-                                            <div className="pt-1">
-                                                <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {skills.map(s => <Tag key={s} label={s} />)}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
 
@@ -240,14 +216,6 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                         </div>
                                         {creatorData.profile_links && (
                                             <DetailRow label="Links" value={creatorData.profile_links} />
-                                        )}
-                                        {skills.length > 0 && (
-                                            <div className="pt-1">
-                                                <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {skills.map(s => <Tag key={s} label={s} />)}
-                                                </div>
-                                            </div>
                                         )}
                                     </div>
                                 )}

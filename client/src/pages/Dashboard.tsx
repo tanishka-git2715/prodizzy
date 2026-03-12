@@ -518,6 +518,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const [otherRoleSpec, setOtherRoleSpec] = useState((profile as any).other_role_spec || "");
 
   const [founderStatus, setFounderStatus] = useState((profile as any).founder_status || "");
+  const [startupData, setStartupData] = useState<any>((profile as any).startup_data || {});
   const [skills, setSkills] = useState<string[]>(profile.skills || []);
   const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
   const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
@@ -531,11 +532,11 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 
   // Constants
   const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
-  const FOUNDER_STATUS_OPTIONS = ["Exploring an idea", "Currently working on an MVP", "Already building a product", "Generating early revenue / Growing", "Scaling an established business"];
+  const FOUNDER_STATUS_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
   const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
   const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
   const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
-  const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Open to All"];
+  const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Other (Specify)"];
   const GEO_OPTIONS = ["India", "Global", "Specific Regions (Specify)"];
   const STUDY_YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Final Year", "Postgraduate", "Recent Graduate"];
   const EXP_OPTIONS = ["0–2 years", "2–4 years", "4–8 years", "8+ years"];
@@ -577,6 +578,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       resume_url: resumeUrl,
       roles,
       founder_status: roles.includes("Founder") ? founderStatus : undefined,
+      startup_data: roles.includes("Founder") ? startupData : undefined,
       investor_data: roles.includes("Investor") ? investorData : undefined,
       student_data: roles.includes("Student") ? studentData : undefined,
       professional_data: roles.includes("Working Professional") ? professionalData : undefined,
@@ -686,11 +688,41 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 
                   {roles.includes("Founder") && (
                     <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                      <p className="text-xs text-white/35 uppercase tracking-wider">Founder Status</p>
-                      <PickOne options={FOUNDER_STATUS_OPTIONS} value={founderStatus} onChange={setFounderStatus} />
-                      <div className="space-y-2 pt-2">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
-                        <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                      <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Startup Info</h3>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Current Status</p>
+                          <PickOne options={FOUNDER_STATUS_OPTIONS} value={founderStatus} onChange={setFounderStatus} />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField label="Company Name" value={startupData.company_name || ""} onChange={(v) => setStartupData({ ...startupData, company_name: v })} />
+                          <FormField label="Your Role" value={startupData.role || ""} onChange={(v) => setStartupData({ ...startupData, role: v })} placeholder="e.g. CEO, Founder" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Industry</p>
+                          <PickOne options={INDUSTRY_OPTIONS} value={startupData.industry || ""} onChange={(v) => setStartupData({ ...startupData, industry: v })} />
+                          {startupData.industry === "Other (Specify)" && (
+                            <FormField label="Specify Industry" value={startupData.industry_other || ""} onChange={(v) => setStartupData({ ...startupData, industry_other: v })} placeholder="e.g. AgriTech, Space Tech" />
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Team Size</p>
+                            <PickOne options={["Solo", "2–10", "11–50", "51–500", "500–1000", "1000+"]} value={startupData.team_size || ""} onChange={(v) => setStartupData({ ...startupData, team_size: v })} />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Is your startup registered?</p>
+                            <PickOne options={["Yes", "No"]} value={startupData.is_registered || ""} onChange={(v) => setStartupData({ ...startupData, is_registered: v })} />
+                          </div>
+                        </div>
+                        <TextArea label="Product Description" value={startupData.product_description || ""} onChange={(v) => setStartupData({ ...startupData, product_description: v })} />
+                        <FormField label="Target Audience" value={startupData.target_audience || ""} onChange={(v) => setStartupData({ ...startupData, target_audience: v })} placeholder="Who is it for?" />
+                        <FormField label="Company Website" value={startupData.website || ""} onChange={(v) => setStartupData({ ...startupData, website: v })} placeholder="https://..." />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField label="No. of Users" value={startupData.num_users || ""} onChange={(v) => setStartupData({ ...startupData, num_users: v })} placeholder="e.g. 500" />
+                          <FormField label="Monthly Revenue" value={startupData.monthly_revenue || ""} onChange={(v) => setStartupData({ ...startupData, monthly_revenue: v })} placeholder="e.g. $5k" />
+                        </div>
+                        <TextArea label="Traction Highlights" value={startupData.traction_highlights || ""} onChange={(v) => setStartupData({ ...startupData, traction_highlights: v })} />
                       </div>
                     </div>
                   )}
