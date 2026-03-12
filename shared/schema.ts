@@ -346,3 +346,98 @@ export type ConnectionRequest = {
 export type MatchedStartup = PublicStartupProfile & {
   match_score: number;
 };
+
+// =============================================
+// BUSINESS PROFILE
+// =============================================
+
+export const insertBusinessSchema = z.object({
+  business_name: z.string().min(1, "Business name is required"),
+  business_type: z.enum(["Startup", "Agency", "Enterprise", "Institution"]),
+  industry: z.array(z.string()).optional(),
+  website: z.string().url("Valid URL required").optional().or(z.literal("")),
+  linkedin_url: z.string().url("Valid LinkedIn URL required").optional().or(z.literal("")),
+  logo_url: z.string().url("Valid URL required").optional().or(z.literal("")),
+  description: z.string().optional(),
+  team_size: z.string().optional(),
+  location: z.string().optional(),
+  founded_year: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
+});
+
+export const updateBusinessSchema = insertBusinessSchema.partial();
+
+export type InsertBusiness = z.infer<typeof insertBusinessSchema>;
+export type UpdateBusiness = z.infer<typeof updateBusinessSchema>;
+
+export type Business = {
+  _id: string;
+  owner_user_id: string;
+  business_name: string;
+  business_type: "Startup" | "Agency" | "Enterprise" | "Institution";
+  industry?: string[];
+  website?: string;
+  linkedin_url?: string;
+  logo_url?: string;
+  description?: string;
+  team_size?: string;
+  location?: string;
+  founded_year?: number;
+  approved: boolean;
+  onboarding_completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// =============================================
+// TEAM MEMBER
+// =============================================
+
+export const inviteTeamMemberSchema = z.object({
+  email: z.string().email("Valid email required"),
+  role: z.enum(["admin", "member"]).default("member"),
+  permissions: z.object({
+    can_create_campaigns: z.boolean().default(true),
+    can_edit_business: z.boolean().default(false),
+    can_invite_members: z.boolean().default(false),
+    can_view_analytics: z.boolean().default(true),
+  }).optional(),
+});
+
+export const updateTeamMemberSchema = z.object({
+  role: z.enum(["owner", "admin", "member"]).optional(),
+  permissions: z.object({
+    can_create_campaigns: z.boolean().optional(),
+    can_edit_business: z.boolean().optional(),
+    can_invite_members: z.boolean().optional(),
+    can_view_analytics: z.boolean().optional(),
+  }).optional(),
+});
+
+export type InviteTeamMember = z.infer<typeof inviteTeamMemberSchema>;
+export type UpdateTeamMember = z.infer<typeof updateTeamMemberSchema>;
+
+export type TeamMember = {
+  _id: string;
+  business_id: string;
+  user_id?: string;
+  email: string;
+  role: "owner" | "admin" | "member";
+  invited_by: string;
+  invite_status: "pending" | "accepted" | "declined";
+  invite_token?: string;
+  invited_at: string;
+  accepted_at?: string;
+  permissions: {
+    can_create_campaigns: boolean;
+    can_edit_business: boolean;
+    can_invite_members: boolean;
+    can_view_analytics: boolean;
+  };
+  createdAt: string;
+  // Populated fields when joined with User
+  user?: {
+    displayName?: string;
+    avatarUrl?: string;
+    email?: string;
+  };
+};

@@ -2,8 +2,9 @@ import type { Express, Request, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
-import { insertProfileSchema, updateProfileSchema } from "@shared/schema";
+import { insertProfileSchema, updateProfileSchema, insertBusinessSchema, updateBusinessSchema, inviteTeamMemberSchema, updateTeamMemberSchema } from "@shared/schema";
 import { z } from "zod";
+import { sendInviteEmail } from "./email";
 
 function ensureAuthenticated(req: Request, res: Response, next: any) {
   if (req.isAuthenticated()) {
@@ -17,6 +18,112 @@ function ensureAdmin(req: Request, res: Response, next: any) {
     return next();
   }
   res.status(403).json({ message: "Forbidden" });
+}
+
+/** Business Access Control Middleware */
+async function ensureBusinessOwner(req: Request, res: Response, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const businessId = req.params.id || req.params.businessId;
+  const userId = (req.user as any)._id?.toString() || (req.user as any).id;
+
+  try {
+    const business = await storage.getBusinessById(businessId);
+    if (!business) {
+      return res.status(404).json({ message: "Business not found" });
+    }
+
+    if (business.owner_user_id !== userId) {
+      return res.status(403).json({ message: "Only business owner can perform this action" });
+    }
+
+    (req as any).business = business;
+    next();
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+async function ensureBusinessAdmin(req: Request, res: Response, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const businessId = req.params.id || req.params.businessId;
+  const userId = (req.user as any)._id?.toString() || (req.user as any).id;
+
+  try {
+    const business = await storage.getBusinessById(businessId);
+    if (!business) {
+      return res.status(404).json({ message: "Business not found" });
+    }
+
+    // Check if owner
+    if (business.owner_user_id === userId) {
+      (req as any).business = business;
+      (req as any).userRole = "owner";
+      return next();
+    }
+
+    // Check if admin/member
+    const members = await storage.getTeamMembers(businessId);
+    const member = members.find(m => m.user_id === userId);
+
+    if (!member || member.invite_status !== "accepted") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (member.role !== "admin" && member.role !== "owner") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    (req as any).business = business;
+    (req as any).userRole = member.role;
+    (req as any).membership = member;
+    next();
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+async function ensureBusinessMember(req: Request, res: Response, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const businessId = req.params.id || req.params.businessId;
+  const userId = (req.user as any)._id?.toString() || (req.user as any).id;
+
+  try {
+    const business = await storage.getBusinessById(businessId);
+    if (!business) {
+      return res.status(404).json({ message: "Business not found" });
+    }
+
+    // Check if owner
+    if (business.owner_user_id === userId) {
+      (req as any).business = business;
+      (req as any).userRole = "owner";
+      return next();
+    }
+
+    // Check if member
+    const members = await storage.getTeamMembers(businessId);
+    const member = members.find(m => m.user_id === userId);
+
+    if (!member || member.invite_status !== "accepted") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    (req as any).business = business;
+    (req as any).userRole = member.role;
+    (req as any).membership = member;
+    next();
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
 }
 
 /** True if profile can browse startups: dedicated investor, or approved partner who selected "Investor" */
@@ -187,6 +294,91 @@ export async function registerRoutes(
     }
   });
 
+  // Admin Analytics Endpoints
+  app.get("/api/admin/analytics/overview", ensureAdmin, async (req, res) => {
+    try {
+      const totalUsers = await storage.getAllUsers();
+      const mau = await storage.getActiveUsersCount(30);
+      const dau = await storage.getActiveUsersCount(1);
+      const connectionMetrics = await storage.getConnectionMetrics();
+      const marketplaceHealth = await storage.getMarketplaceHealth();
+
+      res.json({
+        totalUsers: totalUsers.length,
+        mau,
+        dau,
+        engagementRate: totalUsers.length > 0 ? ((mau / totalUsers.length) * 100).toFixed(2) : "0.00",
+        totalConnections: connectionMetrics.total,
+        acceptanceRate: connectionMetrics.acceptanceRate,
+        startupCount: marketplaceHealth.startupCount,
+        investorCount: marketplaceHealth.investorCount,
+        partnerCount: marketplaceHealth.partnerCount
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/analytics/growth", ensureAdmin, async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+
+      const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+      const end = endDate ? new Date(endDate as string) : new Date();
+
+      const growthData = await storage.getUserGrowthTrends(start, end);
+
+      // Calculate cumulative totals
+      let cumulativeTotal = 0;
+      const enrichedData = growthData.map(item => {
+        cumulativeTotal += item.count;
+        return {
+          ...item,
+          cumulative: cumulativeTotal
+        };
+      });
+
+      res.json({
+        trends: enrichedData,
+        totalNewUsers: growthData.reduce((sum, item) => sum + item.count, 0)
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/analytics/engagement", ensureAdmin, async (req, res) => {
+    try {
+      const funnelData = await storage.getEngagementFunnel();
+      res.json(funnelData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/analytics/marketplace", ensureAdmin, async (req, res) => {
+    try {
+      const marketplaceHealth = await storage.getMarketplaceHealth();
+      const connectionMetrics = await storage.getConnectionMetrics();
+
+      res.json({
+        ...marketplaceHealth,
+        connections: connectionMetrics
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/analytics/cohorts", ensureAdmin, async (req, res) => {
+    try {
+      const cohortData = await storage.getCohortData();
+      res.json(cohortData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/admin/waitlist", ensureAdmin, async (req, res) => {
     try {
       const entries = await storage.getAllWaitlistEntries();
@@ -303,6 +495,207 @@ export async function registerRoutes(
       const matches = await storage.getMatchesForInvestor(userId, limit);
 
       res.json(matches);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // =============================================
+  // BUSINESS ROUTES
+  // =============================================
+
+  // Create business profile
+  app.post("/api/business", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const ownerEmail = req.user.email;
+      if (!ownerEmail) {
+        return res.status(400).json({ message: "User email is required to create a business" });
+      }
+      const input = insertBusinessSchema.parse(req.body);
+
+      const business = await storage.createBusiness(userId, input, ownerEmail);
+      res.status(201).json(business);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.')
+        });
+      }
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Get user's businesses (owned + member)
+  app.get("/api/business", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const businesses = await storage.getUserBusinesses(userId);
+      res.json(businesses);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get specific business
+  app.get("/api/business/:id", ensureAuthenticated, ensureBusinessMember, async (req: any, res) => {
+    try {
+      // Business already loaded by middleware
+      res.json(req.business);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update business (owner/admin only)
+  app.patch("/api/business/:id", ensureAuthenticated, ensureBusinessAdmin, async (req: any, res) => {
+    try {
+      const businessId = req.params.id;
+      const updates = updateBusinessSchema.parse(req.body);
+
+      const business = await storage.updateBusiness(businessId, updates);
+      res.json(business);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.')
+        });
+      }
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Delete business (owner only)
+  app.delete("/api/business/:id", ensureAuthenticated, ensureBusinessOwner, async (req: any, res) => {
+    try {
+      const businessId = req.params.id;
+      await storage.deleteBusiness(businessId);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // =============================================
+  // TEAM MEMBER ROUTES
+  // =============================================
+
+  // Invite team member
+  app.post("/api/business/:id/members", ensureAuthenticated, ensureBusinessAdmin, async (req: any, res) => {
+    try {
+      const businessId = req.params.id;
+      const userId = req.user._id?.toString() || req.user.id;
+      const input = inviteTeamMemberSchema.parse(req.body);
+
+      const member = await storage.inviteTeamMember(
+        businessId,
+        input.email,
+        userId,
+        input.role,
+        input.permissions
+      );
+
+      // Send invite email
+      const business = await storage.getBusinessById(businessId);
+      const inviterName = req.user.displayName || req.user.email || "A team member";
+
+      await sendInviteEmail(
+        input.email,
+        business.business_name,
+        inviterName,
+        member.invite_token
+      );
+
+      res.status(201).json(member);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.')
+        });
+      }
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Get team members
+  app.get("/api/business/:id/members", ensureAuthenticated, ensureBusinessMember, async (req: any, res) => {
+    try {
+      const businessId = req.params.id;
+      const members = await storage.getTeamMembers(businessId);
+      res.json(members);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update team member (owner/admin only)
+  app.patch("/api/business/:id/members/:memberId", ensureAuthenticated, ensureBusinessAdmin, async (req: any, res) => {
+    try {
+      const businessId = req.params.id;
+      const memberId = req.params.memberId;
+      const updates = updateTeamMemberSchema.parse(req.body);
+
+      const member = await storage.updateTeamMember(businessId, memberId, updates);
+      res.json(member);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.')
+        });
+      }
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Remove team member (owner/admin only)
+  app.delete("/api/business/:id/members/:memberId", ensureAuthenticated, ensureBusinessAdmin, async (req: any, res) => {
+    try {
+      const businessId = req.params.id;
+      const memberId = req.params.memberId;
+
+      await storage.removeTeamMember(businessId, memberId);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // =============================================
+  // INVITE TOKEN ROUTES (Public)
+  // =============================================
+
+  // Verify invite token (public - no auth required)
+  app.get("/api/invite/:token", async (req, res) => {
+    try {
+      const token = req.params.token;
+      const member = await storage.getTeamMemberByToken(token);
+
+      if (!member) {
+        return res.status(404).json({ message: "Invalid or expired invite" });
+      }
+
+      if (member.invite_status !== "pending") {
+        return res.status(400).json({ message: "Invite already used" });
+      }
+
+      res.json(member);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Accept invite
+  app.post("/api/invite/:token/accept", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const token = req.params.token;
+      const userId = req.user._id?.toString() || req.user.id;
+
+      const member = await storage.acceptInvite(token, userId);
+      res.json(member);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

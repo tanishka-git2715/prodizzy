@@ -215,6 +215,73 @@ ConnectionSchema.index({ created_at: -1 }); // Sort by recency
 
 export const Connection = mongoose.model("Connection", ConnectionSchema);
 
+// Business Model - Company profiles separate from individual profiles
+const BusinessSchema = new Schema({
+    owner_user_id: { type: String, required: true },
+    business_name: { type: String, required: true },
+    business_type: {
+        type: String,
+        enum: ["Startup", "Agency", "Enterprise", "Institution"],
+        required: true
+    },
+    industry: [String],
+    website: String,
+    linkedin_url: String,
+    logo_url: String,
+    description: String,
+    team_size: String,
+    location: String,
+    founded_year: Number,
+    approved: { type: Boolean, default: false },
+    onboarding_completed: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+}, { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } });
+
+// Indexes for Business
+BusinessSchema.index({ owner_user_id: 1 });
+BusinessSchema.index({ approved: 1 });
+BusinessSchema.index({ business_name: 'text' }); // Text search for business name
+
+export const Business = mongoose.model("Business", BusinessSchema);
+
+// TeamMember Model - Manages team access to business profiles
+const TeamMemberSchema = new Schema({
+    business_id: { type: Schema.Types.ObjectId, ref: 'Business', required: true },
+    user_id: String,
+    email: { type: String, required: true },
+    role: {
+        type: String,
+        enum: ["owner", "admin", "member"],
+        default: "member"
+    },
+    invited_by: String,
+    invite_status: {
+        type: String,
+        enum: ["pending", "accepted", "declined"],
+        default: "pending"
+    },
+    invite_token: { type: String, unique: true, sparse: true },
+    invited_at: { type: Date, default: Date.now },
+    accepted_at: Date,
+    permissions: {
+        can_create_campaigns: { type: Boolean, default: true },
+        can_edit_business: { type: Boolean, default: false },
+        can_invite_members: { type: Boolean, default: false },
+        can_view_analytics: { type: Boolean, default: true }
+    },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// Indexes for TeamMember
+TeamMemberSchema.index({ business_id: 1, user_id: 1 }, { unique: true, sparse: true }); // Prevent duplicate members
+TeamMemberSchema.index({ business_id: 1 }); // Fast team member lookups
+TeamMemberSchema.index({ user_id: 1 }); // Find all businesses a user belongs to
+TeamMemberSchema.index({ invite_token: 1 }); // Fast invite token lookups
+TeamMemberSchema.index({ email: 1 }); // Search by email
+
+export const TeamMember = mongoose.model("TeamMember", TeamMemberSchema);
+
 // Performance indexes for existing models
 StartupProfileSchema.index({ approved: 1 });
 StartupProfileSchema.index({ 'intent_fundraising.capital_amount': 1 });

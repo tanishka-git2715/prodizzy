@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection } from "./models";
+import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection, Business, TeamMember } from "./models";
 import type {
   InsertWaitlistEntry,
   WaitlistResponse,
@@ -7,6 +7,7 @@ import type {
   UpdateProfile,
   StartupProfile as StartupProfileType
 } from "@shared/schema";
+import crypto from "crypto";
 
 interface DiscoverFilters {
   industry?: string;
@@ -44,6 +45,30 @@ export interface IStorage {
 
   // Matching Methods
   getMatchesForInvestor(investorUserId: string, limit?: number): Promise<any[]>;
+
+  // Analytics Methods
+  getActiveUsersCount(days: number): Promise<number>;
+  getUserGrowthTrends(startDate: Date, endDate: Date): Promise<any[]>;
+  getConnectionMetrics(): Promise<any>;
+  getCohortData(): Promise<any[]>;
+  getEngagementFunnel(): Promise<any>;
+  getMarketplaceHealth(): Promise<any>;
+
+  // Business Methods
+  createBusiness(userId: string, businessData: any, ownerEmail: string): Promise<any>;
+  getUserBusinesses(userId: string): Promise<any[]>;
+  getBusinessById(businessId: string): Promise<any | undefined>;
+  updateBusiness(businessId: string, updates: any): Promise<any>;
+  deleteBusiness(businessId: string): Promise<void>;
+
+  // Team Member Methods
+  inviteTeamMember(businessId: string, email: string, invitedBy: string, role: string, permissions?: any): Promise<any>;
+  getTeamMembers(businessId: string): Promise<any[]>;
+  getTeamMemberByToken(token: string): Promise<any | undefined>;
+  acceptInvite(token: string, userId: string): Promise<any>;
+  updateTeamMember(businessId: string, memberId: string, updates: any): Promise<any>;
+  removeTeamMember(businessId: string, memberId: string): Promise<void>;
+  getUserBusinessMemberships(userId: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -75,6 +100,7 @@ export class DatabaseStorage implements IStorage {
       case "investor": return InvestorProfile;
       case "partner": return PartnerProfile;
       case "individual": return IndividualProfile;
+      case "business": return Business;
       default: return StartupProfile;
     }
   }
@@ -529,6 +555,508 @@ export class DatabaseStorage implements IStorage {
 
     // Check if ranges overlap
     return investorRange[1] >= startupRange[0] && investorRange[0] <= startupRange[1];
+  }
+
+  // Analytics Methods Implementation
+  async getActiveUsersCount(days: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const count = await User.countDocuments({
+      lastLogin: { $gte: cutoffDate }
+    });
+
+    return count;
+  }
+
+  async getUserGrowthTrends(startDate: Date, endDate: Date): Promise<any[]> {
+    const users = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+            day: { $dayOfMonth: "$createdAt" }
+          },
+          count: { $sum: 1 },
+          startups: {
+            $sum: { $cond: [{ $eq: ["$profileType", "startup"] }, 1, 0] }
+          },
+          partners: {
+            $sum: { $cond: [{ $eq: ["$profileType", "partner"] }, 1, 0] }
+          },
+          individuals: {
+            $sum: { $cond: [{ $eq: ["$profileType", "individual"] }, 1, 0] }
+          },
+          investors: {
+            $sum: { $cond: [{ $eq: ["$profileType", "investor"] }, 1, 0] }
+          }
+        }
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 }
+      },
+      {
+        $project: {
+          _id: 0,
+          date: {
+            $dateFromParts: {
+              year: "$_id.year",
+              month: "$_id.month",
+              day: "$_id.day"
+            }
+          },
+          count: 1,
+          startups: 1,
+          partners: 1,
+          individuals: 1,
+          investors: 1
+        }
+      }
+    ]);
+
+    return users;
+  }
+
+  async getConnectionMetrics(): Promise<any> {
+    const totalConnections = await Connection.countDocuments({});
+    const pendingConnections = await Connection.countDocuments({ status: "pending" });
+    const acceptedConnections = await Connection.countDocuments({ status: "accepted" });
+    const declinedConnections = await Connection.countDocuments({ status: "declined" });
+
+    const acceptanceRate = totalConnections > 0
+      ? ((acceptedConnections / (acceptedConnections + declinedConnections)) * 100) || 0
+      : 0;
+
+    // Get average time to respond (for accepted/declined connections)
+    const respondedConnections = await Connection.find({
+      status: { $in: ["accepted", "declined"] },
+      updatedAt: { $exists: true }
+    }).lean();
+
+    let avgResponseTime = 0;
+    if (respondedConnections.length > 0) {
+      const totalResponseTime = respondedConnections.reduce((sum, conn) => {
+        const created = new Date(conn.createdAt).getTime();
+        const updated = new Date(conn.updatedAt).getTime();
+        return sum + (updated - created);
+      }, 0);
+      avgResponseTime = totalResponseTime / respondedConnections.length / (1000 * 60 * 60 * 24); // Convert to days
+    }
+
+    // Get repeat connection rate (users making multiple connections)
+    const connectionsPerUser = await Connection.aggregate([
+      {
+        $group: {
+          _id: "$investor_user_id",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalUsers: { $sum: 1 },
+          repeatUsers: {
+            $sum: { $cond: [{ $gt: ["$count", 1] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    const repeatRate = connectionsPerUser.length > 0
+      ? (connectionsPerUser[0].repeatUsers / connectionsPerUser[0].totalUsers) * 100
+      : 0;
+
+    return {
+      total: totalConnections,
+      pending: pendingConnections,
+      accepted: acceptedConnections,
+      declined: declinedConnections,
+      acceptanceRate: parseFloat(acceptanceRate.toFixed(2)),
+      avgResponseTimeDays: parseFloat(avgResponseTime.toFixed(2)),
+      repeatConnectionRate: parseFloat(repeatRate.toFixed(2))
+    };
+  }
+
+  async getCohortData(): Promise<any[]> {
+    // Get users grouped by signup month
+    const cohorts = await User.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" }
+          },
+          userIds: { $push: "$_id" },
+          signupCount: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1 }
+      }
+    ]);
+
+    // For each cohort, calculate retention for subsequent months
+    const cohortData = await Promise.all(
+      cohorts.map(async (cohort) => {
+        const cohortDate = new Date(cohort._id.year, cohort._id.month - 1, 1);
+        const cohortMonth = `${cohort._id.year}-${String(cohort._id.month).padStart(2, '0')}`;
+
+        // Calculate retention for months 0, 1, 2, 3, 6 (if data exists)
+        const retentionMonths = [0, 1, 2, 3, 6];
+        const retention: any = {};
+
+        for (const monthOffset of retentionMonths) {
+          const checkDate = new Date(cohortDate);
+          checkDate.setMonth(checkDate.getMonth() + monthOffset);
+
+          const nextMonthDate = new Date(checkDate);
+          nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+
+          const activeUsers = await User.countDocuments({
+            _id: { $in: cohort.userIds },
+            lastLogin: { $gte: checkDate, $lt: nextMonthDate }
+          });
+
+          const retentionRate = cohort.signupCount > 0
+            ? (activeUsers / cohort.signupCount) * 100
+            : 0;
+
+          retention[`month${monthOffset}`] = parseFloat(retentionRate.toFixed(2));
+        }
+
+        return {
+          cohort: cohortMonth,
+          signupCount: cohort.signupCount,
+          retention
+        };
+      })
+    );
+
+    return cohortData;
+  }
+
+  async getEngagementFunnel(): Promise<any> {
+    const totalSignups = await User.countDocuments({});
+
+    // Profile completion
+    const completedProfiles = await Promise.all([
+      StartupProfile.countDocuments({ onboarding_completed: true }),
+      PartnerProfile.countDocuments({ onboarding_completed: true }),
+      IndividualProfile.countDocuments({ onboarding_completed: true }),
+      InvestorProfile.countDocuments({ onboarding_completed: true })
+    ]);
+    const totalCompleted = completedProfiles.reduce((sum, count) => sum + count, 0);
+
+    // Users who have browsed (made at least one connection attempt)
+    const usersWithConnections = await Connection.distinct("investor_user_id");
+
+    // First connection attempt
+    const firstConnection = usersWithConnections.length;
+
+    // Accepted connections
+    const acceptedConnections = await Connection.countDocuments({ status: "accepted" });
+
+    return {
+      signups: totalSignups,
+      profileCompleted: totalCompleted,
+      firstBrowse: firstConnection,
+      firstConnection: firstConnection,
+      acceptedConnection: acceptedConnections,
+      conversionRates: {
+        signupToProfile: totalSignups > 0 ? ((totalCompleted / totalSignups) * 100).toFixed(2) : "0.00",
+        profileToBrowse: totalCompleted > 0 ? ((firstConnection / totalCompleted) * 100).toFixed(2) : "0.00",
+        browseToConnection: firstConnection > 0 ? ((firstConnection / firstConnection) * 100).toFixed(2) : "0.00",
+        connectionToAccepted: firstConnection > 0 ? ((acceptedConnections / firstConnection) * 100).toFixed(2) : "0.00"
+      }
+    };
+  }
+
+  async getMarketplaceHealth(): Promise<any> {
+    // Get counts by profile type
+    const startupCount = await StartupProfile.countDocuments({ approved: true });
+    const investorCount = await InvestorProfile.countDocuments({});
+    const partnerCount = await PartnerProfile.countDocuments({ approved: true });
+
+    // Startup to investor ratio
+    const startupToInvestorRatio = investorCount > 0
+      ? (startupCount / investorCount).toFixed(2)
+      : "0.00";
+
+    // Active sellers (investors/partners who made at least 1 connection)
+    const activeInvestors = await Connection.distinct("investor_user_id");
+    const totalSellers = investorCount + partnerCount;
+
+    const sellerLiquidityIndex = totalSellers > 0
+      ? ((activeInvestors.length / totalSellers) * 100).toFixed(2)
+      : "0.00";
+
+    // Get connection metrics
+    const connectionMetrics = await this.getConnectionMetrics();
+
+    return {
+      startupCount,
+      investorCount,
+      partnerCount,
+      startupToInvestorRatio: parseFloat(startupToInvestorRatio),
+      activeSellers: activeInvestors.length,
+      totalSellers,
+      sellerLiquidityIndex: parseFloat(sellerLiquidityIndex),
+      connectionAcceptanceRate: connectionMetrics.acceptanceRate,
+      avgConnectionsPerActiveUser: totalSellers > 0
+        ? (connectionMetrics.total / totalSellers).toFixed(2)
+        : "0.00"
+    };
+  }
+
+  // =============================================
+  // BUSINESS METHODS
+  // =============================================
+
+  async createBusiness(userId: string, businessData: any, ownerEmail: string): Promise<any> {
+    const business = new Business({
+      owner_user_id: userId,
+      ...businessData,
+      approved: false,
+      onboarding_completed: true
+    });
+    await business.save();
+
+    const email = ownerEmail;
+
+    // Create owner team member record
+    await this.inviteTeamMember(
+      business._id.toString(),
+      email,
+      userId,
+      "owner",
+      {
+        can_create_campaigns: true,
+        can_edit_business: true,
+        can_invite_members: true,
+        can_view_analytics: true
+      }
+    );
+
+    // Auto-accept owner's team member record
+    const ownerMember = await TeamMember.findOne({
+      business_id: business._id,
+      email
+    });
+    if (ownerMember) {
+      ownerMember.user_id = userId;
+      ownerMember.invite_status = "accepted";
+      ownerMember.accepted_at = new Date();
+      await ownerMember.save();
+    }
+
+    return business.toObject();
+  }
+
+  async getUserBusinesses(userId: string): Promise<any[]> {
+    // Get businesses owned by user
+    const ownedBusinesses = await Business.find({ owner_user_id: userId }).lean();
+
+    // Get businesses where user is a team member
+    const memberships = await TeamMember.find({
+      user_id: userId,
+      invite_status: "accepted"
+    }).lean();
+
+    const memberBusinessIds = memberships
+      .map(m => m.business_id)
+      .filter(id => !ownedBusinesses.some(b => b._id.toString() === id.toString()));
+
+    const memberBusinesses = memberBusinessIds.length > 0
+      ? await Business.find({ _id: { $in: memberBusinessIds } }).lean()
+      : [];
+
+    // Combine and add role information
+    const allBusinesses = [
+      ...ownedBusinesses.map(b => ({ ...b, user_role: "owner" })),
+      ...memberBusinesses.map(b => {
+        const membership = memberships.find(m => m.business_id.toString() === b._id.toString());
+        return { ...b, user_role: membership?.role || "member" };
+      })
+    ];
+
+    return allBusinesses;
+  }
+
+  async getBusinessById(businessId: string): Promise<any | undefined> {
+    const business = await Business.findById(businessId).lean();
+    return business || undefined;
+  }
+
+  async updateBusiness(businessId: string, updates: any): Promise<any> {
+    const business = await Business.findByIdAndUpdate(
+      businessId,
+      { ...updates, updatedAt: new Date() },
+      { new: true }
+    );
+    if (!business) throw new Error("Business not found");
+    return business.toObject();
+  }
+
+  async deleteBusiness(businessId: string): Promise<void> {
+    // Delete all team members
+    await TeamMember.deleteMany({ business_id: businessId });
+    // Delete business
+    await Business.findByIdAndDelete(businessId);
+  }
+
+  // =============================================
+  // TEAM MEMBER METHODS
+  // =============================================
+
+  async inviteTeamMember(
+    businessId: string,
+    email: string,
+    invitedBy: string,
+    role: string = "member",
+    permissions?: any
+  ): Promise<any> {
+    // Generate unique invite token
+    const inviteToken = crypto.randomBytes(32).toString("hex");
+
+    // Check if invite already exists
+    const existing = await TeamMember.findOne({
+      business_id: businessId,
+      email: email,
+      invite_status: "pending"
+    });
+
+    if (existing) {
+      throw new Error("User already invited to this business");
+    }
+
+    // Check if user already member
+    const existingMember = await TeamMember.findOne({
+      business_id: businessId,
+      email: email,
+      invite_status: "accepted"
+    });
+
+    if (existingMember) {
+      throw new Error("User is already a team member");
+    }
+
+    const defaultPermissions = {
+      can_create_campaigns: true,
+      can_edit_business: role === "admin" || role === "owner",
+      can_invite_members: role === "admin" || role === "owner",
+      can_view_analytics: true
+    };
+
+    const member = new TeamMember({
+      business_id: businessId,
+      email,
+      role,
+      invited_by: invitedBy,
+      invite_token: inviteToken,
+      invite_status: "pending",
+      invited_at: new Date(),
+      permissions: permissions || defaultPermissions
+    });
+
+    await member.save();
+    return member.toObject();
+  }
+
+  async getTeamMembers(businessId: string): Promise<any[]> {
+    const members = await TeamMember.find({ business_id: businessId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Populate user info for accepted members
+    const memberIds = members
+      .filter(m => m.user_id)
+      .map(m => m.user_id);
+
+    const users = memberIds.length > 0
+      ? await User.find({ _id: { $in: memberIds } }).lean()
+      : [];
+
+    return members.map(member => {
+      const user = users.find(u => u._id.toString() === member.user_id);
+      return {
+        ...member,
+        user: user ? {
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+          email: user.email
+        } : undefined
+      };
+    });
+  }
+
+  async getTeamMemberByToken(token: string): Promise<any | undefined> {
+    const member = await TeamMember.findOne({ invite_token: token }).lean();
+    if (!member) return undefined;
+
+    // Also fetch business info
+    const business = await Business.findById(member.business_id).lean();
+
+    return {
+      ...member,
+      business: business ? {
+        business_name: business.business_name,
+        business_type: business.business_type,
+        logo_url: business.logo_url
+      } : undefined
+    };
+  }
+
+  async acceptInvite(token: string, userId: string): Promise<any> {
+    const member = await TeamMember.findOne({ invite_token: token });
+    if (!member) throw new Error("Invalid invite token");
+
+    if (member.invite_status === "accepted") {
+      throw new Error("Invite already accepted");
+    }
+
+    member.user_id = userId;
+    member.invite_status = "accepted";
+    member.accepted_at = new Date();
+    await member.save();
+
+    return member.toObject();
+  }
+
+  async updateTeamMember(businessId: string, memberId: string, updates: any): Promise<any> {
+    const member = await TeamMember.findOneAndUpdate(
+      { _id: memberId, business_id: businessId },
+      updates,
+      { new: true }
+    );
+
+    if (!member) throw new Error("Team member not found");
+    return member.toObject();
+  }
+
+  async removeTeamMember(businessId: string, memberId: string): Promise<void> {
+    const result = await TeamMember.findOneAndDelete({
+      _id: memberId,
+      business_id: businessId
+    });
+
+    if (!result) throw new Error("Team member not found");
+  }
+
+  async getUserBusinessMemberships(userId: string): Promise<any[]> {
+    const memberships = await TeamMember.find({
+      user_id: userId,
+      invite_status: "accepted"
+    })
+    .populate('business_id')
+    .lean();
+
+    return memberships;
   }
 }
 
