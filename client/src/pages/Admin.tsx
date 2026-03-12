@@ -799,10 +799,10 @@ export default function Admin() {
               </div>
               <button
                 onClick={() => {
-                  if (confirm("This will permanently delete ALL old Startup and Partner profiles. Cannot be undone. Continue?")) {
+                  if (confirm("This will permanently delete ALL old Startup, Partner, and Individual profiles. User accounts are kept. Cannot be undone. Continue?")) {
                     fetch("/api/admin/purge-legacy", { method: "POST", headers: { "Content-Type": "application/json" } })
                       .then(r => r.json())
-                      .then(d => alert(`Purged: ${d.startups} startup(s), ${d.partners} partner(s) deleted.`))
+                      .then(d => alert(`Purged: ${d.startups} startup(s), ${d.partners} partner(s), ${d.individuals} individual(s) deleted.`))
                       .catch(() => alert("Error purging legacy data."));
                   }
                 }}

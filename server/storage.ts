@@ -31,7 +31,7 @@ export interface IStorage {
   getAllWaitlistEntries(): Promise<any[]>;
   getUserByGoogleId(googleId: string): Promise<any | undefined>;
   deleteProfile(type: string, id: string): Promise<void>;
-  purgeLegacyProfiles(): Promise<{ startups: number; partners: number }>;
+  purgeLegacyProfiles(): Promise<{ startups: number; partners: number; individuals: number }>;
 
   // Connection Methods
   createConnection(investorUserId: string, startupId: string, message?: string): Promise<any>;
@@ -304,12 +304,14 @@ export class DatabaseStorage implements IStorage {
     await (Model as any).findByIdAndDelete(id);
   }
 
-  async purgeLegacyProfiles(): Promise<{ startups: number; partners: number }> {
+  async purgeLegacyProfiles(): Promise<{ startups: number; partners: number; individuals: number }> {
     const startupResult = await StartupProfile.deleteMany({});
     const partnerResult = await PartnerProfile.deleteMany({});
+    const individualResult = await IndividualProfile.deleteMany({});
     return {
       startups: startupResult.deletedCount || 0,
       partners: partnerResult.deletedCount || 0,
+      individuals: individualResult.deletedCount || 0,
     };
   }
 
