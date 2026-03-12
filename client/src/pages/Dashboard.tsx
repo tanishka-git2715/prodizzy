@@ -735,7 +735,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                                 </div>
                               )}
                               {roles.includes("Investor") && investorData && (
-                                <div className="space-y-3 pt-4 border-t border-white/5">
+                                <div className="space-y-3 pt-4">
                                   <p className="text-[10px] text-red-400/60 uppercase font-bold">Investor Profile</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Type" value={investorData.investor_types} />
@@ -756,7 +756,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                               )}
 
                               {roles.includes("Student") && studentData && (
-                                <div className="space-y-3 pt-4 border-t border-white/5">
+                                <div className="space-y-3 pt-4">
                                   <p className="text-[10px] text-blue-400/60 uppercase font-bold">Academic Info</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Institution" value={studentData.institution} />
@@ -776,7 +776,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                               )}
 
                               {roles.includes("Working Professional") && professionalData && (
-                                <div className="space-y-3 pt-4 border-t border-white/5">
+                                <div className="space-y-3 pt-4">
                                   <p className="text-[10px] text-green-400/60 uppercase font-bold">Professional Path</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Company" value={professionalData.company} />
@@ -796,7 +796,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                               )}
 
                               {roles.includes("Freelancer / Service Provider") && freelancerData && (
-                                <div className="space-y-3 pt-4 border-t border-white/5">
+                                <div className="space-y-3 pt-4">
                                   <p className="text-[10px] text-purple-400/60 uppercase font-bold">Freelance Details</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Experience" value={freelancerData.experience_years} />
@@ -818,7 +818,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                               )}
 
                               {roles.includes("Consultant / Mentor / Advisor") && consultantData && (
-                                <div className="space-y-3 pt-4 border-t border-white/5">
+                                <div className="space-y-3 pt-4">
                                   <p className="text-[10px] text-orange-400/60 uppercase font-bold">Advisory Profile</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Expertise" value={consultantData.expertise_areas} />
@@ -837,7 +837,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                               )}
 
                               {roles.includes("Content Creator / Community Admin") && creatorData && (
-                                <div className="space-y-3 pt-4 border-t border-white/5">
+                                <div className="space-y-3 pt-4">
                                   <p className="text-[10px] text-pink-400/60 uppercase font-bold">Creator Presence</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <DetailRow label="Platforms" value={creatorData.platforms} />
@@ -1864,7 +1864,7 @@ export default function Dashboard() {
   async function signOut() {
     qc.clear();
     await logout();
-    setLocation("/");
+    window.location.href = "/";
   }
 
   if (authLoading || (isLoading && !profile)) {

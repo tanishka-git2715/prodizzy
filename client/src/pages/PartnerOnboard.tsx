@@ -361,6 +361,7 @@ export default function PartnerOnboard() {
         looking_for: lookingFor,
         monthly_capacity: monthlyCapacity || undefined,
         preferred_budget_range: preferredBudgetRange || undefined,
+        onboarding_completed: true,
       }),
     });
 

@@ -106,7 +106,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProfileByUserId(userId: string): Promise<any | undefined> {
-    // 1. Try to get the user first. Use findOne to avoid CastError if userId is a googleId
+    // 1. Resolve to canonical MongoDB ID
     const user = await User.findOne({
       $or: [
         { _id: mongoose.isValidObjectId(userId) ? userId : new mongoose.Types.ObjectId() },
@@ -114,21 +114,22 @@ export class DatabaseStorage implements IStorage {
       ]
     }).lean();
 
-    if (user?.profileType) {
-      const Model = this.getModelByType(user.profileType);
-      let doc = await (Model as any).findOne({ user_id: userId }).lean();
+    if (!user) return undefined;
+    const actualId = user._id.toString();
 
-      // Fallback to googleId if not found by MongoDB ID
-      if (!doc && user?.googleId && user.googleId !== userId) {
-        doc = await (Model as any).findOne({ user_id: user.googleId }).lean();
-      }
+    // 2. Try lookup by profileType if user knows it
+    if (user.profileType) {
+      const Model = this.getModelByType(user.profileType);
+      const doc = await (Model as any).findOne({
+        $or: [{ user_id: actualId }, { user_id: user.googleId }]
+      }).lean();
 
       if (doc) {
         return { ...doc, type: user.profileType };
       }
     }
 
-    // 2. Fallback: Check all models in parallel if profileType is missing or profile not found
+    // 3. Robust fallback: search all potential profile models
     const models = [
       { model: StartupProfile, type: "startup" },
       { model: PartnerProfile, type: "partner" },
@@ -138,14 +139,9 @@ export class DatabaseStorage implements IStorage {
 
     const results = await Promise.all(
       models.map(async ({ model, type }) => {
-        // Search by the provided userId (could be _id or googleId)
-        let doc = await (model as any).findOne({ user_id: userId }).lean();
-
-        // If not found and we have a googleId, search by that too (backward compatibility)
-        if (!doc && user?.googleId && user.googleId !== userId) {
-          doc = await (model as any).findOne({ user_id: user.googleId }).lean();
-        }
-
+        const doc = await (model as any).findOne({
+          $or: [{ user_id: actualId }, { user_id: user.googleId }]
+        }).lean();
         if (doc) return { ...doc, type };
         return null;
       })
@@ -153,12 +149,63 @@ export class DatabaseStorage implements IStorage {
 
     const profile = results.find(r => r !== null);
 
-    // 3. If found during fallback and it is completed, update the user for next time
-    if (profile && user && profile.onboarding_completed) {
-      await User.findByIdAndUpdate(userId, { profileType: profile.type });
+    // 4. Update user's profileType if found during fallback for faster future lookups
+    if (profile && profile.onboarding_completed) {
+      await User.findByIdAndUpdate(actualId, { profileType: profile.type });
     }
 
     return profile || undefined;
+  }
+
+  async getProfileStatus(userId: string): Promise<{ hasProfile: boolean, hasCompletedProfile: boolean, needsOnboarding: boolean }> {
+    const user = await User.findOne({
+      $or: [
+        { _id: mongoose.isValidObjectId(userId) ? userId : new mongoose.Types.ObjectId() },
+        { googleId: userId }
+      ]
+    }).lean();
+
+    if (!user) return { hasProfile: false, hasCompletedProfile: false, needsOnboarding: true };
+    const actualId = user._id.toString();
+
+    // Check by profileType if available
+    if (user.profileType) {
+      const Model = this.getModelByType(user.profileType);
+      const doc = await (Model as any).findOne({
+        $or: [{ user_id: actualId }, { user_id: user.googleId }]
+      }).lean();
+
+      if (doc) {
+        return {
+          hasProfile: true,
+          hasCompletedProfile: !!(doc as any).onboarding_completed,
+          needsOnboarding: !(doc as any).onboarding_completed
+        };
+      }
+    }
+
+    // Fallback search
+    const models = [
+      { model: StartupProfile, type: "startup" },
+      { model: PartnerProfile, type: "partner" },
+      { model: IndividualProfile, type: "individual" },
+      { model: InvestorProfile, type: "investor" }
+    ];
+
+    for (const { model } of models) {
+      const doc = await (model as any).findOne({
+        $or: [{ user_id: actualId }, { user_id: user.googleId }]
+      }).lean();
+      if (doc) {
+        return {
+          hasProfile: true,
+          hasCompletedProfile: !!(doc as any).onboarding_completed,
+          needsOnboarding: !(doc as any).onboarding_completed
+        };
+      }
+    }
+
+    return { hasProfile: false, hasCompletedProfile: false, needsOnboarding: true };
   }
 
   async upsertProfile(userId: string, email: string, profile: any, type: string): Promise<any> {
@@ -355,7 +402,7 @@ export class DatabaseStorage implements IStorage {
     });
     if (!startupProfile) return [];
 
-    const connections = await Connection.find({ startup_id: startupProfile._id })
+    const connections = await Connection.find({ startup_id: startupProfile._id } as any)
       .populate('investor_id', 'full_name firm_name investor_type check_size email user_id')
       .sort({ created_at: -1 })
       .lean();
@@ -402,17 +449,17 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (status === 'declined') {
-      connection.status = 'declined';
+      (connection as any).status = 'declined';
     } else if (status === 'accepted') {
       if (isStartup) {
-        connection.startup_accepted = true;
+        (connection as any).startup_accepted = true;
       } else if (isInvestor) {
-        connection.investor_accepted = true;
+        (connection as any).investor_accepted = true;
       }
 
       // If both accepted, mark as accepted
-      if (connection.startup_accepted && connection.investor_accepted) {
-        connection.status = 'accepted';
+      if ((connection as any).startup_accepted && (connection as any).investor_accepted) {
+        (connection as any).status = 'accepted';
       }
     }
 
@@ -831,7 +878,7 @@ export class DatabaseStorage implements IStorage {
 
     // Create owner team member record
     await this.inviteTeamMember(
-      business._id.toString(),
+      (business as any)._id.toString(),
       email,
       userId,
       "owner",
@@ -845,14 +892,14 @@ export class DatabaseStorage implements IStorage {
 
     // Auto-accept owner's team member record
     const ownerMember = await TeamMember.findOne({
-      business_id: business._id,
+      business_id: (business as any)._id,
       email
     });
     if (ownerMember) {
       ownerMember.user_id = userId;
       ownerMember.invite_status = "accepted";
       ownerMember.accepted_at = new Date();
-      await ownerMember.save();
+      await (ownerMember as any).save();
     }
 
     return business.toObject();
@@ -873,7 +920,7 @@ export class DatabaseStorage implements IStorage {
       .filter(id => !ownedBusinesses.some(b => b._id.toString() === id.toString()));
 
     const memberBusinesses = memberBusinessIds.length > 0
-      ? await Business.find({ _id: { $in: memberBusinessIds } }).lean()
+      ? await Business.find({ _id: { $in: memberBusinessIds } } as any).lean()
       : [];
 
     // Combine and add role information
@@ -1053,8 +1100,8 @@ export class DatabaseStorage implements IStorage {
       user_id: userId,
       invite_status: "accepted"
     })
-    .populate('business_id')
-    .lean();
+      .populate('business_id')
+      .lean();
 
     return memberships;
   }

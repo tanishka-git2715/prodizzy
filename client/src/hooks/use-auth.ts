@@ -7,6 +7,11 @@ export interface CustomSession {
     email: string | null;
     displayName?: string;
     avatarUrl?: string;
+    profileStatus: {
+      hasProfile: boolean;
+      hasCompletedProfile: boolean;
+      needsOnboarding: boolean;
+    };
   };
 }
 

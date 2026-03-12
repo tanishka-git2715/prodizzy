@@ -94,25 +94,9 @@ export default function Home() {
     );
   };
 
-  // Check if signed-in user already has a completed profile (backend uses single /api/profile for all types)
-  const { data: profileStatus, isFetching: loadingProfile } = useQuery({
-    queryKey: ["profile-status", session?.user?.id],
-    queryFn: async () => {
-      const profileRes = await fetch("/api/profile");
-      const hasProfile = profileRes.ok;
-      let hasCompletedProfile = false;
-      if (hasProfile) {
-        const data = await profileRes.json();
-        hasCompletedProfile = !!data?.onboarding_completed;
-      }
-      return {
-        hasProfile,
-        hasCompletedProfile,
-        needsOnboarding: profileRes.status === 404,
-      };
-    },
-    enabled: !!session,
-  });
+  // No longer needed - now included in session.user.profileStatus
+  const profileStatus = session?.user?.profileStatus;
+  const loadingProfile = false;
 
   const [authSuccess, setAuthSuccess] = useState(() => {
     if (typeof window === "undefined") return false;

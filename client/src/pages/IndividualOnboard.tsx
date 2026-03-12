@@ -301,8 +301,9 @@ export default function IndividualOnboard() {
   const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
   const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
   const NOTICE_OPTIONS = ["Immediate", "< 1 month", "1–3 months", "3+ months"];
-  const effectiveTotalSteps = (roles.includes("Founder") || roles.includes("Other (Specify)")) ? 1
-    : roles.includes("Investor") ? 2 : 3;
+  const effectiveTotalSteps = roles.includes("Other (Specify)") ? 1
+    : (roles.includes("Founder") || roles.includes("Investor")) ? 2
+      : 3;
 
   // --- Logic ---
   useEffect(() => { window.scrollTo(0, 0); }, [step]);

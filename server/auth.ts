@@ -256,9 +256,15 @@ export function setupAuth(app: Express) {
         }
     });
 
-    app.get("/api/auth/me", (req: any, res) => {
+    app.get("/api/auth/me", async (req: any, res) => {
         if (req.isAuthenticated()) {
-            const user = { ...req.user, id: req.user._id?.toString() || req.user.id };
+            const userId = req.user._id?.toString() || req.user.id;
+            const profileStatus = await storage.getProfileStatus(userId);
+            const user = {
+                ...req.user,
+                id: userId,
+                profileStatus
+            };
             res.json(user);
         } else {
             res.status(401).json({ message: "Not authenticated" });
