@@ -37,6 +37,7 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
     const consultantData = profile.consultant_data;
     const creatorData = profile.creator_data;
     const founderStatus = profile.founder_status;
+    const startupData = profile.startup_data;
 
     const isInvestor = roles.includes("Investor");
     const isShortPath = roles.length === 1 && (roles.includes("Founder") || roles.includes("Other (Specify)"));
@@ -115,9 +116,46 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                             <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Role-Specific Details</h3>
                             <div className="space-y-6 p-4 bg-white/[0.02] border border-white/5 rounded-xl">
                                 {roles.includes("Founder") && (
-                                    <div className="space-y-3">
-                                        <p className="text-[10px] text-red-400/60 uppercase font-bold">Founder Status</p>
-                                        <p className="text-sm text-white/70">{founderStatus || "Exploring"}</p>
+                                    <div className={`space-y-3 ${roles.indexOf("Founder") > 0 ? "pt-4 border-t border-white/5" : ""}`}>
+                                        <p className="text-[10px] text-red-400/60 uppercase font-bold">Startup Info</p>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <DetailRow label="Role" value={startupData?.role} />
+                                            <DetailRow label="Company" value={startupData?.company_name} />
+                                            <DetailRow label="Stage" value={startupData?.stage || founderStatus || "Exploring"} />
+                                            <DetailRow label="Industry" value={startupData?.industry} />
+                                            <DetailRow label="Team Size" value={startupData?.team_size} />
+                                            <DetailRow label="Registered" value={startupData?.is_registered} />
+                                        </div>
+                                        {startupData?.product_description && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Product Description</p>
+                                                <p className="text-sm text-white/70">{startupData.product_description}</p>
+                                            </div>
+                                        )}
+                                        {startupData?.target_audience && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Target Audience</p>
+                                                <p className="text-sm text-white/70">{startupData.target_audience}</p>
+                                            </div>
+                                        )}
+                                        {(startupData?.num_users || startupData?.monthly_revenue) && (
+                                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                                <DetailRow label="Users" value={startupData?.num_users} />
+                                                <DetailRow label="Revenue" value={startupData?.monthly_revenue} />
+                                            </div>
+                                        )}
+                                        {startupData?.traction_highlights && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Traction Highlights</p>
+                                                <p className="text-sm text-white/70">{startupData.traction_highlights}</p>
+                                            </div>
+                                        )}
+                                        {startupData?.website && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Website</p>
+                                                <a href={ensureHttps(startupData.website)} target="_blank" rel="noreferrer" className="text-sm text-blue-400 hover:underline">{startupData.website}</a>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                                 {roles.includes("Investor") && investorData && (

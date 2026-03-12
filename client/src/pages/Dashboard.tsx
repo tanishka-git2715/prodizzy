@@ -762,10 +762,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <FormField label="Specify Regions" value={investorData.specific_regions || ""} onChange={(v) => setInvestorData({ ...investorData, specific_regions: v })} />
                           )}
                         </div>
-                        <div className="space-y-2 pt-2 border-t border-white/5">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
-                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
-                        </div>
                       </div>
                     </div>
                   )}
@@ -878,10 +874,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             setConsultantData({ ...consultantData, support_types: next });
                           }} />
                         </div>
-                        <div className="space-y-2 pt-2 border-t border-white/5">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
-                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
-                        </div>
                       </div>
                     </div>
                   )}
@@ -907,10 +899,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                           }} />
                         </div>
                         <TextArea label="Profile / Community Links (comma separated)" value={Array.isArray(creatorData.profile_links) ? creatorData.profile_links.join(", ") : ""} onChange={(v) => setCreatorData({ ...creatorData, profile_links: v.split(",").map(s => s.trim()) })} />
-                        <div className="space-y-2 pt-2 border-t border-white/5">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
-                          <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
-                        </div>
                       </div>
                     </div>
                   )}
@@ -918,10 +906,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                   {roles.includes("Other (Specify)") && (
                     <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
                       <FormField label="Specify Other Role" value={otherRoleSpec} onChange={setOtherRoleSpec} />
-                      <div className="space-y-2 pt-2 border-t border-white/5">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
-                        <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
-                      </div>
                     </div>
                   )}
 
@@ -989,9 +973,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
               </div>
             )}
           </div>
-        </div >
-      </div >
-    </div >
+        </div>
+      </div>
+    </div>
   );
 }
 
