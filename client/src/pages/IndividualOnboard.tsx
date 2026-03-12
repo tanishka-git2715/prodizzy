@@ -313,6 +313,36 @@ export default function IndividualOnboard() {
 
   useEffect(() => {
     setError(""); // Clear any errors when switching roles
+
+    // Reset role-specific data to ensure clean state when switching paths
+    setInvestorType("");
+    setInvestmentStages([]);
+    setTicketSize("");
+    setPreferredIndustries([]);
+    setGeoFocus("");
+    setSpecificRegions("");
+    setInstitution("");
+    setCourse("");
+    setStudyYear("");
+    setStudentCommunities("");
+    setCommunityLinks("");
+    setAdminContact("");
+    setCurrentCompany("");
+    setJobTitle("");
+    setTotalExp("");
+    setNoticePeriod("");
+    setFreelanceExp("");
+    setNotableClients("");
+    setEngagementModel("");
+    setBudgetRange("");
+    setConsultantExp("");
+    setSupportTypes([]);
+    setPlatforms([]);
+    setAudienceSize("");
+    setNiche([]);
+    setProfileLinks("");
+    setOtherRoleSpec("");
+    setFounderStatus("");
   }, [roles]);
 
   const toggle = (set: any, val: string) => set((curr: string[]) => curr.includes(val) ? curr.filter(x => x !== val) : [...curr, val]);
