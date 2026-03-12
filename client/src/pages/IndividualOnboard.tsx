@@ -200,6 +200,37 @@ function MultiSelectDropdown({
   );
 }
 
+// --- Options ---
+const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
+
+const FOUNDER_STATUS_OPTIONS = ["Exploring an idea", "Currently working on an MVP", "Already building a product", "Generating early revenue / Growing", "Scaling an established business"];
+const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
+const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
+const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
+const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Open to All"];
+const GEO_OPTIONS = ["India", "Global", "Specific Regions (Specify)"];
+
+const STUDY_YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Final Year", "Postgraduate", "Recent Graduate"];
+const EXP_OPTIONS = ["0–2 years", "2–4 years", "4–8 years", "8+ years"];
+const FREELANCE_EXP_OPTIONS = ["0-1 years", "1-3 years", "3-5 years", "5+ years"];
+const ENGAGEMENT_OPTIONS = ["Hourly", "Project-based", "Monthly Retainer", "Equity-based (for startups)"];
+const BUDGET_RANGE_OPTIONS = ["Below ₹10K", "₹10K–50K", "₹50K–2L", "₹2L+", "Depends on scope"];
+
+const CONSULTANT_EXP_OPTIONS = ["5–10 years", "10–15 years", "15–20 years", "20+ years"];
+const EXPERTISE_OPTIONS = ["Business Strategy", "Product Strategy & Management", "Growth & Marketing", "Fundraising & Investor Readiness", "Sales & Go-to-Market", "Operations & Scaling", "Finance & Startup Metrics", "Career Guidance / Leadership Coaching", "Technology / AI Advisory", "Community & Ecosystem Building", "Other"];
+const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Board / investor advisory", "Other"];
+
+const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other"];
+const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
+const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other"];
+
+const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other"];
+const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
+const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
+const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
+const NOTICE_OPTIONS = ["Immediate", "< 1 month", "1–3 months", "3+ months"];
+
+
 // --- Main Page ---
 
 export default function IndividualOnboard() {
@@ -296,35 +327,6 @@ export default function IndividualOnboard() {
   const [workMode, setWorkMode] = useState("");
   const [lookingFor, setLookingFor] = useState<string[]>([]);
 
-  // --- Options ---
-  const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
-
-  const FOUNDER_STATUS_OPTIONS = ["Exploring an idea", "Currently working on an MVP", "Already building a product", "Generating early revenue / Growing", "Scaling an established business"];
-  const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
-  const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
-  const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
-  const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Open to All"];
-  const GEO_OPTIONS = ["India", "Global", "Specific Regions (Specify)"];
-
-  const STUDY_YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Final Year", "Postgraduate", "Recent Graduate"];
-  const EXP_OPTIONS = ["0–2 years", "2–4 years", "4–8 years", "8+ years"];
-  const FREELANCE_EXP_OPTIONS = ["0-1 years", "1-3 years", "3-5 years", "5+ years"];
-  const ENGAGEMENT_OPTIONS = ["Hourly", "Project-based", "Monthly Retainer", "Equity-based (for startups)"];
-  const BUDGET_RANGE_OPTIONS = ["Below ₹10K", "₹10K–50K", "₹50K–2L", "₹2L+", "Depends on scope"];
-
-  const CONSULTANT_EXP_OPTIONS = ["5–10 years", "10–15 years", "15–20 years", "20+ years"];
-  const EXPERTISE_OPTIONS = ["Business Strategy", "Product Strategy & Management", "Growth & Marketing", "Fundraising & Investor Readiness", "Sales & Go-to-Market", "Operations & Scaling", "Finance & Startup Metrics", "Career Guidance / Leadership Coaching", "Technology / AI Advisory", "Community & Ecosystem Building", "Other"];
-  const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Board / investor advisory", "Other"];
-
-  const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other"];
-  const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
-  const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other"];
-
-  const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other"];
-  const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
-  const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
-  const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
-  const NOTICE_OPTIONS = ["Immediate", "< 1 month", "1–3 months", "3+ months"];
   const effectiveTotalSteps = roles.includes("Other (Specify)") ? 1
     : (roles.includes("Founder") || roles.includes("Investor")) ? 2
       : 3;
