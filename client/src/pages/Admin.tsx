@@ -781,8 +781,6 @@ export default function Admin() {
               <div className="flex gap-4 overflow-x-auto no-scrollbar">
                 {[
                   { type: "individual" as const, label: "Individuals" },
-                  { type: "startup" as const, label: "Founders" },
-                  { type: "partner" as const, label: "Partners" },
                   { type: "business" as const, label: "Businesses" },
                   { type: "users" as const, label: "All Users" },
                 ].map(tab => (

@@ -267,10 +267,6 @@ export class DatabaseStorage implements IStorage {
     };
 
     let query: any = {};
-    if (Model === IndividualProfile) {
-      if (type === "startup") query = { roles: "Founder" };
-      else if (type === "partner") query = { roles: "Service Partner / Agency" };
-    }
 
     const docs = await (Model as any).find(query, projection).sort({ createdAt: -1 }).lean();
     return docs.map((d: any) => ({

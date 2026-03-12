@@ -457,7 +457,10 @@ export default function IndividualOnboard() {
       if (roles.includes("Content Creator / Community Admin") && (platforms.length === 0 || !audienceSize || niche.length === 0)) return false;
       return true;
     }
-    if (step === 2) return skills.length > 0 && availability && workMode;
+    if (step === 2) {
+      const showSkills = roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r));
+      return (showSkills ? skills.length > 0 : true) && availability && workMode;
+    }
     return true;
   }
 
@@ -750,7 +753,9 @@ export default function IndividualOnboard() {
     <div key="2" className="space-y-6">
       <StepHeader step={2} total={effectiveTotalSteps} title="Final Details" />
       <div className="space-y-5">
-        <MultiSelectDropdown label="Primary Skills" options={SKILL_OPTIONS} selected={skills} onToggle={(v) => toggle(setSkills, v)} enableSearch />
+        {roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r)) && (
+          <MultiSelectDropdown label="Primary Skills" options={SKILL_OPTIONS} selected={skills} onToggle={(v) => toggle(setSkills, v)} enableSearch />
+        )}
         <Dropdown label="Availability" options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
         <Dropdown label="Preferred Work Mode" options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
