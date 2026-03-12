@@ -301,6 +301,7 @@ export default function IndividualOnboard() {
   const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
   const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
   const NOTICE_OPTIONS = ["Immediate", "< 1 month", "1–3 months", "3+ months"];
+  const isShortPath = roles.includes("Founder") || roles.includes("Other (Specify)");
 
   // --- Logic ---
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
@@ -414,7 +415,7 @@ export default function IndividualOnboard() {
 
   const steps = [
     <div key="0" className="space-y-6">
-      <StepHeader step={0} total={3} title="Create Your Professional Profile" />
+      <StepHeader step={0} total={isShortPath ? 1 : 3} title="Create Your Professional Profile" />
       <div className="space-y-6">
         {/* Role Selection Moved to Top & Single Select Cards */}
         <div className="space-y-3">
@@ -618,7 +619,7 @@ export default function IndividualOnboard() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           )}
-          {step < 2 ? (
+          {step < 2 && !isShortPath ? (
             <button onClick={() => { if (canProceed()) go(step + 1); }} disabled={!canProceed()}
               className="flex-1 bg-white text-black font-semibold py-3 rounded-xl text-sm hover:opacity-90 transition-opacity disabled:opacity-20">
               Continue
