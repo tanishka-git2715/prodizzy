@@ -91,8 +91,8 @@ export const insertProfileSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
   email: z.string().email("Valid email required").optional(), // Often handled by auth but good to have
   phone: z.string().optional(),
-  website: z.string().url("Valid URL required").optional().or(z.literal("")),
-  linkedin_url: z.string().url("Valid LinkedIn URL required").optional().or(z.literal("")),
+  website: z.string().regex(/^(https?:\/\/)?([\da-z\.\-]+)\.([a-z\.]{2,6})([\/\w \.\-]*)*\/?$/, "Invalid website URL format").optional().or(z.literal("")),
+  linkedin_url: z.string().regex(/^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/, "Invalid LinkedIn URL format").optional().or(z.literal("")),
 
   // Section 2: Startup Profile
   stage: z.enum([
@@ -359,9 +359,9 @@ export const insertBusinessSchema = z.object({
   business_name: z.string().min(1, "Business name is required"),
   business_type: z.enum(["Startup", "Agency", "Enterprise", "Institution"]),
   industry: z.array(z.string()).optional(),
-  website: z.string().url("Valid URL required").optional().or(z.literal("")),
-  linkedin_url: z.string().url("Valid LinkedIn URL required").optional().or(z.literal("")),
-  logo_url: z.string().url("Valid URL required").optional().or(z.literal("")),
+  website: z.string().regex(/^(https?:\/\/)?([\da-z\.\-]+)\.([a-z\.]{2,6})([\/\w \.\-]*)*\/?$/, "Please enter a valid website (e.g., example.com)").optional().or(z.literal("")),
+  linkedin_url: z.string().regex(/^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/, "Please enter a valid LinkedIn URL").optional().or(z.literal("")),
+  logo_url: z.string().regex(/^(https?:\/\/)?([\da-z\.\-]+)\.([a-z\.]{2,6})([\/\w \.\-]*)*\/?$/, "Invalid image URL").optional().or(z.literal("")),
   description: z.string().optional(),
   team_size: z.string().optional(),
   location: z.string().optional(),

@@ -78,12 +78,21 @@ export default function BusinessCreate() {
     try {
       setSubmitting(true);
 
+      const formatUrl = (url?: string) => {
+        if (!url || !url.trim()) return undefined;
+        let formatted = url.trim();
+        if (!/^https?:\/\//i.test(formatted)) {
+          formatted = `https://${formatted}`;
+        }
+        return formatted;
+      };
+
       // Validate with Zod
       const validated = insertBusinessSchema.parse({
         ...formData,
         industry: formData.industry.length > 0 ? formData.industry : undefined,
-        website: formData.website || undefined,
-        linkedin_url: formData.linkedin_url || undefined,
+        website: formatUrl(formData.website),
+        linkedin_url: formatUrl(formData.linkedin_url),
         description: formData.description || undefined,
         team_size: formData.team_size || undefined,
         location: formData.location || undefined,
