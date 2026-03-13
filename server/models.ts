@@ -206,7 +206,7 @@ export const IndividualProfile = mongoose.model("IndividualProfile", IndividualP
 
 // User Model for Authentication
 const UserSchema = new Schema({
-    googleId: { type: String, unique: true },
+    googleId: { type: String, unique: true, sparse: true },
     email: { type: String, required: true, unique: true },
     password: { type: String },
     displayName: String,
