@@ -533,7 +533,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   // Constants
   const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
   const FOUNDER_STATUS_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
-  const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
+  const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other (Specify)"];
   const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
   const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
   const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Other (Specify)"];
@@ -662,7 +662,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                       <div className="space-y-3">
                         <FormField label="Full Name" value={fullName} onChange={setFullName} />
                         <FormField label="Email" value={email} onChange={setEmail} type="email" />
-                        <FormField label="Phone Number" value={phone} onChange={setPhone} />
                         <FormField label="Location" value={location} onChange={setLocationState} />
                       </div>
                     </div>
@@ -672,7 +671,30 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                       <div className="space-y-3">
                         <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} />
                         <FormField label="Portfolio URL" value={portfolioUrl} onChange={setPortfolioUrl} />
-                        <FormField label="Resume URL" value={resumeUrl} onChange={setResumeUrl} />
+                        <div className="space-y-1.5 flex-1">
+                          <p className="text-[10px] text-white/25 uppercase tracking-wider ml-1">Resume Upload</p>
+                          <input 
+                            type="file" 
+                            accept=".pdf,.doc,.docx"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setResumeUrl(reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                          />
+                          {resumeUrl && resumeUrl.length < 500 && (
+                            <p className="text-xs text-white/40 ml-1">Current file uploaded (or URL provided)</p>
+                          )}
+                          {resumeUrl && resumeUrl.length >= 500 && (
+                            <p className="text-xs text-green-400/70 ml-1">File selected and ready to save</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -736,6 +758,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             setInvestorData({ ...investorData, investor_types: next });
                           }} />
                         </div>
+                        {investorData.investor_types?.includes("Other (Specify)") && (
+                          <FormField label="Specify Investor Type" value={investorData.investor_type_other || ""} onChange={(v) => setInvestorData({ ...investorData, investor_type_other: v })} placeholder="e.g. Micro VC..." />
+                        )}
                         <div className="space-y-2">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Stage Focus</p>
                           <PickMany options={INVESTOR_STAGE_OPTIONS} value={investorData.investment_stages || []} onChange={(next) => {
@@ -752,6 +777,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             setInvestorData({ ...investorData, industries: next });
                           }} />
                         </div>
+                        {investorData.industries?.includes("Other (Specify)") && (
+                          <FormField label="Specify Industry" value={investorData.industry_other || ""} onChange={(v) => setInvestorData({ ...investorData, industry_other: v })} placeholder="e.g. Creator Economy, Space Tech..." />
+                        )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <p className="text-xs text-white/35 uppercase tracking-wider">Geographic Focus</p>

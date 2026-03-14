@@ -204,7 +204,7 @@ function MultiSelectDropdown({
 const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
 
 const FOUNDER_STATUS_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
-const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other"];
+const INVESTOR_TYPE_OPTIONS = ["Angel Investor", "Venture Capital Professional", "Investment Scout", "Syndicate Lead / Member", "Family Office Representative", "Corporate Investor", "Other (Specify)"];
 const INVESTOR_STAGE_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
 const TICKET_SIZE_OPTIONS = ["Below ₹10 Lakhs", "₹10–50 Lakhs", "₹50 Lakhs – ₹1 Crore", "₹1 Crore+", "Depends on startup"];
 const INDUSTRY_OPTIONS = ["Software & AI", "E-commerce & Retail", "Finance & Payments", "Healthcare & Wellness", "Education & Training", "Food & Beverage", "Transportation & Delivery", "Real Estate & Construction", "Marketing & Advertising", "Energy & Sustainability", "Other (Specify)"];
@@ -258,6 +258,7 @@ export default function IndividualOnboard() {
   const [email, setEmail] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [resumeUrl, setResumeUrl] = useState("");
   const [roles, setRoles] = useState<string[]>(() => {
     // Try to restore from URL or sessionStorage
     const params = new URLSearchParams(window.location.search);
@@ -287,9 +288,11 @@ export default function IndividualOnboard() {
   // --- State: Step 2 (Conditional) ---
   // Investor Focus
   const [investorType, setInvestorType] = useState("");
+  const [investorTypeOther, setInvestorTypeOther] = useState("");
   const [investmentStages, setInvestmentStages] = useState<string[]>([]);
   const [ticketSize, setTicketSize] = useState("");
   const [preferredIndustries, setPreferredIndustries] = useState<string[]>([]);
+  const [preferredIndustriesOther, setPreferredIndustriesOther] = useState("");
   const [geoFocus, setGeoFocus] = useState("");
   const [specificRegions, setSpecificRegions] = useState("");
 
@@ -382,9 +385,11 @@ export default function IndividualOnboard() {
 
     // Reset role-specific data to ensure clean state when switching paths
     setInvestorType("");
+    setInvestorTypeOther("");
     setInvestmentStages([]);
     setTicketSize("");
     setPreferredIndustries([]);
+    setPreferredIndustriesOther("");
     setGeoFocus("");
     setSpecificRegions("");
     setInstitution("");
@@ -485,6 +490,7 @@ export default function IndividualOnboard() {
       location: userLocation,
       linkedin_url: linkedinUrl || undefined,
       portfolio_url: portfolioUrl || undefined,
+      resume_url: resumeUrl || undefined,
       roles: selectedRoles,
 
       founder_status: isFounderRole ? founderStatus : undefined,
@@ -501,9 +507,11 @@ export default function IndividualOnboard() {
     if (isInvestor) {
       payload.investor_data = {
         investor_types: [investorType], // Using existing investorType
+        investor_type_other: investorType === "Other (Specify)" ? investorTypeOther : undefined,
         investment_stages: investmentStages,
         ticket_size: ticketSize,
         industries: preferredIndustries, // Using existing preferredIndustries
+        industry_other: preferredIndustries.includes("Other (Specify)") ? preferredIndustriesOther : undefined,
         geography: geoFocus, // Using existing geoFocus
         specific_regions: geoFocus === "Specific Regions (Specify)" ? specificRegions : undefined,
       };
@@ -644,7 +652,33 @@ export default function IndividualOnboard() {
           <Field label="Location" value={userLocation} onChange={setUserLocation} placeholder="Mumbai, India" />
           <Field label="Email" value={email} onChange={setEmail} placeholder="you@email.com" />
           <Field label="LinkedIn Profile" value={linkedinUrl} onChange={setLinkedinUrl} optional placeholder="https://linkedin.com/in/..." />
-          <Field label="Portfolio / Resume Link" value={portfolioUrl} onChange={setPortfolioUrl} optional placeholder="https://yoursite.com" />
+          <Field label="Portfolio URL" value={portfolioUrl} onChange={setPortfolioUrl} optional placeholder="https://yoursite.com" />
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-white/40 uppercase tracking-wider">
+              Resume Upload <span className="lowercase opacity-50 font-normal">(optional)</span>
+            </label>
+            <input 
+              type="file" 
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setResumeUrl(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+            />
+            {resumeUrl && resumeUrl.length < 500 && (
+              <p className="text-xs text-white/40 ml-1">Current file uploaded (or URL provided)</p>
+            )}
+            {resumeUrl && resumeUrl.length >= 500 && (
+              <p className="text-xs text-green-400/70 ml-1">File selected and ready to save</p>
+            )}
+          </div>
         </div>
       </div>
     </div>,
@@ -681,9 +715,15 @@ export default function IndividualOnboard() {
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Investor Info</h3>
             <Dropdown label="Investor Type" options={INVESTOR_TYPE_OPTIONS} value={investorType} onChange={setInvestorType} />
+            {investorType === "Other (Specify)" && (
+              <Field label="Specify Investor Type" value={investorTypeOther} onChange={setInvestorTypeOther} placeholder="E.g. Micro VC..." />
+            )}
             <MultiSelectDropdown label="Investment Stage Focus" options={INVESTOR_STAGE_OPTIONS} selected={investmentStages} onToggle={(v) => toggle(setInvestmentStages, v)} />
             <Dropdown label="Typical Investment Ticket Size" options={TICKET_SIZE_OPTIONS} value={ticketSize} onChange={setTicketSize} />
             <MultiSelectDropdown label="Preferred Industries" options={INDUSTRY_OPTIONS} selected={preferredIndustries} onToggle={(v) => toggle(setPreferredIndustries, v)} />
+            {preferredIndustries.includes("Other (Specify)") && (
+              <Field label="Specify Preferred Industry" value={preferredIndustriesOther} onChange={setPreferredIndustriesOther} placeholder="E.g. Web3, Space Tech..." />
+            )}
             <Dropdown label="Geographic Focus" options={GEO_OPTIONS} value={geoFocus} onChange={setGeoFocus} />
             {geoFocus === "Specific Regions (Specify)" && (
               <Field label="Specify Regions" value={specificRegions} onChange={setSpecificRegions} placeholder="E.g. SE Asia, USA..." />
