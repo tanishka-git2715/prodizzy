@@ -6,14 +6,18 @@ import path from "path";
 export async function handleCampaignSSR(req: Request, res: Response, next: any) {
   const campaignId = req.params.id;
 
+  console.log(`[SSR] Handling campaign: ${campaignId}`);
+
   try {
     // Get campaign data
     const campaign = await storage.getCampaignById(campaignId);
 
     if (!campaign || campaign.status !== "active") {
-      // Campaign not found, let normal routing handle it
+      console.log(`[SSR] Campaign not found or not active: ${campaignId}`);
       return next();
     }
+
+    console.log(`[SSR] Campaign found: ${campaign.title}`);
 
     // Determine index.html path based on environment
     const isDev = process.env.NODE_ENV !== "production";
@@ -34,35 +38,52 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
     const description = campaign.description.slice(0, 200);
     const url = `${req.protocol}://${req.get("host")}/c/${campaignId}`;
     const image = campaign.business?.logo_url || `${req.protocol}://${req.get("host")}/logo.png`;
+    const businessName = campaign.business?.business_name || "Prodizzy";
 
-    // Inject meta tags
+    // Build comprehensive details for description
+    let detailedDescription = campaign.description.slice(0, 160);
+    if (campaign.engagementType) {
+      detailedDescription = `${campaign.engagementType} • ${detailedDescription}`;
+    }
+    if (campaign.budget) {
+      detailedDescription = `${campaign.budget} • ${detailedDescription}`;
+    }
+
+    // Remove ALL existing OG and Twitter meta tags
+    html = html.replace(/<meta[^>]*property="og:[^"]*"[^>]*>\s*/gi, '');
+    html = html.replace(/<meta[^>]*name="twitter:[^"]*"[^>]*>\s*/gi, '');
+    html = html.replace(/<meta[^>]*name="description"[^>]*>\s*/gi, '');
+    html = html.replace(/<title>[^<]*<\/title>\s*/gi, '');
+
+    console.log(`[SSR] Injecting meta tags for: ${title}`);
+
+    // Inject NEW meta tags
     const metaTags = `
-    <!-- Open Graph / Facebook -->
+    <title>${escapeHtml(title)} | ${escapeHtml(businessName)}</title>
+    <meta name="description" content="${escapeHtml(detailedDescription)}">
+
+    <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="${url}">
     <meta property="og:title" content="${escapeHtml(title)}">
-    <meta property="og:description" content="${escapeHtml(description)}">
+    <meta property="og:description" content="${escapeHtml(detailedDescription)}">
     <meta property="og:image" content="${image}">
     <meta property="og:site_name" content="Prodizzy">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="${url}">
-    <meta property="twitter:title" content="${escapeHtml(title)}">
-    <meta property="twitter:description" content="${escapeHtml(description)}">
-    <meta property="twitter:image" content="${image}">
-
-    <!-- WhatsApp (uses Open Graph) -->
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
 
-    <!-- SEO -->
-    <title>${escapeHtml(title)} | Prodizzy</title>
-    <meta name="description" content="${escapeHtml(description)}">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="${url}">
+    <meta name="twitter:title" content="${escapeHtml(title)}">
+    <meta name="twitter:description" content="${escapeHtml(detailedDescription)}">
+    <meta name="twitter:image" content="${image}">
     `;
 
-    // Replace the <head> section
-    html = html.replace("</head>", `${metaTags}</head>`);
+    // Inject at the END of <head> to override any defaults
+    html = html.replace("</head>", `${metaTags}\n</head>`);
+
+    console.log(`[SSR] Successfully injected meta tags, sending HTML`);
 
     // Send the modified HTML
     res.status(200).set({ "Content-Type": "text/html" }).send(html);
