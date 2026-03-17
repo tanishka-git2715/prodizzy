@@ -209,27 +209,29 @@ export default function CampaignCreate() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-black text-white p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Button
             variant="ghost"
             onClick={() => setLocation(`/business/${businessId}`)}
-            className="mb-4 text-white/60 hover:text-white"
+            className="mb-4 text-white/60 hover:text-white -ml-2 sm:ml-0"
+            size="sm"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Button>
 
           {template && (
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                {template.icon && <template.icon className="w-6 h-6 text-blue-400" />}
+            <div className="flex items-start gap-3 mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+                {template.icon && <template.icon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />}
               </div>
-              <div>
-                <h1 className="text-2xl font-bold">{template.title}</h1>
-                <p className="text-white/60 text-sm">{template.description}</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold">{template.title}</h1>
+                <p className="text-white/60 text-xs sm:text-sm">{template.description}</p>
               </div>
             </div>
           )}
@@ -237,10 +239,10 @@ export default function CampaignCreate() {
           {/* Progress Bar */}
           <div className="mb-2">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-white/60">
+              <span className="text-xs sm:text-sm text-white/60">
                 {progress < 100 ? "Complete your campaign" : "Ready to launch!"}
               </span>
-              <span className="text-sm font-medium text-blue-400">
+              <span className="text-xs sm:text-sm font-medium text-blue-400">
                 {Math.round(progress)}%
               </span>
             </div>
@@ -249,13 +251,13 @@ export default function CampaignCreate() {
           <p className="text-xs text-white/40">Launch in 30 seconds ⚡</p>
         </div>
 
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-4 sm:space-y-6">
           {/* Basic Information */}
           <Card className="bg-white/5 border-white/10">
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+            <CardHeader className="px-4 sm:px-6 py-4 sm:py-6">
+              <CardTitle className="text-base sm:text-lg">Basic Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
               {/* Custom Template Fields */}
               {template?.customFields?.map((field) => (
                 <div key={field.name}>
@@ -327,9 +329,9 @@ export default function CampaignCreate() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="engagementType">Engagement Type</Label>
+                  <Label htmlFor="engagementType" className="text-sm">Engagement Type</Label>
                   <Select
                     value={formData.engagementType}
                     onValueChange={(value) =>
@@ -352,7 +354,7 @@ export default function CampaignCreate() {
                 </div>
 
                 <div>
-                  <Label htmlFor="budget">Budget</Label>
+                  <Label htmlFor="budget" className="text-sm">Budget</Label>
                   <Input
                     id="budget"
                     placeholder="e.g., $5,000 - $8,000"
@@ -365,9 +367,9 @@ export default function CampaignCreate() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label htmlFor="deadline">Deadline</Label>
+                  <Label htmlFor="deadline" className="text-sm">Deadline</Label>
                   <Input
                     id="deadline"
                     type="date"
@@ -380,7 +382,7 @@ export default function CampaignCreate() {
                 </div>
 
                 <div>
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location" className="text-sm">Location</Label>
                   <Input
                     id="location"
                     placeholder="e.g., Remote, San Francisco, Hybrid"
@@ -394,7 +396,7 @@ export default function CampaignCreate() {
               </div>
 
               <div>
-                <Label htmlFor="skills">Skills Required</Label>
+                <Label htmlFor="skills" className="text-sm">Skills Required</Label>
                 <div className="flex gap-2 mb-2">
                   <Input
                     id="skills"
@@ -407,9 +409,9 @@ export default function CampaignCreate() {
                         handleAddSkill();
                       }
                     }}
-                    className="bg-white/5 border-white/10"
+                    className="bg-white/5 border-white/10 text-sm"
                   />
-                  <Button type="button" onClick={handleAddSkill} variant="outline">
+                  <Button type="button" onClick={handleAddSkill} variant="outline" size="sm">
                     Add
                   </Button>
                 </div>
@@ -435,37 +437,42 @@ export default function CampaignCreate() {
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowPreview(!showPreview)}
-              className="bg-white/5 border-white/10"
+              className="bg-white/5 border-white/10 w-full sm:w-auto"
+              size="sm"
             >
               <Eye className="w-4 h-4 mr-2" />
-              {showPreview ? "Hide Preview" : "Preview Campaign"}
+              {showPreview ? "Hide Preview" : "Preview"}
             </Button>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => handleSubmit("draft")}
                 disabled={createCampaignMutation.isPending}
-                className="bg-white/5 border-white/10"
+                className="bg-white/5 border-white/10 flex-1 sm:flex-initial"
+                size="sm"
               >
                 <Save className="w-4 h-4 mr-2" />
-                Save Draft
+                <span className="hidden sm:inline">Save Draft</span>
+                <span className="sm:hidden">Draft</span>
               </Button>
 
               <Button
                 type="button"
                 onClick={() => handleSubmit("active")}
                 disabled={progress < 100 || createCampaignMutation.isPending}
-                className="bg-[#E63946] hover:bg-[#E63946]/90"
+                className="bg-[#E63946] hover:bg-[#E63946]/90 flex-1 sm:flex-initial"
+                size="sm"
               >
                 <Send className="w-4 h-4 mr-2" />
-                {createCampaignMutation.isPending ? "Publishing..." : "Publish Campaign"}
+                <span className="hidden sm:inline">{createCampaignMutation.isPending ? "Publishing..." : "Publish Campaign"}</span>
+                <span className="sm:hidden">{createCampaignMutation.isPending ? "..." : "Publish"}</span>
               </Button>
             </div>
           </div>

@@ -147,12 +147,12 @@ export default function PublicCampaignView() {
     <div className="min-h-screen bg-black text-white">
       {/* Header with branding */}
       <div className="border-b border-white/10 bg-black/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => setLocation("/")}
           >
-            <div className="text-xl font-bold">
+            <div className="text-lg sm:text-xl font-bold">
               <span className="text-[#E63946]">Prodizzy</span>
             </div>
           </div>
@@ -162,18 +162,18 @@ export default function PublicCampaignView() {
             onClick={handleShare}
             className="bg-white/5 border-white/10"
           >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
+            <Share2 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Share</span>
           </Button>
         </div>
       </div>
 
       {/* Campaign Content */}
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12">
         {/* Business Header */}
         {campaign.business && (
-          <div className="flex items-center gap-4 mb-8 pb-6 border-b border-white/10">
-            <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+          <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/10">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
               {campaign.business.logo_url ? (
                 <img
                   src={campaign.business.logo_url}
@@ -181,21 +181,21 @@ export default function PublicCampaignView() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Building2 className="w-8 h-8 text-white/40" />
+                <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />
               )}
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">{campaign.business.business_name}</h3>
-              <p className="text-sm text-white/60">Posted an opportunity</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-base sm:text-lg truncate">{campaign.business.business_name}</h3>
+              <p className="text-xs sm:text-sm text-white/60">Posted an opportunity</p>
             </div>
           </div>
         )}
 
         {/* Campaign Details */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold mb-3">{campaign.title}</h1>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3">{campaign.title}</h1>
               <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
                 {campaign.category}
               </Badge>
@@ -203,44 +203,44 @@ export default function PublicCampaignView() {
           </div>
 
           {/* Quick Info Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 my-6 sm:my-8">
             {campaign.engagementType && (
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 sm:p-4 rounded-lg bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2 text-white/60 mb-1">
-                  <Briefcase className="w-4 h-4" />
+                  <Briefcase className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="text-xs">Type</span>
                 </div>
-                <p className="font-medium">{campaign.engagementType}</p>
+                <p className="font-medium text-sm sm:text-base truncate">{campaign.engagementType}</p>
               </div>
             )}
 
             {campaign.budget && (
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 sm:p-4 rounded-lg bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2 text-white/60 mb-1">
-                  <DollarSign className="w-4 h-4" />
+                  <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="text-xs">Budget</span>
                 </div>
-                <p className="font-medium">{campaign.budget}</p>
+                <p className="font-medium text-sm sm:text-base truncate">{campaign.budget}</p>
               </div>
             )}
 
             {campaign.location && (
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 sm:p-4 rounded-lg bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2 text-white/60 mb-1">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="text-xs">Location</span>
                 </div>
-                <p className="font-medium">{campaign.location}</p>
+                <p className="font-medium text-sm sm:text-base truncate">{campaign.location}</p>
               </div>
             )}
 
             {campaign.deadline && (
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 sm:p-4 rounded-lg bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2 text-white/60 mb-1">
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="text-xs">Deadline</span>
                 </div>
-                <p className="font-medium">
+                <p className="font-medium text-sm sm:text-base">
                   {new Date(campaign.deadline).toLocaleDateString()}
                 </p>
               </div>
@@ -249,9 +249,9 @@ export default function PublicCampaignView() {
         </div>
 
         {/* Main Content Card */}
-        <Card className="bg-white/5 border-white/10 mb-8">
-          <CardContent className="p-8">
-            <h2 className="text-2xl font-semibold mb-4">About this opportunity</h2>
+        <Card className="bg-white/5 border-white/10 mb-6 sm:mb-8">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4">About this opportunity</h2>
             <p className="text-white/80 whitespace-pre-wrap leading-relaxed">
               {campaign.description}
             </p>
@@ -299,18 +299,18 @@ export default function PublicCampaignView() {
         </Card>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-r from-[#E63946]/10 to-blue-500/10 border border-white/10 rounded-xl p-8 text-center">
-          <h3 className="text-2xl font-bold mb-2">Interested in this opportunity?</h3>
-          <p className="text-white/60 mb-6">
+        <div className="bg-gradient-to-r from-[#E63946]/10 to-blue-500/10 border border-white/10 rounded-xl p-6 sm:p-8 text-center">
+          <h3 className="text-xl sm:text-2xl font-bold mb-2">Interested in this opportunity?</h3>
+          <p className="text-sm sm:text-base text-white/60 mb-6">
             {session
               ? "Click apply to submit your application"
               : "Sign up or log in to apply for this opportunity"}
           </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
               size="lg"
               onClick={handleApply}
-              className="bg-[#E63946] hover:bg-[#E63946]/90 text-white"
+              className="bg-[#E63946] hover:bg-[#E63946]/90 text-white w-full sm:w-auto"
             >
               <CheckCircle className="w-5 h-5 mr-2" />
               {session ? "Apply Now" : "Sign Up to Apply"}
@@ -320,16 +320,17 @@ export default function PublicCampaignView() {
                 size="lg"
                 variant="outline"
                 onClick={() => setLocation("/login")}
-                className="bg-white/5 border-white/10"
+                className="bg-white/5 border-white/10 w-full sm:w-auto"
               >
-                Already have an account? Login
+                <span className="hidden sm:inline">Already have an account? Login</span>
+                <span className="sm:hidden">Login</span>
               </Button>
             )}
           </div>
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 text-center text-sm text-white/40">
+        <div className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-white/40">
           <p>
             Posted {new Date(campaign.createdAt).toLocaleDateString()} • {campaign.views || 0}{" "}
             views
