@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection, Business, TeamMember } from "./models";
+import { Waitlist, StartupProfile, InvestorProfile, PartnerProfile, IndividualProfile, User, Connection, Business, TeamMember, Campaign, CampaignApplication } from "./models";
 import type {
   InsertWaitlistEntry,
   WaitlistResponse,
@@ -1161,6 +1161,196 @@ export class DatabaseStorage implements IStorage {
       .lean();
 
     return memberships;
+  }
+
+  // =============================================
+  // CAMPAIGN METHODS
+  // =============================================
+
+  async createCampaign(businessId: string, userId: string, campaignData: any): Promise<any> {
+    const campaign = new Campaign({
+      business_id: businessId,
+      created_by: userId,
+      ...campaignData
+    });
+
+    await campaign.save();
+
+    // Populate business and creator info
+    const populated = await Campaign.findById(campaign._id)
+      .populate('business_id', 'business_name logo_url')
+      .lean();
+
+    return populated;
+  }
+
+  async getCampaignById(campaignId: string): Promise<any | undefined> {
+    const campaign = await Campaign.findById(campaignId)
+      .populate('business_id', 'business_name logo_url')
+      .lean();
+
+    return campaign;
+  }
+
+  async getCampaignsByBusiness(businessId: string): Promise<any[]> {
+    const campaigns = await Campaign.find({ business_id: businessId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return campaigns;
+  }
+
+  async getActiveCampaigns(filters?: { category?: string; skills?: string[] }): Promise<any[]> {
+    const query: any = { status: "active" };
+
+    if (filters?.category) {
+      query.category = filters.category;
+    }
+
+    if (filters?.skills && filters.skills.length > 0) {
+      query.skills = { $in: filters.skills };
+    }
+
+    const campaigns = await Campaign.find(query)
+      .populate('business_id', 'business_name logo_url location')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return campaigns;
+  }
+
+  async updateCampaign(campaignId: string, updates: any): Promise<any> {
+    const campaign = await Campaign.findByIdAndUpdate(
+      campaignId,
+      { ...updates, updatedAt: new Date() },
+      { new: true }
+    )
+      .populate('business_id', 'business_name logo_url')
+      .lean();
+
+    if (!campaign) throw new Error("Campaign not found");
+    return campaign;
+  }
+
+  async deleteCampaign(campaignId: string): Promise<void> {
+    const result = await Campaign.findByIdAndDelete(campaignId);
+    if (!result) throw new Error("Campaign not found");
+  }
+
+  async incrementCampaignViews(campaignId: string): Promise<void> {
+    await Campaign.findByIdAndUpdate(campaignId, { $inc: { views: 1 } });
+  }
+
+  async incrementCampaignApplications(campaignId: string): Promise<void> {
+    await Campaign.findByIdAndUpdate(campaignId, { $inc: { applications: 1 } });
+  }
+
+  async getCampaignStats(businessId: string): Promise<any> {
+    const campaigns = await Campaign.find({ business_id: businessId });
+
+    const stats = {
+      total: campaigns.length,
+      active: campaigns.filter(c => c.status === "active").length,
+      draft: campaigns.filter(c => c.status === "draft").length,
+      closed: campaigns.filter(c => c.status === "closed").length,
+      approved: campaigns.filter(c => c.approved).length,
+      pendingApproval: campaigns.filter(c => c.status === "active" && !c.approved).length,
+      totalViews: campaigns.reduce((sum, c) => sum + c.views, 0),
+      totalApplications: campaigns.reduce((sum, c) => sum + c.applications, 0)
+    };
+
+    return stats;
+  }
+
+  async approveCampaign(campaignId: string, approved: boolean): Promise<any> {
+    const campaign = await Campaign.findByIdAndUpdate(
+      campaignId,
+      { approved },
+      { new: true }
+    ).lean();
+
+    if (!campaign) throw new Error("Campaign not found");
+    return campaign;
+  }
+
+  async getAllCampaignsForAdmin(): Promise<any[]> {
+    const campaigns = await Campaign.find()
+      .populate('business_id', 'business_name logo_url')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return campaigns;
+  }
+
+  // =============================================
+  // CAMPAIGN APPLICATION METHODS
+  // =============================================
+
+  async createCampaignApplication(campaignId: string, userId: string, applicationData: any): Promise<any> {
+    // Check if user already applied
+    const existing = await CampaignApplication.findOne({
+      campaign_id: campaignId,
+      user_id: userId
+    });
+
+    if (existing) {
+      throw new Error("You have already applied to this campaign");
+    }
+
+    const application = new CampaignApplication({
+      campaign_id: campaignId,
+      user_id: userId,
+      ...applicationData
+    });
+
+    await application.save();
+
+    // Increment campaign applications count
+    await this.incrementCampaignApplications(campaignId);
+
+    return application.toObject();
+  }
+
+  async getCampaignApplications(campaignId: string, campaignApproved: boolean): Promise<any[]> {
+    // Only return applications if campaign is approved
+    if (!campaignApproved) {
+      return [];
+    }
+
+    const applications = await CampaignApplication.find({ campaign_id: campaignId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return applications;
+  }
+
+  async getAllCampaignApplicationsForAdmin(campaignId: string): Promise<any[]> {
+    // Admin can see all applications regardless of approval
+    const applications = await CampaignApplication.find({ campaign_id: campaignId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return applications;
+  }
+
+  async getUserApplications(userId: string): Promise<any[]> {
+    const applications = await CampaignApplication.find({ user_id: userId })
+      .populate('campaign_id', 'title business_id status approved')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return applications;
+  }
+
+  async updateApplicationStatus(applicationId: string, status: string): Promise<any> {
+    const application = await CampaignApplication.findByIdAndUpdate(
+      applicationId,
+      { status },
+      { new: true }
+    ).lean();
+
+    if (!application) throw new Error("Application not found");
+    return application;
   }
 }
 

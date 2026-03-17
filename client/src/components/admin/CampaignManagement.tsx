@@ -1,0 +1,334 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Check, X, Eye, Calendar, Users, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface Campaign {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: string;
+  approved: boolean;
+  views: number;
+  applications: number;
+  createdAt: string;
+  business?: {
+    business_name: string;
+    logo_url?: string;
+  };
+}
+
+function CampaignRow({ campaign }: { campaign: Campaign }) {
+  const [expanded, setExpanded] = useState(false);
+  const [showApplications, setShowApplications] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: applications } = useQuery<any[]>({
+    queryKey: ["admin-campaign-applications", campaign._id],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/campaigns/${campaign._id}/applications`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to load applications");
+      return response.json();
+    },
+    enabled: showApplications,
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (approved: boolean) =>
+      fetch(`/api/admin/campaigns/${campaign._id}/approve`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ approved }),
+      }).then((r) => r.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-campaigns"] });
+    },
+  });
+
+  return (
+    <div
+      className={`border rounded-xl transition-colors ${
+        campaign.approved
+          ? "border-green-500/20 bg-green-500/5"
+          : "border-yellow-500/20 bg-yellow-500/5"
+      }`}
+    >
+      <div className="px-5 py-4 flex items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className="text-white font-medium text-sm">{campaign.title}</span>
+            <Badge variant="outline" className="text-xs">
+              {campaign.category}
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`text-xs ${
+                campaign.status === "active"
+                  ? "bg-green-500/20 text-green-400"
+                  : campaign.status === "draft"
+                  ? "bg-gray-500/20 text-gray-400"
+                  : "bg-red-500/20 text-red-400"
+              }`}
+            >
+              {campaign.status}
+            </Badge>
+            {campaign.approved ? (
+              <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/15 text-green-400 border border-green-500/20">
+                Approved
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">
+                Pending Approval
+              </span>
+            )}
+          </div>
+          <p className="text-white/40 text-xs">
+            {campaign.business?.business_name || "Unknown Business"} •{" "}
+            {new Date(campaign.createdAt).toLocaleDateString()} • {campaign.views} views •{" "}
+            {campaign.applications} applications
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => window.open(`/c/${campaign._id}`, "_blank")}
+            className="bg-white/5 border border-white/10"
+          >
+            <ExternalLink className="w-3 h-3 mr-1" />
+            View
+          </Button>
+
+          {campaign.applications > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowApplications(!showApplications)}
+              className="bg-white/5 border border-white/10"
+            >
+              <Users className="w-3 h-3 mr-1" />
+              {campaign.applications} Apps
+            </Button>
+          )}
+
+          {!campaign.approved ? (
+            <Button
+              size="sm"
+              onClick={() => approveMutation.mutate(true)}
+              disabled={approveMutation.isPending}
+              className="bg-green-500/15 text-green-400 border border-green-500/20 hover:bg-green-500/25"
+            >
+              <Check className="w-3 h-3 mr-1" />
+              Approve
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => approveMutation.mutate(false)}
+              disabled={approveMutation.isPending}
+              variant="outline"
+              className="bg-red-500/15 text-red-400 border border-red-500/20 hover:bg-red-500/25"
+            >
+              <X className="w-3 h-3 mr-1" />
+              Revoke
+            </Button>
+          )}
+
+          <button
+            onClick={() => setExpanded((e) => !e)}
+            className="text-white/30 hover:text-white/60 transition-colors p-1"
+          >
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 border-t border-white/6 pt-4">
+              <div className="mb-4">
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">
+                  Description
+                </p>
+                <p className="text-white/70 text-sm whitespace-pre-wrap">
+                  {campaign.description}
+                </p>
+              </div>
+
+              {showApplications && applications && applications.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/6">
+                  <p className="text-xs text-white/30 uppercase tracking-wider mb-3">
+                    Applications ({applications.length})
+                  </p>
+                  <div className="space-y-2">
+                    {applications.map((app: any) => (
+                      <div
+                        key={app._id}
+                        className="p-3 rounded-lg bg-white/5 border border-white/10"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm text-white/80">
+                              User ID: {app.user_id}
+                            </p>
+                            {app.message && (
+                              <p className="text-xs text-white/60 mt-1">{app.message}</p>
+                            )}
+                            <p className="text-xs text-white/40 mt-1">
+                              Applied {new Date(app.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${
+                              app.status === "accepted"
+                                ? "bg-green-500/20 text-green-400"
+                                : app.status === "rejected"
+                                ? "bg-red-500/20 text-red-400"
+                                : "bg-yellow-500/20 text-yellow-400"
+                            }`}
+                          >
+                            {app.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function CampaignManagement() {
+  const [filter, setFilter] = useState<"all" | "pending" | "approved">("all");
+
+  const { data: campaigns, isLoading } = useQuery<Campaign[]>({
+    queryKey: ["admin-campaigns"],
+    queryFn: async () => {
+      const response = await fetch("/api/admin/campaigns", {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to load campaigns");
+      return response.json();
+    },
+  });
+
+  const filteredCampaigns = campaigns?.filter((c) => {
+    if (filter === "pending") return c.status === "active" && !c.approved;
+    if (filter === "approved") return c.approved;
+    return true;
+  });
+
+  const stats = {
+    total: campaigns?.length || 0,
+    pending: campaigns?.filter((c) => c.status === "active" && !c.approved).length || 0,
+    approved: campaigns?.filter((c) => c.approved).length || 0,
+    totalApplications: campaigns?.reduce((sum, c) => sum + c.applications, 0) || 0,
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="bg-white/5 border-white/10">
+          <CardContent className="p-6">
+            <div className="text-2xl font-bold text-white">{stats.total}</div>
+            <div className="text-sm text-white/60">Total Campaigns</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/5 border-white/10">
+          <CardContent className="p-6">
+            <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
+            <div className="text-sm text-white/60">Pending Approval</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/5 border-white/10">
+          <CardContent className="p-6">
+            <div className="text-2xl font-bold text-green-400">{stats.approved}</div>
+            <div className="text-sm text-white/60">Approved</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/5 border-white/10">
+          <CardContent className="p-6">
+            <div className="text-2xl font-bold text-blue-400">{stats.totalApplications}</div>
+            <div className="text-sm text-white/60">Total Applications</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          onClick={() => setFilter("all")}
+          variant={filter === "all" ? "default" : "outline"}
+          className={filter === "all" ? "bg-white text-black" : "bg-white/5 border-white/10"}
+        >
+          All ({stats.total})
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => setFilter("pending")}
+          variant={filter === "pending" ? "default" : "outline"}
+          className={
+            filter === "pending"
+              ? "bg-yellow-500 text-black"
+              : "bg-white/5 border-white/10 text-yellow-400"
+          }
+        >
+          Pending ({stats.pending})
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => setFilter("approved")}
+          variant={filter === "approved" ? "default" : "outline"}
+          className={
+            filter === "approved"
+              ? "bg-green-500 text-black"
+              : "bg-white/5 border-white/10 text-green-400"
+          }
+        >
+          Approved ({stats.approved})
+        </Button>
+      </div>
+
+      {/* Campaigns List */}
+      <div className="space-y-3">
+        {isLoading ? (
+          <div className="text-center py-12 text-white/60">Loading campaigns...</div>
+        ) : filteredCampaigns && filteredCampaigns.length > 0 ? (
+          filteredCampaigns.map((campaign) => (
+            <CampaignRow key={campaign._id} campaign={campaign} />
+          ))
+        ) : (
+          <div className="text-center py-12 text-white/60">
+            No campaigns {filter !== "all" && `in ${filter} status`}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

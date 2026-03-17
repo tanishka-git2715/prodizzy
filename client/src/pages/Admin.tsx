@@ -3,17 +3,18 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2, Users, TrendingUp, Activity, FileText } from "lucide-react";
+import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2, Users, TrendingUp, Activity, FileText, Rocket } from "lucide-react";
 import type { StartupProfile, PartnerProfile, IndividualProfile, Business } from "@shared/schema";
 import { MetricCard } from "@/components/admin/MetricCard";
 import { GrowthChart } from "@/components/admin/GrowthChart";
 import { CohortTable } from "@/components/admin/CohortTable";
 import { FunnelChart } from "@/components/admin/FunnelChart";
+import { CampaignManagement } from "@/components/admin/CampaignManagement";
 import { ProfileDetailView } from "@/components/ProfileDetailView";
 import { ensureHttps } from "@/lib/utils";
 
 type ProfileType = "startup" | "partner" | "individual" | "business";
-type AdminTab = "overview" | "growth" | "marketplace" | "profiles" | ProfileType | "users";
+type AdminTab = "overview" | "growth" | "marketplace" | "profiles" | ProfileType | "users" | "campaigns";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -661,6 +662,7 @@ export default function Admin() {
             { type: "growth" as AdminTab, label: "Growth", icon: TrendingUp },
             { type: "marketplace" as AdminTab, label: "Marketplace", icon: Users },
             { type: "profiles" as AdminTab, label: "Profiles", icon: FileText },
+            { type: "campaigns" as AdminTab, label: "Campaigns", icon: Rocket },
           ].map(tab => (
             <button
               key={tab.type}
@@ -860,6 +862,11 @@ export default function Admin() {
               )}
             </div>
           </>
+        )}
+
+        {/* Campaigns Tab */}
+        {activeTab === "campaigns" && (
+          <CampaignManagement />
         )}
       </div>
     </div>
