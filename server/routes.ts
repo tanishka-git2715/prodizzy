@@ -5,6 +5,7 @@ import { api } from "@shared/routes";
 import { insertProfileSchema, updateProfileSchema, insertBusinessSchema, updateBusinessSchema, inviteTeamMemberSchema, updateTeamMemberSchema, insertCampaignSchema, updateCampaignSchema, insertCampaignApplicationSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendInviteEmail } from "./email";
+import { handleCampaignSSR } from "./ssr";
 
 function ensureAuthenticated(req: Request, res: Response, next: any) {
   if (req.isAuthenticated()) {
@@ -138,6 +139,9 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // SSR for campaign pages (must be before static file serving)
+  app.get("/c/:id", handleCampaignSSR);
 
   app.post(api.waitlist.create.path, async (req, res) => {
     try {
