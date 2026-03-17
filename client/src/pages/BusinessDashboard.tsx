@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Building2, Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy } from "lucide-react";
 import type { Business, TeamMember } from "@shared/schema";
+import { ApplicationsList } from "@/components/applications/ApplicationsList";
 
 export default function BusinessDashboard() {
   const [, params] = useRoute("/business/:id");
@@ -72,6 +73,7 @@ export default function BusinessDashboard() {
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [selectedCampaignForApps, setSelectedCampaignForApps] = useState<string | null>(null);
 
   const handleShareCampaign = (campaignId: string, campaignTitle: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -434,6 +436,10 @@ export default function BusinessDashboard() {
                             {campaign.views || 0} views
                           </span>
                           <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {campaign.applications || 0} applications
+                          </span>
+                          <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {new Date(campaign.createdAt).toLocaleDateString()}
                           </span>
@@ -444,6 +450,34 @@ export default function BusinessDashboard() {
                             </span>
                           )}
                         </div>
+
+                        {/* View Applications Button */}
+                        {campaign.applications > 0 && (
+                          <div className="mt-4 border-t border-white/10 pt-4">
+                            <Button
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedCampaignForApps(
+                                  selectedCampaignForApps === campaign._id ? null : campaign._id
+                                );
+                              }}
+                              className="w-full text-blue-400 hover:text-blue-300"
+                            >
+                              {selectedCampaignForApps === campaign._id
+                                ? "Hide Applications"
+                                : `View ${campaign.applications} Application${campaign.applications !== 1 ? "s" : ""}`}
+                            </Button>
+
+                            {/* Applications List */}
+                            {selectedCampaignForApps === campaign._id && (
+                              <ApplicationsList
+                                campaignId={campaign._id}
+                                campaignTitle={campaign.title}
+                              />
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                     {campaigns.length > 5 && (

@@ -1342,6 +1342,10 @@ export class DatabaseStorage implements IStorage {
     return applications;
   }
 
+  async getCampaignApplicationById(applicationId: string): Promise<any | null> {
+    return await CampaignApplication.findById(applicationId).lean();
+  }
+
   async updateApplicationStatus(applicationId: string, status: string): Promise<any> {
     const application = await CampaignApplication.findByIdAndUpdate(
       applicationId,

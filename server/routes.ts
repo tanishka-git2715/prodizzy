@@ -982,6 +982,47 @@ export async function registerRoutes(
     }
   });
 
+  // Update application status (accept/reject)
+  app.patch("/api/applications/:id/status", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const applicationId = req.params.id;
+      const { status } = req.body;
+      const userId = req.user._id?.toString() || req.user.id;
+
+      if (!["accepted", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const application = await storage.getCampaignApplicationById(applicationId);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      // Check if user owns the campaign's business
+      const campaign = await storage.getCampaignById(application.campaign_id);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      const business = await storage.getBusinessById(campaign.business_id);
+      const isOwner = business.owner_user_id === userId;
+
+      if (!isOwner) {
+        const members = await storage.getTeamMembers(campaign.business_id);
+        const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+
+        if (!member && req.user.role !== "admin") {
+          return res.status(403).json({ message: "Not authorized" });
+        }
+      }
+
+      const updated = await storage.updateApplicationStatus(applicationId, status);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // =============================================
   // ADMIN CAMPAIGN ROUTES
   // =============================================

@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
+import { ApplicationFormModal } from "@/components/applications/ApplicationFormModal";
+import { ApplicationSuccessDialog } from "@/components/applications/ApplicationSuccessDialog";
 import {
   Building2,
   MapPin,
@@ -24,6 +26,8 @@ export default function PublicCampaignView() {
   const { session } = useAuth();
   const { toast } = useToast();
   const campaignId = params?.id;
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const { data: campaign, isLoading, error } = useQuery<any>({
     queryKey: ["public-campaign", campaignId],
@@ -90,12 +94,14 @@ export default function PublicCampaignView() {
       // Redirect to signup with return URL
       setLocation(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
     } else {
-      // User is logged in, show application modal or redirect
-      toast({
-        title: "Application Feature",
-        description: "Application functionality coming soon!",
-      });
+      // User is logged in, show application modal
+      setShowApplicationModal(true);
     }
+  };
+
+  const handleApplicationSuccess = () => {
+    setShowApplicationModal(false);
+    setShowSuccessDialog(true);
   };
 
   const handleShare = async () => {
@@ -337,6 +343,27 @@ export default function PublicCampaignView() {
           </p>
         </div>
       </div>
+
+      {/* Application Modals */}
+      <ApplicationFormModal
+        campaignId={campaignId!}
+        campaignTitle={campaign.title}
+        customFields={campaign.customFields ? Object.entries(campaign.customFields).map(([name, config]: [string, any]) => ({
+          name,
+          label: config.label || name,
+          type: config.type || "text",
+          required: config.required || false,
+        })) : []}
+        open={showApplicationModal}
+        onOpenChange={setShowApplicationModal}
+        onSuccess={handleApplicationSuccess}
+      />
+
+      <ApplicationSuccessDialog
+        open={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+        campaignTitle={campaign.title}
+      />
     </div>
   );
 }
