@@ -48,8 +48,8 @@ export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: Auth
         const res = await verifyOtp({ email, otp });
 
         if (res.success) {
-            // Speed up: don't wait for profile check here, the landing page or onboarding page will handle it
-            window.location.href = "/individual-onboard";
+            // Let the parent/callback handle redirection logic
+            if (onSuccess) onSuccess();
         } else {
             setIsLoading(false);
             setLocalError(res.message || "Invalid code");

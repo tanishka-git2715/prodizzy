@@ -120,17 +120,21 @@ export default function Home() {
     }
   }, [session, profileStatus, loadingProfile, location, setLocation, pendingRole, showAuthModal]);
 
-  // 2. Intent Processing: Handles redirections for NEW users immediately after auth
+  // 2. Intent Processing: Handles redirections for users immediately after auth
   useEffect(() => {
-    if (!session || showAuthModal || loadingProfile || !profileStatus || profileStatus.hasCompletedProfile) return;
+    if (!session || showAuthModal || loadingProfile || !profileStatus || !authSuccess) return;
 
-    if (authSuccess) {
-      // All paths now go to Individual Onboarding first for new users
+    if (profileStatus.hasCompletedProfile) {
+      // Returning user: go to dashboard
+      setLocation("/dashboard");
+    } else {
+      // New user or incomplete profile: go to individual onboarding
       const roleParam = pendingRole ? `?role=${encodeURIComponent(pendingRole)}` : "";
       setLocation(`/individual-onboard${roleParam}`);
-      setPendingRole(null);
-      setAuthSuccess(false);
     }
+
+    setPendingRole(null);
+    setAuthSuccess(false);
   }, [session, profileStatus, loadingProfile, pendingRole, showAuthModal, location, setLocation, authSuccess]);
 
   const handleGoogleLogin = () => {
