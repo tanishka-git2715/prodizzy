@@ -309,6 +309,77 @@ TeamMemberSchema.index({ email: 1 }); // Search by email
 
 export const TeamMember = mongoose.model("TeamMember", TeamMemberSchema);
 
+// Campaign Model - Opportunity campaigns created by businesses
+const CampaignSchema = new Schema({
+    business_id: { type: Schema.Types.ObjectId, ref: 'Business', required: true },
+    created_by: { type: String, required: true }, // user_id of creator
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    category: {
+        type: String,
+        enum: ["Hiring", "Freelance", "Creator", "Startup", "Testing", "Students", "Advisory", "Fundraising", "Agency", "Other"],
+        required: true
+    },
+    templateId: String,
+    targetProfiles: [String],
+    engagementType: {
+        type: String,
+        enum: ["Full-time", "Part-time", "Contract", "Project-based", "Equity", "Internship", "Freelance", "Long-term", "Advisory"]
+    },
+    budget: String,
+    deadline: String, // ISO date string
+    skills: { type: [String], default: [] },
+    location: String,
+    attachments: { type: [String], default: [] },
+    customFields: Schema.Types.Mixed, // Template-specific fields
+    status: {
+        type: String,
+        enum: ["draft", "active", "paused", "closed"],
+        default: "draft"
+    },
+    approved: { type: Boolean, default: false }, // Admin approval required
+    views: { type: Number, default: 0 },
+    applications: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+}, { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } });
+
+// Indexes for Campaign
+CampaignSchema.index({ business_id: 1 }); // Fast business campaign lookups
+CampaignSchema.index({ created_by: 1 }); // Find campaigns by creator
+CampaignSchema.index({ status: 1 }); // Filter by status
+CampaignSchema.index({ category: 1 }); // Filter by category
+CampaignSchema.index({ createdAt: -1 }); // Sort by recency
+CampaignSchema.index({ title: 'text', description: 'text' }); // Text search
+
+export const Campaign = mongoose.model("Campaign", CampaignSchema);
+
+// CampaignApplication Model - Applications/responses to campaigns
+const CampaignApplicationSchema = new Schema({
+    campaign_id: { type: Schema.Types.ObjectId, ref: 'Campaign', required: true },
+    user_id: { type: String, required: true },
+    message: String,
+    resume_url: String,
+    portfolio_url: String,
+    answers: Schema.Types.Mixed, // Custom question answers
+    status: {
+        type: String,
+        enum: ["pending", "accepted", "rejected"],
+        default: "pending"
+    },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+}, { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } });
+
+// Indexes for CampaignApplication
+CampaignApplicationSchema.index({ campaign_id: 1 }); // Find applications by campaign
+CampaignApplicationSchema.index({ user_id: 1 }); // Find applications by user
+CampaignApplicationSchema.index({ campaign_id: 1, user_id: 1 }, { unique: true }); // Prevent duplicate applications
+CampaignApplicationSchema.index({ status: 1 }); // Filter by status
+CampaignApplicationSchema.index({ createdAt: -1 }); // Sort by recency
+
+export const CampaignApplication = mongoose.model("CampaignApplication", CampaignApplicationSchema);
+
 // Performance indexes for existing models
 StartupProfileSchema.index({ approved: 1 });
 StartupProfileSchema.index({ 'intent_fundraising.capital_amount': 1 });

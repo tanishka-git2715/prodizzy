@@ -2,9 +2,10 @@ import type { Express, Request, Response } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
-import { insertProfileSchema, updateProfileSchema, insertBusinessSchema, updateBusinessSchema, inviteTeamMemberSchema, updateTeamMemberSchema } from "@shared/schema";
+import { insertProfileSchema, updateProfileSchema, insertBusinessSchema, updateBusinessSchema, inviteTeamMemberSchema, updateTeamMemberSchema, insertCampaignSchema, updateCampaignSchema, insertCampaignApplicationSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendInviteEmail } from "./email";
+import { handleCampaignSSR } from "./ssr";
 
 function ensureAuthenticated(req: Request, res: Response, next: any) {
   if (req.isAuthenticated()) {
@@ -138,6 +139,9 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // SSR for campaign pages (must be before static file serving)
+  app.get("/c/:id", handleCampaignSSR);
 
   app.post(api.waitlist.create.path, async (req, res) => {
     try {
@@ -708,6 +712,350 @@ export async function registerRoutes(
 
       const member = await storage.acceptInvite(token, userId);
       res.json(member);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // =============================================
+  // CAMPAIGN ROUTES
+  // =============================================
+
+  // Create campaign (business members with permission)
+  app.post("/api/business/:businessId/campaigns", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const businessId = req.params.businessId;
+      const userId = req.user._id?.toString() || req.user.id;
+
+      // Check if user has permission to create campaigns
+      const business = await storage.getBusinessById(businessId);
+      if (!business) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+
+      // Check if owner
+      const isOwner = business.owner_user_id === userId;
+
+      // If not owner, check team membership and permissions
+      if (!isOwner) {
+        const members = await storage.getTeamMembers(businessId);
+        const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+
+        if (!member || !member.permissions.can_create_campaigns) {
+          return res.status(403).json({ message: "Permission denied: cannot create campaigns" });
+        }
+      }
+
+      const input = insertCampaignSchema.parse(req.body);
+      const campaign = await storage.createCampaign(businessId, userId, input);
+
+      res.status(201).json(campaign);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.')
+        });
+      }
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Get all campaigns for a business
+  app.get("/api/business/:businessId/campaigns", ensureAuthenticated, ensureBusinessMember, async (req: any, res) => {
+    try {
+      const businessId = req.params.businessId;
+      const campaigns = await storage.getCampaignsByBusiness(businessId);
+      res.json(campaigns);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get campaign statistics for a business
+  app.get("/api/business/:businessId/campaigns/stats", ensureAuthenticated, ensureBusinessMember, async (req: any, res) => {
+    try {
+      const businessId = req.params.businessId;
+      const stats = await storage.getCampaignStats(businessId);
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get single campaign
+  app.get("/api/campaigns/:id", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const campaignId = req.params.id;
+      const campaign = await storage.getCampaignById(campaignId);
+
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      // Increment views
+      await storage.incrementCampaignViews(campaignId);
+
+      res.json(campaign);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update campaign
+  app.patch("/api/campaigns/:id", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const campaignId = req.params.id;
+      const userId = req.user._id?.toString() || req.user.id;
+
+      // Get campaign to check permissions
+      const campaign = await storage.getCampaignById(campaignId);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      // Check if user is business owner or has edit permissions
+      const business = await storage.getBusinessById(campaign.business_id);
+      const isOwner = business.owner_user_id === userId;
+
+      if (!isOwner) {
+        const members = await storage.getTeamMembers(campaign.business_id);
+        const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+
+        if (!member || (!member.permissions.can_create_campaigns && member.role !== "admin")) {
+          return res.status(403).json({ message: "Permission denied" });
+        }
+      }
+
+      const updates = updateCampaignSchema.parse(req.body);
+      const updatedCampaign = await storage.updateCampaign(campaignId, updates);
+
+      res.json(updatedCampaign);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.')
+        });
+      }
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Delete campaign
+  app.delete("/api/campaigns/:id", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const campaignId = req.params.id;
+      const userId = req.user._id?.toString() || req.user.id;
+
+      // Get campaign to check permissions
+      const campaign = await storage.getCampaignById(campaignId);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      // Only business owner or campaign creator can delete
+      const business = await storage.getBusinessById(campaign.business_id);
+      const isOwner = business.owner_user_id === userId;
+      const isCreator = campaign.created_by === userId;
+
+      if (!isOwner && !isCreator) {
+        return res.status(403).json({ message: "Permission denied" });
+      }
+
+      await storage.deleteCampaign(campaignId);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Browse active campaigns (public discover)
+  app.get("/api/campaigns", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const filters = {
+        category: req.query.category as string,
+        skills: req.query.skills ? (req.query.skills as string).split(',') : undefined
+      };
+
+      const campaigns = await storage.getActiveCampaigns(filters);
+      res.json(campaigns);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // PUBLIC: View single campaign (no auth required for sharing)
+  app.get("/api/campaigns/:id/public", async (req: any, res) => {
+    try {
+      const campaignId = req.params.id;
+      const campaign = await storage.getCampaignById(campaignId);
+
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      // Only show active campaigns publicly (shareable regardless of approval)
+      if (campaign.status !== "active") {
+        return res.status(404).json({ message: "Campaign not available" });
+      }
+
+      // Increment views
+      await storage.incrementCampaignViews(campaignId);
+
+      res.json(campaign);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // =============================================
+  // CAMPAIGN APPLICATION ROUTES
+  // =============================================
+
+  // Apply to campaign
+  app.post("/api/campaigns/:id/apply", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const campaignId = req.params.id;
+      const userId = req.user._id?.toString() || req.user.id;
+
+      const input = insertCampaignApplicationSchema.parse(req.body);
+      const application = await storage.createCampaignApplication(campaignId, userId, input);
+
+      res.status(201).json(application);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.')
+        });
+      }
+      if ((err as Error).message === "You have already applied to this campaign") {
+        return res.status(409).json({ message: (err as Error).message });
+      }
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Get applications for a campaign (only if approved)
+  app.get("/api/campaigns/:id/applications", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const campaignId = req.params.id;
+      const userId = req.user._id?.toString() || req.user.id;
+
+      // Get campaign to check ownership and approval
+      const campaign = await storage.getCampaignById(campaignId);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      // Check if user owns the campaign's business
+      const business = await storage.getBusinessById(campaign.business_id);
+      const isOwner = business.owner_user_id === userId;
+
+      if (!isOwner) {
+        const members = await storage.getTeamMembers(campaign.business_id);
+        const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+
+        if (!member) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+      }
+
+      // Get applications (filtered by approval status)
+      const applications = await storage.getCampaignApplications(campaignId, campaign.approved);
+
+      res.json(applications);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get user's applications
+  app.get("/api/my-applications", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const applications = await storage.getUserApplications(userId);
+      res.json(applications);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update application status (accept/reject)
+  app.patch("/api/applications/:id/status", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const applicationId = req.params.id;
+      const { status } = req.body;
+      const userId = req.user._id?.toString() || req.user.id;
+
+      if (!["accepted", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const application = await storage.getCampaignApplicationById(applicationId);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      // Check if user owns the campaign's business
+      const campaign = await storage.getCampaignById(application.campaign_id);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      const business = await storage.getBusinessById(campaign.business_id);
+      const isOwner = business.owner_user_id === userId;
+
+      if (!isOwner) {
+        const members = await storage.getTeamMembers(campaign.business_id);
+        const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+
+        if (!member && req.user.role !== "admin") {
+          return res.status(403).json({ message: "Not authorized" });
+        }
+      }
+
+      const updated = await storage.updateApplicationStatus(applicationId, status);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // =============================================
+  // ADMIN CAMPAIGN ROUTES
+  // =============================================
+
+  // Get all campaigns for admin
+  app.get("/api/admin/campaigns", ensureAdmin, async (req, res) => {
+    try {
+      const campaigns = await storage.getAllCampaignsForAdmin();
+      res.json(campaigns);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Approve/reject campaign
+  app.patch("/api/admin/campaigns/:id/approve", ensureAdmin, async (req, res) => {
+    try {
+      const campaignId = req.params.id;
+      const { approved } = req.body;
+
+      const campaign = await storage.approveCampaign(campaignId, approved);
+      res.json(campaign);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get all applications for a campaign (admin view - shows all regardless of approval)
+  app.get("/api/admin/campaigns/:id/applications", ensureAdmin, async (req, res) => {
+    try {
+      const campaignId = req.params.id;
+      const applications = await storage.getAllCampaignApplicationsForAdmin(campaignId);
+      res.json(applications);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

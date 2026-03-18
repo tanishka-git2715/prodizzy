@@ -442,3 +442,119 @@ export type TeamMember = {
     email?: string;
   };
 };
+
+// =============================================
+// CAMPAIGN
+// =============================================
+
+export const insertCampaignSchema = z.object({
+  title: z.string().min(1, "Campaign title is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  category: z.enum([
+    "Hiring",
+    "Freelance",
+    "Creator",
+    "Startup",
+    "Testing",
+    "Students",
+    "Advisory",
+    "Fundraising",
+    "Agency",
+    "Other"
+  ]),
+  templateId: z.string().optional(),
+  targetProfiles: z.array(z.string()).optional(),
+  engagementType: z.enum([
+    "Full-time",
+    "Part-time",
+    "Contract",
+    "Project-based",
+    "Equity",
+    "Internship",
+    "Freelance",
+    "Long-term",
+    "Advisory"
+  ]).optional(),
+  budget: z.string().optional(),
+  deadline: z.string().optional(), // ISO date string
+  skills: z.array(z.string()).default([]),
+  location: z.string().optional(),
+  attachments: z.array(z.string()).default([]),
+  customFields: z.record(z.any()).optional(), // Template-specific custom fields
+  status: z.enum(["draft", "active", "paused", "closed"]).default("draft"),
+});
+
+export const updateCampaignSchema = insertCampaignSchema.partial();
+
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+export type UpdateCampaign = z.infer<typeof updateCampaignSchema>;
+
+export type Campaign = {
+  _id: string;
+  business_id: string;
+  created_by: string; // user_id of creator
+  title: string;
+  description: string;
+  category: string;
+  templateId?: string;
+  targetProfiles?: string[];
+  engagementType?: string;
+  budget?: string;
+  deadline?: string;
+  skills: string[];
+  location?: string;
+  attachments: string[];
+  customFields?: Record<string, any>;
+  status: "draft" | "active" | "paused" | "closed";
+  approved: boolean; // Admin approval required
+  views: number;
+  applications: number;
+  createdAt: string;
+  updatedAt: string;
+  // Populated fields
+  business?: {
+    business_name: string;
+    logo_url?: string;
+  };
+  creator?: {
+    displayName?: string;
+    email?: string;
+  };
+};
+
+// =============================================
+// CAMPAIGN APPLICATION
+// =============================================
+
+export const insertCampaignApplicationSchema = z.object({
+  campaign_id: z.string(),
+  message: z.string().optional(),
+  resume_url: z.string().optional(),
+  portfolio_url: z.string().optional(),
+  answers: z.record(z.any()).optional(), // Custom question answers
+});
+
+export type InsertCampaignApplication = z.infer<typeof insertCampaignApplicationSchema>;
+
+export type CampaignApplication = {
+  _id: string;
+  campaign_id: string;
+  user_id: string;
+  message?: string;
+  resume_url?: string;
+  portfolio_url?: string;
+  answers?: Record<string, any>;
+  status: "pending" | "accepted" | "rejected";
+  createdAt: string;
+  updatedAt: string;
+  // Populated fields
+  user?: {
+    displayName?: string;
+    email?: string;
+    avatarUrl?: string;
+  };
+  campaign?: {
+    title: string;
+    business_id: string;
+  };
+};
