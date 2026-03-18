@@ -361,21 +361,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     <FormField label="Website" value={website} onChange={setWebsite} placeholder="https://yourco.com" />
                     <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
                     <FormField label="Location" value={location} onChange={setLocation} placeholder="Delhi, India" />
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <p className="text-xs text-white/35 uppercase tracking-wider ml-1">Profile Photo / Logo</p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleProfilePhotoChange}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
-                      />
-                      {profilePhoto && (
-                        <div className="mt-2 flex items-center gap-3">
-                          <img src={profilePhoto} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-white/10" />
-                          <p className="text-xs text-green-400/70">Image selected</p>
-                        </div>
-                      )}
-                    </div>
                   </div>
 
                   <div className="space-y-4">
@@ -741,21 +726,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                         <FormField label="Full Name" value={fullName} onChange={setFullName} />
                         <FormField label="Email" value={email} onChange={setEmail} type="email" />
                         <FormField label="Location" value={location} onChange={setLocationState} />
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] text-white/25 uppercase tracking-wider ml-1">Profile Photo</p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleProfilePhotoChange}
-                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
-                          />
-                          {profilePhoto && (
-                            <div className="mt-2 flex items-center gap-3">
-                              <img src={profilePhoto} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-white/10" />
-                              <p className="text-xs text-green-400/70">Image selected</p>
-                            </div>
-                          )}
-                        </div>
                       </div>
                     </div>
 
@@ -1432,21 +1402,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                       <FormField label="Email" value={email} onChange={setEmail} type="email" />
                       <FormField label="Website" value={website} onChange={setWebsite} />
                       <FormField label="LinkedIn" value={linkedinUrl} onChange={setLinkedinUrl} />
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <p className="text-xs text-white/35 uppercase tracking-wider ml-1">Profile Photo</p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleProfilePhotoChange}
-                          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
-                        />
-                        {profilePhoto && (
-                          <div className="mt-2 flex items-center gap-3">
-                            <img src={profilePhoto} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-white/10" />
-                            <p className="text-xs text-green-400/70">Image selected</p>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </div>
 

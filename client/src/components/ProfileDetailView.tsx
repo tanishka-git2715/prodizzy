@@ -64,8 +64,8 @@ export function ProfileDetailView({ profile, isAdmin, onPhotoUpload }: ProfileDe
                     )}
                     
                     {onPhotoUpload && (
-                        <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                            <Camera className="w-8 h-8 text-white/70" />
+                        <label className="absolute bottom-1 right-1 w-7 h-7 flex items-center justify-center bg-black/60 backdrop-blur-md border border-white/20 rounded-lg cursor-pointer hover:bg-black/80 transition-all z-10 shadow-lg">
+                            <Camera className="w-3.5 h-3.5 text-white/70" />
                             <input 
                                 type="file" 
                                 className="hidden" 
@@ -150,36 +150,6 @@ export function ProfileDetailView({ profile, isAdmin, onPhotoUpload }: ProfileDe
                         </div>
                     )}
 
-                    {hasPreferences && (
-                        <div className="space-y-3">
-                            <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Preferences & Availability</h3>
-                            <div className="space-y-4 bg-white/[0.02] border border-white/5 p-4 rounded-xl">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <DetailRow label="Experience" value={profile.experience_level} />
-                                    <DetailRow label="Availability" value={profile.availability} />
-                                    <DetailRow label="Work Mode" value={profile.work_mode} />
-                                </div>
-                                {profile.tools_used && (
-                                    <div>
-                                        <p className="text-[10px] text-white/20 uppercase mb-1">Tools Used</p>
-                                        <p className="text-sm text-white/70">{profile.tools_used}</p>
-                                    </div>
-                                )}
-                                {profile.preferred_roles && (
-                                    <div>
-                                        <p className="text-[10px] text-white/20 uppercase mb-1">Preferred Roles</p>
-                                        <p className="text-sm text-white/70">{profile.preferred_roles}</p>
-                                    </div>
-                                )}
-                                {profile.preferred_industries && (
-                                    <div>
-                                        <p className="text-[10px] text-white/20 uppercase mb-1">Preferred Industries</p>
-                                        <p className="text-sm text-white/70">{Array.isArray(profile.preferred_industries) ? profile.preferred_industries.join(", ") : profile.preferred_industries}</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Column 2 */}
@@ -383,6 +353,35 @@ export function ProfileDetailView({ profile, isAdmin, onPhotoUpload }: ProfileDe
                                                         </a>
                                                     ))}
                                                 </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {hasPreferences && (
+                                    <div className="pt-4 border-t border-white/5 space-y-3">
+                                        <p className="text-[10px] text-white/20 uppercase font-bold">Preferences & Availability</p>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <DetailRow label="Experience" value={profile.experience_level} />
+                                            <DetailRow label="Availability" value={profile.availability} />
+                                            <DetailRow label="Work Mode" value={profile.work_mode} />
+                                        </div>
+                                        {profile.tools_used && (
+                                            <div>
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Tools Used</p>
+                                                <p className="text-sm text-white/70">{profile.tools_used}</p>
+                                            </div>
+                                        )}
+                                        {profile.preferred_roles && (
+                                            <div>
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Preferred Roles</p>
+                                                <p className="text-sm text-white/70">{profile.preferred_roles}</p>
+                                            </div>
+                                        )}
+                                        {profile.preferred_industries && (
+                                            <div>
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Preferred Industries</p>
+                                                <p className="text-sm text-white/70">{Array.isArray(profile.preferred_industries) ? profile.preferred_industries.join(", ") : profile.preferred_industries}</p>
                                             </div>
                                         )}
                                     </div>
