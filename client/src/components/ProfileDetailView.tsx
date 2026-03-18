@@ -1,4 +1,4 @@
-import { Mail, Linkedin, Globe, FileText } from "lucide-react";
+import { Mail, Linkedin, Globe, FileText, Github } from "lucide-react";
 import { ensureHttps, downloadBase64File } from "@/lib/utils";
 import type { IndividualProfile } from "@shared/schema";
 
@@ -80,6 +80,12 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                     <a href={ensureHttps(profile.portfolio_url)} target="_blank" rel="noreferrer" className="text-white/70 hover:underline truncate">{profile.portfolio_url.replace(/^https?:\/\//, "")}</a>
                                 </div>
                             )}
+                            {profile.github_url && (
+                                <div className="flex items-center gap-3 text-sm">
+                                    <Github className="w-3.5 h-3.5 text-white/30" />
+                                    <a href={ensureHttps(profile.github_url)} target="_blank" rel="noreferrer" className="text-white/70 hover:underline truncate">{profile.github_url.replace(/^https?:\/\//, "")}</a>
+                                </div>
+                            )}
                             {profile.resume_url && (
                                 <div className="flex items-center gap-3 text-sm">
                                     <FileText className="w-3.5 h-3.5 text-white/30" />
@@ -149,6 +155,24 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                                 <p className="text-sm text-white/70">{startupData.traction_highlights}</p>
                                             </div>
                                         )}
+                                        {startupData?.pitch_deck_link && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Pitch Deck</p>
+                                                <a href={ensureHttps(startupData.pitch_deck_link)} target="_blank" rel="noreferrer" className="text-sm text-teal-400 hover:underline flex items-center gap-1.5">
+                                                    <FileText className="w-3.5 h-3.5" />
+                                                    View Pitch Deck &rarr;
+                                                </a>
+                                            </div>
+                                        )}
+                                        {startupData?.github_url && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">GitHub</p>
+                                                <a href={ensureHttps(startupData.github_url)} target="_blank" rel="noreferrer" className="text-sm text-blue-400 hover:underline flex items-center gap-1.5">
+                                                    <Github className="w-3.5 h-3.5" />
+                                                    GitHub Profile &rarr;
+                                                </a>
+                                            </div>
+                                        )}
                                         {startupData?.website && (
                                             <div className="pt-2">
                                                 <p className="text-[10px] text-white/20 uppercase mb-1">Website</p>
@@ -179,6 +203,18 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                             <DetailRow label="Year" value={studentData.year} />
                                             <DetailRow label="Community" value={studentData.communities?.is_member ? "Member" : "No"} />
                                         </div>
+                                        {studentData.communities?.links && studentData.communities.links.length > 0 && (
+                                            <div className="pt-1">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Community Links</p>
+                                                <div className="flex flex-col gap-1">
+                                                    {studentData.communities.links.map((link: string, idx: number) => (
+                                                        <a key={idx} href={ensureHttps(link)} target="_blank" rel="noreferrer" className="text-sm text-blue-400 hover:underline truncate">
+                                                            {link.replace(/^https?:\/\//, "")}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         {skills.length > 0 && (
                                             <div className="pt-1">
                                                 <p className="text-[10px] text-white/20 uppercase mb-1">Skills</p>
@@ -250,8 +286,23 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                             <DetailRow label="Audience" value={creatorData.audience_size} />
                                             <DetailRow label="Niches" value={creatorData.niches} />
                                         </div>
-                                        {creatorData.profile_links && (
-                                            <DetailRow label="Links" value={creatorData.profile_links} />
+                                        {creatorData.profile_links && creatorData.profile_links.length > 0 && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1.5">Profile / Community Links</p>
+                                                <div className="flex flex-col gap-1.5">
+                                                    {creatorData.profile_links.map((link: string, idx: number) => (
+                                                        <a 
+                                                            key={idx}
+                                                            href={ensureHttps(link)} 
+                                                            target="_blank" 
+                                                            rel="noreferrer" 
+                                                            className="text-sm text-blue-400 hover:underline truncate"
+                                                        >
+                                                            {link.replace(/^https?:\/\//, "")}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
                                 )}

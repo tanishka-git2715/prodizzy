@@ -491,12 +491,12 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const FREELANCE_EXP_OPTIONS = ["0-1 years", "1-3 years", "3-5 years", "5+ years"];
   const ENGAGEMENT_OPTIONS = ["Hourly", "Project-based", "Monthly Retainer", "Equity-based (for startups)"];
   const BUDGET_RANGE_OPTIONS = ["Below ₹10K", "₹10K–50K", "₹50K–2L", "₹2L+", "Depends on scope"];
-  const EXPERTISE_OPTIONS = ["Business Strategy", "Product Strategy & Management", "Growth & Marketing", "Fundraising & Investor Readiness", "Sales & Go-to-Market", "Operations & Scaling", "Finance & Startup Metrics", "Career Guidance / Leadership Coaching", "Technology / AI Advisory", "Community & Ecosystem Building", "Other"];
+  const EXPERTISE_OPTIONS = ["Business Strategy", "Growth & Marketing", "Fundraising & Investor Readiness", "Operations & Scaling", "Finance & Startup Metrics", "Career Guidance / Leadership Coaching", "Technology / AI Advisory", "Community & Ecosystem Building", "Other (Specify)"];
   const CONSULTANT_EXP_OPTIONS = ["5–10 years", "10–15 years", "15–20 years", "20+ years"];
-  const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Board / investor advisory", "Other"];
-  const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other"];
+  const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Board / investor advisory", "Other (Specify)"];
+  const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other (Specify)"];
   const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
-  const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other"];
+  const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other (Specify)"];
   const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other (Specify)"];
   const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
   const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
@@ -661,7 +661,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                 <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Basic Details</h3>
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest pb-2">Basic Details</h3>
                       <div className="space-y-3">
                         <FormField label="Full Name" value={fullName} onChange={setFullName} />
                         <FormField label="Email" value={email} onChange={setEmail} type="email" />
@@ -670,7 +670,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                     </div>
 
                     <div className="space-y-4">
-                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Professional Links</h3>
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest pb-2">Professional Links</h3>
                       <div className="space-y-3">
                         <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} />
                         <FormField label="Portfolio URL" value={portfolioUrl} onChange={setPortfolioUrl} />
@@ -703,7 +703,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Roles</h3>
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest pb-2">Roles</h3>
                     <div className="space-y-2">
                       <p className="text-xs text-white/35 uppercase tracking-wider">What describes you best?</p>
                       <PickMany options={ROLE_OPTIONS} value={roles} onChange={setRoles} />
@@ -825,12 +825,22 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             })} />
                           </div>
                         )}
-                        <div className="space-y-4 pt-2 border-t border-white/5">
+                        <div className="space-y-4 pt-2">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
                           <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
                           {skills.includes("Other (Specify)") && (
                             <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
                           )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
+                            <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Preferred Work Mode</p>
+                            <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -848,12 +858,22 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <PickOne options={EXP_OPTIONS} value={professionalData.experience_years || ""} onChange={(v) => setProfessionalData({ ...professionalData, experience_years: v })} />
                           </div>
                         </div>
-                        <div className="space-y-4 pt-2 border-t border-white/5">
+                        <div className="space-y-4 pt-2">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
                           <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
                           {skills.includes("Other (Specify)") && (
                             <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
                           )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
+                            <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Preferred Work Mode</p>
+                            <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -878,12 +898,22 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <PickOne options={BUDGET_RANGE_OPTIONS} value={freelancerData.budget_range || ""} onChange={(v) => setFreelancerData({ ...freelancerData, budget_range: v })} />
                           </div>
                         </div>
-                        <div className="space-y-4 pt-2 border-t border-white/5">
+                        <div className="space-y-4 pt-2">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
                           <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
                           {skills.includes("Other (Specify)") && (
                             <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
                           )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
+                            <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Preferred Work Mode</p>
+                            <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -899,6 +929,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             setConsultantData({ ...consultantData, expertise_areas: next });
                           }} />
                         </div>
+                        {(consultantData.expertise_areas || []).includes("Other (Specify)") && (
+                          <FormField label="Specify Expertise" value={consultantData.expertise_other || ""} onChange={(v) => setConsultantData({ ...consultantData, expertise_other: v })} placeholder="E.g. Legal Advisory, Climate Tech..." />
+                        )}
                         <div className="space-y-2">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Experience Level</p>
                           <PickOne options={CONSULTANT_EXP_OPTIONS} value={consultantData.experience_level || ""} onChange={(v) => setConsultantData({ ...consultantData, experience_level: v })} />
@@ -909,6 +942,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             setConsultantData({ ...consultantData, support_types: next });
                           }} />
                         </div>
+                        {(consultantData.support_types || []).includes("Other (Specify)") && (
+                          <FormField label="Specify Support Type" value={consultantData.support_type_other || ""} onChange={(v) => setConsultantData({ ...consultantData, support_type_other: v })} placeholder="E.g. Technical reviews, due diligence..." />
+                        )}
                       </div>
                     </div>
                   )}
@@ -923,6 +959,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             setCreatorData({ ...creatorData, platforms: next });
                           }} />
                         </div>
+                        {(creatorData.platforms || []).includes("Other (Specify)") && (
+                          <FormField label="Specify Platform" value={creatorData.platform_other || ""} onChange={(v) => setCreatorData({ ...creatorData, platform_other: v })} placeholder="E.g. Threads, TikTok..." />
+                        )}
                         <div className="space-y-2">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Audience Size</p>
                           <PickOne options={AUDIENCE_SIZE_OPTIONS} value={creatorData.audience_size || ""} onChange={(v) => setCreatorData({ ...creatorData, audience_size: v })} />
@@ -933,6 +972,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             setCreatorData({ ...creatorData, niches: next });
                           }} />
                         </div>
+                        {(creatorData.niches || []).includes("Other (Specify)") && (
+                          <FormField label="Specify Niche" value={creatorData.niche_other || ""} onChange={(v) => setCreatorData({ ...creatorData, niche_other: v })} placeholder="E.g. Travel, Fitness..." />
+                        )}
                         <TextArea label="Profile / Community Links (comma separated)" value={Array.isArray(creatorData.profile_links) ? creatorData.profile_links.join(", ") : ""} onChange={(v) => setCreatorData({ ...creatorData, profile_links: v.split(",").map(s => s.trim()) })} />
                       </div>
                     </div>
@@ -944,25 +986,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                       </div>
                     )}
 
-                    {roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r)) && (
-                      <div className="space-y-6 pt-4 border-t border-white/5">
-                        <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Preferences & Availability</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
-                            <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
-                          </div>
-                          <div className="space-y-2">
-                            <p className="text-xs text-white/35 uppercase tracking-wider">Preferred Work Mode</p>
-                            <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
-                          <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
-                        </div>
-                      </div>
-                    )}
+
 
 
                   <div className="pt-6 border-t border-white/10 flex gap-4">
@@ -1263,7 +1287,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                 <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
                   {/* Section: Basic Details */}
                   <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Basic Details</h3>
+                    <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest pb-2">Basic Details</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField label="Company Name" value={companyName} onChange={setCompanyName} />
                       <FormField label="Full Name" value={fullName} onChange={setFullName} />
@@ -1277,7 +1301,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                   {/* Section: Partner Info */}
                   <div className="space-y-6">
                     <div className="space-y-4">
-                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Partner Profile</h3>
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest pb-2">Partner Profile</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Partner Type</p>
@@ -1300,7 +1324,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                     </div>
 
                     <div className="space-y-4">
-                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Requirements</h3>
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest pb-2">Requirements</h3>
                       <div className="space-y-1.5">
                         <p className="text-xs text-white/35 uppercase tracking-wider">What are you looking for?</p>
                         <PickOne options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />

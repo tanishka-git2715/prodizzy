@@ -225,12 +225,12 @@ const ENGAGEMENT_OPTIONS = ["Hourly", "Project-based", "Monthly Retainer", "Equi
 const BUDGET_RANGE_OPTIONS = ["Below ₹10K", "₹10K–50K", "₹50K–2L", "₹2L+", "Depends on scope"];
 
 const CONSULTANT_EXP_OPTIONS = ["5–10 years", "10–15 years", "15–20 years", "20+ years"];
-const EXPERTISE_OPTIONS = ["Business Strategy", "Product Strategy & Management", "Growth & Marketing", "Fundraising & Investor Readiness", "Sales & Go-to-Market", "Operations & Scaling", "Finance & Startup Metrics", "Career Guidance / Leadership Coaching", "Technology / AI Advisory", "Community & Ecosystem Building", "Other"];
-const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Board / investor advisory", "Other"];
+const EXPERTISE_OPTIONS = ["Business Strategy", "Growth & Marketing", "Fundraising & Investor Readiness", "Operations & Scaling", "Finance & Startup Metrics", "Career Guidance / Leadership Coaching", "Technology / AI Advisory", "Community & Ecosystem Building", "Other (Specify)"];
+const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Board / investor advisory", "Other (Specify)"];
 
-const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other"];
+const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other (Specify)"];
 const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
-const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other"];
+const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other (Specify)"];
 
 const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other (Specify)"];
 const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
@@ -319,8 +319,10 @@ export default function IndividualOnboard() {
 
   // Content Creator details
   const [platforms, setPlatforms] = useState<string[]>([]);
+  const [platformOther, setPlatformOther] = useState("");
   const [audienceSize, setAudienceSize] = useState("");
   const [niche, setNiche] = useState<string[]>([]);
+  const [nicheOther, setNicheOther] = useState("");
   const [profileLinks, setProfileLinks] = useState("");
 
   // Other Role (Specify)
@@ -580,8 +582,10 @@ export default function IndividualOnboard() {
     if (isCreator) {
       payload.creator_data = {
         platforms: platforms, // Using existing platforms
+        platform_other: platforms.includes("Other (Specify)") ? platformOther : undefined,
         audience_size: audienceSize,
         niches: niche, // Using existing niche
+        niche_other: niche.includes("Other (Specify)") ? nicheOther : undefined,
         profile_links: profileLinks.split(",").map(l => l.trim()).filter(Boolean),
       };
     }
@@ -783,8 +787,14 @@ export default function IndividualOnboard() {
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Consultant Info</h3>
             <MultiSelectDropdown label="Primary Expertise Area" options={EXPERTISE_OPTIONS} selected={niche} onToggle={(v) => toggle(setNiche, v)} />
+            {niche.includes("Other (Specify)") && (
+              <Field label="Specify Expertise" value={otherRoleSpec} onChange={setOtherRoleSpec} placeholder="E.g. Legal Advisory, Climate Tech..." />
+            )}
             <Dropdown label="Experience Level" options={CONSULTANT_EXP_OPTIONS} value={consultantExp} onChange={setConsultantExp} />
             <MultiSelectDropdown label="Type of Support You Offer" options={SUPPORT_TYPE_OPTIONS} selected={supportTypes} onToggle={(v) => toggle(setSupportTypes, v)} />
+            {supportTypes.includes("Other (Specify)") && (
+              <Field label="Specify Support Type" value={adminContact} onChange={setAdminContact} placeholder="E.g. Technical reviews, due diligence..." />
+            )}
           </div>
         )}
 
@@ -792,8 +802,14 @@ export default function IndividualOnboard() {
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Creator Info</h3>
             <MultiSelectDropdown label="Primary Platform(s)" options={PLATFORM_OPTIONS} selected={platforms} onToggle={(v) => toggle(setPlatforms, v)} />
+            {platforms.includes("Other (Specify)") && (
+              <Field label="Specify Platform" value={platformOther} onChange={setPlatformOther} placeholder="E.g. Threads, TikTok..." />
+            )}
             <Dropdown label="Audience / Community Size" options={AUDIENCE_SIZE_OPTIONS} value={audienceSize} onChange={setAudienceSize} />
             <MultiSelectDropdown label="Content / Community Niche" options={NICHE_OPTIONS} selected={niche} onToggle={(v) => toggle(setNiche, v)} />
+            {niche.includes("Other (Specify)") && (
+              <Field label="Specify Niche" value={nicheOther} onChange={setNicheOther} placeholder="E.g. Travel, Fitness..." />
+            )}
             <Field label="Profile / Community Links" value={profileLinks} onChange={setProfileLinks} multiline placeholder="One link per line or comma separated..." />
           </div>
         )}
@@ -818,7 +834,7 @@ export default function IndividualOnboard() {
           </div>
         )}
         {roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r)) && (
-          <div className="space-y-6 pt-4 border-t border-white/5">
+          <div className="space-y-6 pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Dropdown label="Availability" options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
               <Dropdown label="Preferred Work Mode" options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
