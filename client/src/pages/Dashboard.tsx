@@ -493,7 +493,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const BUDGET_RANGE_OPTIONS = ["Below ₹10K", "₹10K–50K", "₹50K–2L", "₹2L+", "Depends on scope"];
   const EXPERTISE_OPTIONS = ["Business Strategy", "Growth & Marketing", "Fundraising & Investor Readiness", "Operations & Scaling", "Finance & Startup Metrics", "Career Guidance / Leadership Coaching", "Technology / AI Advisory", "Community & Ecosystem Building", "Other (Specify)"];
   const CONSULTANT_EXP_OPTIONS = ["5–10 years", "10–15 years", "15–20 years", "20+ years"];
-  const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Board / investor advisory", "Other (Specify)"];
+  const SUPPORT_TYPE_OPTIONS = ["Paid consulting sessions", "Mentorship / coaching", "Project-based advisory", "Long-term strategic advisory", "Equity-based startup advisory", "Other (Specify)"];
   const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other (Specify)"];
   const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
   const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other (Specify)"];
@@ -832,7 +832,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
                           )}
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                           <div className="space-y-2">
                             <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
                             <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
@@ -865,7 +865,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
                           )}
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                           <div className="space-y-2">
                             <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
                             <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
@@ -905,7 +905,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
                           )}
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                           <div className="space-y-2">
                             <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
                             <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
@@ -989,7 +989,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 
 
 
-                  <div className="pt-6 border-t border-white/10 flex gap-4">
+                  <div className="pt-6 flex gap-4">
                     <button
                       onClick={saveCore}
                       disabled={patchMutation.isPending}
