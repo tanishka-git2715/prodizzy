@@ -478,59 +478,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   profile: IndividualProfile; session: any; signOut: () => void;
   patchMutation: any; connections: any[]; greeting: string;
 }) {
-  const [, setLocation] = useLocation();
-  const [editingCore, setEditingCore] = useState(false);
-  const firstName = profile.full_name?.split(" ")[0] || "there";
-  const [, navigate] = useLocation();
-
-  // Fetch user's businesses
-  const { data: businesses, isLoading: businessesLoading } = useQuery({
-    queryKey: ["businesses"],
-    queryFn: async () => {
-      const response = await fetch("/api/business", { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch businesses");
-      return response.json();
-    }
-  });
-
-  // Form state
-  const [fullName, setFullName] = useState(profile.full_name || "");
-  const [email, setEmail] = useState(profile.email || "");
-  const [dob, setDob] = useState((profile as any).dob || "");
-  const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
-  const [portfolioUrl, setPortfolioUrl] = useState(profile.portfolio_url || "");
-  const [roles, setRoles] = useState<string[]>((profile as any).roles || []);
-
-  // Role-specific states
-  const [investorData, setInvestorData] = useState((profile as any).investor_data || {});
-  const [studentData, setStudentData] = useState((profile as any).student_data || {});
-  const [professionalData, setProfessionalData] = useState((profile as any).professional_data || {});
-  const [freelancerData, setFreelancerData] = useState((profile as any).freelancer_data || {});
-  const [consultantData, setConsultantData] = useState((profile as any).consultant_data || {});
-  const [creatorData, setCreatorData] = useState((profile as any).creator_data || {});
-  const [otherRoleSpec, setOtherRoleSpec] = useState((profile as any).other_role_spec || "");
-
-  const [founderStatus, setFounderStatus] = useState((profile as any).founder_status || "");
-  const [startupData, setStartupData] = useState<any>((profile as any).startup_data || {});
-  
-  // Extract initial skills and handle custom "Other" skill
-  const initialSkills = profile.skills || [];
-  const knownSkills = initialSkills.filter(s => SKILL_OPTIONS.includes(s));
-  const customSkills = initialSkills.filter(s => !SKILL_OPTIONS.includes(s));
-  
-  const [skills, setSkills] = useState<string[]>(customSkills.length > 0 ? [...knownSkills, "Other (Specify)"] : knownSkills);
-  const [skillOther, setSkillOther] = useState(customSkills.join(", "));
-  
-  const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
-  const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
-  const [lookingFor, setLookingFor] = useState<string[]>(Array.isArray(profile.looking_for) ? profile.looking_for : []);
-  const [preferredRoles, setPreferredRoles] = useState(profile.preferred_roles || "");
-  const [preferredIndustries, setPreferredIndustries] = useState<string[]>(profile.preferred_industries?.split(", ") || []);
-  const [availability, setAvailability] = useState(profile.availability || "");
-  const [workMode, setWorkMode] = useState(profile.work_mode || "");
-  const [location, setLocationState] = useState(profile.location || "");
-  const [resumeUrl, setResumeUrl] = useState(profile.resume_url || "");
-
   // Constants
   const ROLE_OPTIONS = ["Founder", "Investor", "Student", "Working Professional", "Freelancer / Service Provider", "Consultant / Mentor / Advisor", "Content Creator / Community Admin", "Other (Specify)"];
   const FOUNDER_STATUS_OPTIONS = ["Pre-Seed (Ideation Stage)", "Seed (MVP & Early Traction)", "Series A (Generating Revenue)", "Series B/C/D (Expansion & Scaling)", "MNC (Global)"];
@@ -554,6 +501,60 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
   const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
   const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
+
+  const [, setLocation] = useLocation();
+  const [editingCore, setEditingCore] = useState(false);
+  const firstName = profile.full_name?.split(" ")[0] || "there";
+  const [, navigate] = useLocation();
+
+  // Fetch user's businesses
+  const { data: businesses, isLoading: businessesLoading } = useQuery({
+    queryKey: ["businesses"],
+    queryFn: async () => {
+      const response = await fetch("/api/business", { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch businesses");
+      return response.json();
+    }
+  });
+
+  // Form state
+  const [fullName, setFullName] = useState(profile.full_name || "");
+  const [email, setEmail] = useState(profile.email || "");
+  const [dob, setDob] = useState((profile as any).dob || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
+  const [portfolioUrl, setPortfolioUrl] = useState(profile.portfolio_url || "");
+  const [roles, setRoles] = useState<string[]>(Array.isArray((profile as any).roles) ? (profile as any).roles : []);
+
+  // Role-specific states
+  const [investorData, setInvestorData] = useState((profile as any).investor_data || {});
+  const [studentData, setStudentData] = useState((profile as any).student_data || {});
+  const [professionalData, setProfessionalData] = useState((profile as any).professional_data || {});
+  const [freelancerData, setFreelancerData] = useState((profile as any).freelancer_data || {});
+  const [consultantData, setConsultantData] = useState((profile as any).consultant_data || {});
+  const [creatorData, setCreatorData] = useState((profile as any).creator_data || {});
+  const [otherRoleSpec, setOtherRoleSpec] = useState((profile as any).other_role_spec || "");
+
+  const [founderStatus, setFounderStatus] = useState((profile as any).founder_status || "");
+  const [startupData, setStartupData] = useState<any>((profile as any).startup_data || {});
+  
+  // Extract initial skills and handle custom "Other" skill
+  const initialSkills = Array.isArray(profile.skills) ? profile.skills : [];
+  const knownSkills = initialSkills.filter(s => SKILL_OPTIONS.includes(s));
+  const customSkills = initialSkills.filter(s => !SKILL_OPTIONS.includes(s));
+  
+  const [skills, setSkills] = useState<string[]>(customSkills.length > 0 ? [...knownSkills, "Other (Specify)"] : knownSkills);
+  const [skillOther, setSkillOther] = useState(customSkills.join(", "));
+  
+  const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
+  const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
+  const [lookingFor, setLookingFor] = useState<string[]>(Array.isArray(profile.looking_for) ? profile.looking_for : []);
+  const [preferredRoles, setPreferredRoles] = useState(profile.preferred_roles || "");
+  const [preferredIndustries, setPreferredIndustries] = useState<string[]>(typeof profile.preferred_industries === 'string' ? profile.preferred_industries.split(", ") : []);
+  const [availability, setAvailability] = useState(profile.availability || "");
+  const [workMode, setWorkMode] = useState(profile.work_mode || "");
+  const [location, setLocationState] = useState(profile.location || "");
+  const [resumeUrl, setResumeUrl] = useState(profile.resume_url || "");
+
 
   function DetailRow({ label, value }: { label: string; value: string | string[] | undefined | null }) {
     if (!value || (Array.isArray(value) && value.length === 0)) return null;
