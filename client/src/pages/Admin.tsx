@@ -68,7 +68,6 @@ function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; 
               : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Pending</span>
             }
           </div>
-          <p className="text-white/35 text-xs mt-0.5 truncate">{profile.full_name} · {profile.role} · {profile.email}</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -199,9 +198,6 @@ function BusinessProfileRow({ profile, profileType }: { profile: Business; profi
               : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Pending</span>
             }
           </div>
-          <p className="text-white/35 text-xs mt-0.5 truncate">
-            {profile.location || "Location —"}{profile.team_size ? ` · Team: ${profile.team_size}` : ""}{profile.founded_year ? ` · Founded ${profile.founded_year}` : ""}
-          </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -303,8 +299,7 @@ function UserRow({ user }: { user: any }) {
             {user.role || 'user'}
           </span>
         </div>
-        <p className="text-white/35 text-xs mt-0.5 truncate">{user.email} · Registered {new Date(user.createdAt).toLocaleDateString()}</p>
-      </div>
+        </div>
       <div className="text-xs text-white/20 tabular-nums">
         ID: {user.googleId || user._id}
       </div>
@@ -353,7 +348,6 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
               : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Pending</span>
             }
           </div>
-          <p className="text-white/35 text-xs mt-0.5 truncate">{profile.full_name} · {profile.email}</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -520,7 +514,6 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
               : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Pending</span>
             }
           </div>
-          <p className="text-white/35 text-xs mt-0.5 truncate">{profile.email} · {profile.location} · {profile.availability}</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
