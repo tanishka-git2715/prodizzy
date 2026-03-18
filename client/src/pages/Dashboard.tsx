@@ -512,7 +512,15 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
 
   const [founderStatus, setFounderStatus] = useState((profile as any).founder_status || "");
   const [startupData, setStartupData] = useState<any>((profile as any).startup_data || {});
-  const [skills, setSkills] = useState<string[]>(profile.skills || []);
+  
+  // Extract initial skills and handle custom "Other" skill
+  const initialSkills = profile.skills || [];
+  const knownSkills = initialSkills.filter(s => SKILL_OPTIONS.includes(s));
+  const customSkills = initialSkills.filter(s => !SKILL_OPTIONS.includes(s));
+  
+  const [skills, setSkills] = useState<string[]>(customSkills.length > 0 ? [...knownSkills, "Other (Specify)"] : knownSkills);
+  const [skillOther, setSkillOther] = useState(customSkills.join(", "));
+  
   const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
   const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
   const [lookingFor, setLookingFor] = useState<string[]>(Array.isArray(profile.looking_for) ? profile.looking_for : []);
@@ -533,7 +541,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const GEO_OPTIONS = ["India", "Global", "Specific Regions (Specify)"];
   const STUDY_YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Final Year", "Postgraduate", "Recent Graduate"];
   const EXP_OPTIONS = ["0–2 years", "2–4 years", "4–8 years", "8+ years"];
-  const NOTICE_OPTIONS = ["Immediate", "< 1 month", "1–3 months", "3+ months"];
   const FREELANCE_EXP_OPTIONS = ["0-1 years", "1-3 years", "3-5 years", "5+ years"];
   const ENGAGEMENT_OPTIONS = ["Hourly", "Project-based", "Monthly Retainer", "Equity-based (for startups)"];
   const BUDGET_RANGE_OPTIONS = ["Below ₹10K", "₹10K–50K", "₹50K–2L", "₹2L+", "Depends on scope"];
@@ -543,7 +550,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "WhatsApp Community", "Telegram", "Discord", "Newsletter / Blog", "Podcast", "Other"];
   const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
   const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other"];
-  const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other"];
+  const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other (Specify)"];
   const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
   const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
   const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
@@ -573,12 +580,15 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       startup_data: roles.includes("Founder") ? startupData : undefined,
       investor_data: roles.includes("Investor") ? investorData : undefined,
       student_data: roles.includes("Student") ? studentData : undefined,
-      professional_data: roles.includes("Working Professional") ? professionalData : undefined,
+      professional_data: roles.includes("Working Professional") ? (() => {
+        const { notice_period, ...rest } = professionalData;
+        return rest;
+      })() : undefined,
       freelancer_data: roles.includes("Freelancer / Service Provider") ? freelancerData : undefined,
       consultant_data: roles.includes("Consultant / Mentor / Advisor") ? consultantData : undefined,
       creator_data: roles.includes("Content Creator / Community Admin") ? creatorData : undefined,
       other_role_spec: roles.includes("Other (Specify)") ? otherRoleSpec : undefined,
-      skills,
+      skills: skills.includes("Other (Specify)") ? [...skills.filter(s => s !== "Other (Specify)"), ...skillOther.split(",").map(s => s.trim())].filter(Boolean) : skills,
       looking_for: lookingFor,
       experience_level: experienceLevel,
       tools_used: toolsUsed,
@@ -814,9 +824,12 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             })} />
                           </div>
                         )}
-                        <div className="space-y-2 pt-2 border-t border-white/5">
+                        <div className="space-y-4 pt-2 border-t border-white/5">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
                           <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                          {skills.includes("Other (Specify)") && (
+                            <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -826,21 +839,20 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                     <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
                       <h3 className="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 inline-block rounded">Professional Info</h3>
                       <div className="space-y-4">
-                        <FormField label="Company Name" value={professionalData.company || ""} onChange={(v) => setProfessionalData({ ...professionalData, company: v })} />
-                        <FormField label="Job Title" value={professionalData.title || ""} onChange={(v) => setProfessionalData({ ...professionalData, title: v })} />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-4">
+                          <FormField label="Company Name" value={professionalData.company || ""} onChange={(v) => setProfessionalData({ ...professionalData, company: v })} />
+                          <FormField label="Job Title" value={professionalData.title || ""} onChange={(v) => setProfessionalData({ ...professionalData, title: v })} />
                           <div className="space-y-2">
                             <p className="text-xs text-white/35 uppercase tracking-wider">Years of Experience</p>
                             <PickOne options={EXP_OPTIONS} value={professionalData.experience_years || ""} onChange={(v) => setProfessionalData({ ...professionalData, experience_years: v })} />
                           </div>
-                          <div className="space-y-2">
-                            <p className="text-xs text-white/35 uppercase tracking-wider">Notice Period</p>
-                            <PickOne options={NOTICE_OPTIONS} value={professionalData.notice_period || ""} onChange={(v) => setProfessionalData({ ...professionalData, notice_period: v })} />
-                          </div>
                         </div>
-                        <div className="space-y-2 pt-2 border-t border-white/5">
+                        <div className="space-y-4 pt-2 border-t border-white/5">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
                           <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                          {skills.includes("Other (Specify)") && (
+                            <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -865,9 +877,12 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                             <PickOne options={BUDGET_RANGE_OPTIONS} value={freelancerData.budget_range || ""} onChange={(v) => setFreelancerData({ ...freelancerData, budget_range: v })} />
                           </div>
                         </div>
-                        <div className="space-y-2 pt-2 border-t border-white/5">
+                        <div className="space-y-4 pt-2 border-t border-white/5">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Skills</p>
                           <PickMany options={SKILL_OPTIONS} value={skills} onChange={setSkills} />
+                          {skills.includes("Other (Specify)") && (
+                            <FormField label="Specify Other Skills" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -922,11 +937,29 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                     </div>
                   )}
 
-                  {roles.includes("Other (Specify)") && (
-                    <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                      <FormField label="Specify Other Role" value={otherRoleSpec} onChange={setOtherRoleSpec} />
+                    {roles.includes("Other (Specify)") && (
+                      <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                        <FormField label="Specify Other Role" value={otherRoleSpec} onChange={setOtherRoleSpec} />
+                      </div>
+                    )}
+
+                    <div className="space-y-6 pt-4 border-t border-white/5">
+                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Preferences & Availability</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
+                          <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Preferred Work Mode</p>
+                          <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
+                        <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
+                      </div>
                     </div>
-                  )}
 
 
                   <div className="pt-6 border-t border-white/10 flex gap-4">

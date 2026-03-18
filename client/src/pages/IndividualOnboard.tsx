@@ -232,12 +232,10 @@ const PLATFORM_OPTIONS = ["Instagram", "YouTube", "LinkedIn", "X (Twitter)", "Wh
 const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
 const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other"];
 
-const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other"];
+const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other (Specify)"];
 const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
 const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
 const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
-const NOTICE_OPTIONS = ["Immediate", "< 1 month", "1–3 months", "3+ months"];
-
 
 // --- Main Page ---
 
@@ -308,7 +306,6 @@ export default function IndividualOnboard() {
   const [currentCompany, setCurrentCompany] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [totalExp, setTotalExp] = useState("");
-  const [noticePeriod, setNoticePeriod] = useState("");
 
   // Freelancer details
   const [freelanceExp, setFreelanceExp] = useState("");
@@ -365,6 +362,7 @@ export default function IndividualOnboard() {
 
   // --- State: Step 3 (Skills & Availability) ---
   const [skills, setSkills] = useState<string[]>([]);
+  const [skillOther, setSkillOther] = useState("");
   const [availability, setAvailability] = useState("");
   const [workMode, setWorkMode] = useState("");
   const [lookingFor, setLookingFor] = useState<string[]>([]);
@@ -494,7 +492,7 @@ export default function IndividualOnboard() {
       roles: selectedRoles,
 
       founder_status: isFounderRole ? founderStatus : undefined,
-      skills: skills, // Using existing skills state
+      skills: skills.includes("Other (Specify)") ? [...skills.filter(s => s !== "Other (Specify)"), skillOther].filter(Boolean) : skills,
       looking_for: lookingFor, // Using existing lookingFor state
       availability, // Using existing availability state
       work_mode: workMode, // Using existing workMode state
@@ -535,7 +533,6 @@ export default function IndividualOnboard() {
         company: currentCompany, // Using existing currentCompany
         title: jobTitle, // Using existing jobTitle
         experience_years: totalExp, // Using existing totalExp
-        notice_period: noticePeriod,
       };
     }
 
@@ -746,7 +743,6 @@ export default function IndividualOnboard() {
             <Field label="Company / Organization Name" value={currentCompany} onChange={setCurrentCompany} />
             <Field label="Job Title / Role" value={jobTitle} onChange={setJobTitle} />
             <Dropdown label="Total Years of Experience" options={EXP_OPTIONS} value={totalExp} onChange={setTotalExp} />
-            <Dropdown label="Notice Period" options={NOTICE_OPTIONS} value={noticePeriod} onChange={setNoticePeriod} />
           </div>
         )}
 
@@ -791,7 +787,12 @@ export default function IndividualOnboard() {
       <StepHeader step={2} total={effectiveTotalSteps} title="Final Details" />
       <div className="space-y-5">
         {roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r)) && (
-          <MultiSelectDropdown label="Primary Skills" options={SKILL_OPTIONS} selected={skills} onToggle={(v) => toggle(setSkills, v)} enableSearch />
+          <div className="space-y-4">
+            <MultiSelectDropdown label="Primary Skills" options={SKILL_OPTIONS} selected={skills} onToggle={(v) => toggle(setSkills, v)} enableSearch />
+            {skills.includes("Other (Specify)") && (
+              <Field label="Specify Skill" value={skillOther} onChange={setSkillOther} placeholder="E.g. Musical Performance, Legal Advisory..." />
+            )}
+          </div>
         )}
         <Dropdown label="Availability" options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
         <Dropdown label="Preferred Work Mode" options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />

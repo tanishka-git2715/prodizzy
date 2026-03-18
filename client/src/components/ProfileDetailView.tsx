@@ -197,7 +197,6 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                             <DetailRow label="Company" value={professionalData.company} />
                                             <DetailRow label="Title" value={professionalData.title} />
                                             <DetailRow label="Experience" value={professionalData.experience_years} />
-                                            <DetailRow label="Notice Period" value={professionalData.notice_period} />
                                         </div>
                                         {skills.length > 0 && (
                                             <div className="pt-1">

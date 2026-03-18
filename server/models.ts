@@ -130,7 +130,6 @@ const IndividualProfileSchema = new Schema({
         company: String,
         title: String,
         experience_years: String,
-        notice_period: String,
     },
     freelancer_data: {
         service_areas: [String],
