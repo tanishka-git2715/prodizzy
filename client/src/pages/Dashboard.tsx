@@ -135,6 +135,22 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
   const [numUsers, setNumUsers] = useState(profile.num_users || "");
   const [monthlyRevenue, setMonthlyRevenue] = useState(profile.monthly_revenue || "");
   const [tractionHighlights, setTractionHighlights] = useState(profile.traction_highlights || "");
+  const [profilePhoto, setProfilePhoto] = useState(profile.profile_photo || "");
+
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        alert("Image size should be less than 1MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
 
   function saveCore() {
@@ -160,6 +176,7 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
       num_users: numUsers,
       monthly_revenue: monthlyRevenue,
       traction_highlights: tractionHighlights,
+      profile_photo: profilePhoto,
     });
     setEditingCore(false);
   }
@@ -319,6 +336,21 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     <FormField label="Website" value={website} onChange={setWebsite} placeholder="https://yourco.com" />
                     <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
                     <FormField label="Location" value={location} onChange={setLocation} placeholder="Delhi, India" />
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <p className="text-xs text-white/35 uppercase tracking-wider ml-1">Profile Photo / Logo</p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfilePhotoChange}
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                      />
+                      {profilePhoto && (
+                        <div className="mt-2 flex items-center gap-3">
+                          <img src={profilePhoto} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-white/10" />
+                          <p className="text-xs text-green-400/70">Image selected</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-4">
@@ -523,6 +555,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
   const [portfolioUrl, setPortfolioUrl] = useState(profile.portfolio_url || "");
   const [roles, setRoles] = useState<string[]>(Array.isArray((profile as any).roles) ? (profile as any).roles : []);
+  const [profilePhoto, setProfilePhoto] = useState(profile.profile_photo || "");
 
   // Role-specific states
   const [investorData, setInvestorData] = useState((profile as any).investor_data || {});
@@ -553,6 +586,20 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const [location, setLocationState] = useState(profile.location || "");
   const [resumeUrl, setResumeUrl] = useState(profile.resume_url || "");
 
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        alert("Image size should be less than 1MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   function DetailRow({ label, value }: { label: string; value: string | string[] | undefined | null }) {
     if (!value || (Array.isArray(value) && value.length === 0)) return null;
@@ -594,6 +641,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       preferred_industries: preferredIndustries.join(", "),
       availability,
       work_mode: workMode,
+      profile_photo: profilePhoto,
     });
     setEditingCore(false);
   }
@@ -663,6 +711,21 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                         <FormField label="Full Name" value={fullName} onChange={setFullName} />
                         <FormField label="Email" value={email} onChange={setEmail} type="email" />
                         <FormField label="Location" value={location} onChange={setLocationState} />
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] text-white/25 uppercase tracking-wider ml-1">Profile Photo</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleProfilePhotoChange}
+                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                          />
+                          {profilePhoto && (
+                            <div className="mt-2 flex items-center gap-3">
+                              <img src={profilePhoto} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-white/10" />
+                              <p className="text-xs text-green-400/70">Image selected</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -1098,6 +1161,22 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
   const [certifications, setCertifications] = useState(profile.certifications || "");
   const [monthlyCapacity, setMonthlyCapacity] = useState(profile.monthly_capacity || "");
   const [preferredBudgetRange, setPreferredBudgetRange] = useState(profile.preferred_budget_range || "");
+  const [profilePhoto, setProfilePhoto] = useState(profile.profile_photo || "");
+
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        alert("Image size should be less than 1MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const [partnerTypeOther, setPartnerTypeOther] = useState("");
   const [pricingModelOther, setPricingModelOther] = useState("");
@@ -1126,7 +1205,8 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       portfolio_links: portfolioLinks,
       certifications: certifications,
       monthly_capacity: monthlyCapacity,
-      preferred_budget_range: preferredBudgetRange
+      preferred_budget_range: preferredBudgetRange,
+      profile_photo: profilePhoto,
     });
     setEditingCore(false);
   }
@@ -1282,6 +1362,21 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                       <FormField label="Email" value={email} onChange={setEmail} type="email" />
                       <FormField label="Website" value={website} onChange={setWebsite} />
                       <FormField label="LinkedIn" value={linkedinUrl} onChange={setLinkedinUrl} />
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <p className="text-xs text-white/35 uppercase tracking-wider ml-1">Profile Photo</p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePhotoChange}
+                          className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                        />
+                        {profilePhoto && (
+                          <div className="mt-2 flex items-center gap-3">
+                            <img src={profilePhoto} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-white/10" />
+                            <p className="text-xs text-green-400/70">Image selected</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 

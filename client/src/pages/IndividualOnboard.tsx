@@ -674,6 +674,7 @@ export default function IndividualOnboard() {
           <Field label="Email" value={email} onChange={setEmail} placeholder="you@email.com" />
           <Field label="LinkedIn Profile" value={linkedinUrl} onChange={setLinkedinUrl} optional placeholder="https://linkedin.com/in/..." />
           <Field label="Portfolio URL" value={portfolioUrl} onChange={setPortfolioUrl} optional placeholder="https://yoursite.com" />
+
           <div className="space-y-2">
             <label className="block text-xs font-medium text-white/40 uppercase tracking-wider">
               Resume Upload <span className="lowercase opacity-50 font-normal">(optional)</span>

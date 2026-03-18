@@ -134,6 +134,7 @@ export const insertProfileSchema = z.object({
   intent_partnerships: intentPartnershipsSchema,
   intent_promotions: intentPromotionsSchema,
   intent_fundraising: intentFundraisingSchema,
+  profile_photo: z.string().optional(),
 });
 
 export const updateProfileSchema = z.object({
@@ -199,6 +200,7 @@ export const insertInvestorSchema = z.object({
   stages: z.array(z.string()).min(1, "Select at least one stage"),
   geography: z.string().default(""),
   thesis: z.string().optional(),
+  profile_photo: z.string().optional(),
 });
 
 export type InsertInvestor = z.infer<typeof insertInvestorSchema>;
@@ -239,6 +241,7 @@ export const insertPartnerSchema = z.object({
   looking_for: z.string().optional(),
   monthly_capacity: z.string().optional(),
   preferred_budget_range: z.string().optional(),
+  profile_photo: z.string().optional(),
 });
 
 export type InsertPartner = z.infer<typeof insertPartnerSchema>;
@@ -358,7 +361,7 @@ export const insertBusinessSchema = z.object({
   industry: z.array(z.string()).optional(),
   website: z.string().regex(/^(https?:\/\/)?([\da-z\.\-]+)\.([a-z\.]{2,6})([\/\w \.\-]*)*\/?$/, "Please enter a valid website (e.g., example.com)").optional().or(z.literal("")),
   linkedin_url: z.string().regex(/^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/, "Please enter a valid LinkedIn URL").optional().or(z.literal("")),
-  logo_url: z.string().regex(/^(https?:\/\/)?([\da-z\.\-]+)\.([a-z\.]{2,6})([\/\w \.\-]*)*\/?$/, "Invalid image URL").optional().or(z.literal("")),
+  logo_url: z.string().optional().or(z.literal("")),
   description: z.string().optional(),
   team_size: z.string().optional(),
   location: z.string().optional(),

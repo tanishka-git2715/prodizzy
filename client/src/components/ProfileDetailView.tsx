@@ -45,8 +45,20 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl font-bold text-white shadow-2xl">
-                    {profile.full_name?.[0]?.toUpperCase()}
+                <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl font-bold text-white shadow-2xl overflow-hidden shrink-0">
+                    {profile.profile_photo ? (
+                        <img
+                            src={profile.profile_photo}
+                            alt={profile.full_name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as HTMLImageElement).parentElement!.innerText = profile.full_name?.[0]?.toUpperCase() || '?';
+                            }}
+                        />
+                    ) : (
+                        profile.full_name?.[0]?.toUpperCase() || '?'
+                    )}
                 </div>
                 <div className="space-y-1">
                     <h2 className="text-2xl font-semibold tracking-tight text-white">{profile.full_name}</h2>
