@@ -235,7 +235,6 @@ export default function Onboard() {
   const [role, setRole] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
 
@@ -270,7 +269,6 @@ export default function Onboard() {
         if (data.role) setRole(data.role);
         if (data.fullName) setFullName(data.fullName);
         if (data.email) setEmail(data.email);
-        if (data.phone) setPhone(data.phone);
         if (data.website) setWebsite(data.website);
         if (data.linkedinUrl) setLinkedinUrl(data.linkedinUrl);
         if (data.stage) setStage(data.stage);
@@ -294,14 +292,14 @@ export default function Onboard() {
   // Save to localStorage on change
   useEffect(() => {
     const data = {
-      companyName, role, fullName, email, phone, website, linkedinUrl,
+      companyName, role, fullName, email, website, linkedinUrl,
       stage, industry, customIndustry, teamSize, location, isRegistered,
       productDesc, targetAudience, numUsers, monthlyRevenue, tractionHighlights,
       step
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [
-    companyName, role, fullName, email, phone, website, linkedinUrl,
+    companyName, role, fullName, email, website, linkedinUrl,
     stage, industry, customIndustry, teamSize, location, isRegistered,
     productDesc, targetAudience, numUsers, monthlyRevenue, tractionHighlights,
     step
@@ -363,7 +361,6 @@ export default function Onboard() {
       role,
       full_name: fullName,
       email,
-      phone,
       website,
       linkedin_url: linkedinUrl,
       stage,
@@ -414,7 +411,6 @@ export default function Onboard() {
       <Field label="Your Role" value={role} onChange={setRole} placeholder="e.g. Founder, CEO, etc." />
       <Field label="Your Name" value={fullName} onChange={setFullName} placeholder="e.g. Alex Chen" />
       <Field label="Email Address" value={email} onChange={setEmail} type="email" placeholder="you@startup.com" />
-      <Field label="Phone Number (Optional)" value={phone} onChange={setPhone} placeholder="e.g. +91 98765 43210" />
       <Field label="LinkedIn Profile (Optional)" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/alexchen" />
       <Field label="Website Link (Optional)" value={website} onChange={setWebsite} placeholder="https://acme.com" />
     </div>,

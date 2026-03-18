@@ -549,7 +549,6 @@ export class DatabaseStorage implements IStorage {
       linkedin_url: 0,
       website: 0,
       deck_link: 0,
-      phone: 0
     };
 
     // Search both StartupProfile and IndividualProfile (Founder role)
@@ -605,7 +604,6 @@ export class DatabaseStorage implements IStorage {
       linkedin_url: undefined,
       website: undefined,
       deck_link: undefined,
-      phone: undefined
     }));
   }
 

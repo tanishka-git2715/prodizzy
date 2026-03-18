@@ -1,4 +1,4 @@
-import { Building2, MapPin, Users, ArrowRight, Clock } from "lucide-react";
+import { MapPin, Users, ArrowRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Business } from "@shared/schema";
 
@@ -14,11 +14,6 @@ export function BusinessCard({ business, onClick }: BusinessCardProps) {
       onClick={onClick}
     >
       <div className="flex items-start gap-4">
-        {/* Business Icon/Logo */}
-        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shrink-0">
-          <Building2 className="w-6 h-6 text-white" />
-        </div>
-
         {/* Business Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-2">

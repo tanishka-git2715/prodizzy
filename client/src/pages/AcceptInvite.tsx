@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Building2, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 export default function AcceptInvite() {
   const { token } = useParams();
@@ -122,9 +122,6 @@ export default function AcceptInvite() {
       <div className="max-w-md w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-[#E63946] p-6 text-center">
-          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mx-auto mb-3">
-            <Building2 className="w-6 h-6 text-white" />
-          </div>
           <h1 className="text-2xl font-bold text-white">Team Invitation</h1>
         </div>
 

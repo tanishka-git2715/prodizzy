@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
-import { LogOut, ChevronRight, Check, Edit2, X, Mail, Phone, Linkedin, Globe, Github, FileText, MapPin, Briefcase, Building2, Plus } from "lucide-react";
+import { LogOut, ChevronRight, Check, Edit2, X, Mail, Linkedin, Globe, Github, FileText, MapPin, Briefcase, Plus } from "lucide-react";
 import { ensureHttps } from "@/lib/utils";
 import { BusinessCard } from "@/components/business/BusinessCard";
 import { ProfileDetailView } from "@/components/ProfileDetailView";
@@ -121,7 +121,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [role, setRole] = useState(profile.role || "");
   const [email, setEmail] = useState(profile.email || "");
-  const [phone, setPhone] = useState(profile.phone || "");
   const [website, setWebsite] = useState(profile.website || "");
   const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
   const [location, setLocation] = useState(profile.location || "");
@@ -148,7 +147,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
       full_name: fullName,
       role,
       email,
-      phone,
       website,
       linkedin_url: linkedinUrl,
       location,
@@ -200,7 +198,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     setFullName(profile.full_name || "");
                     setRole(profile.role || "");
                     setEmail(profile.email || "");
-                    setPhone(profile.phone || "");
                     setWebsite(profile.website || "");
                     setLinkedinUrl(profile.linkedin_url || "");
                     setLocation(profile.location || "");
@@ -285,7 +282,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     <div>
                       <p className="text-[10px] text-white/25 uppercase tracking-wider mb-0.5">Contact</p>
                       <p className="text-xs text-white/60 truncate" title={profile.email}>{profile.email}</p>
-                      <p className="text-xs text-white/60 truncate mt-0.5">{profile.phone}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-white/25 uppercase tracking-wider mb-0.5">LinkedIn</p>
@@ -320,7 +316,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     <FormField label="Your Full Name" value={fullName} onChange={setFullName} placeholder="Jane Smith" />
                     <FormField label="Your Role" value={role} onChange={setRole} placeholder="Co-founder & CEO" />
                     <FormField label="Email" value={email} onChange={setEmail} type="email" placeholder="jane@prodizzy.com" />
-                    <FormField label="Phone" value={phone} onChange={setPhone} placeholder="+91 98765 43210" />
                     <FormField label="Website" value={website} onChange={setWebsite} placeholder="https://yourco.com" />
                     <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
                     <FormField label="Location" value={location} onChange={setLocation} placeholder="Delhi, India" />
@@ -465,7 +460,6 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
               </div>
             ) : (
               <div className="text-center py-8 space-y-3">
-                <Building2 className="w-12 h-12 text-white/20 mx-auto" />
                 <div>
                   <p className="text-white/50 text-sm">No businesses yet</p>
                   <p className="text-white/25 text-xs mt-1">Create a business profile to manage campaigns and team members</p>
@@ -503,7 +497,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [email, setEmail] = useState(profile.email || "");
   const [dob, setDob] = useState((profile as any).dob || "");
-  const [phone, setPhone] = useState(profile.phone || "");
   const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
   const [portfolioUrl, setPortfolioUrl] = useState(profile.portfolio_url || "");
   const [roles, setRoles] = useState<string[]>((profile as any).roles || []);
@@ -571,7 +564,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       full_name: fullName,
       email,
       dob,
-      phone,
       location,
       linkedin_url: linkedinUrl,
       portfolio_url: portfolioUrl,
@@ -992,7 +984,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
               </div>
             ) : (
               <div className="text-center py-8 space-y-3">
-                <Building2 className="w-12 h-12 text-white/20 mx-auto" />
                 <div>
                   <p className="text-white/50 text-sm">No businesses yet</p>
                   <p className="text-white/25 text-xs mt-1">Create a business profile to manage campaigns and team members</p>
@@ -1032,7 +1023,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
   const [role, setRole] = useState(profile.role || "");
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [email, setEmail] = useState(profile.email || "");
-  const [phone, setPhone] = useState(profile.phone || "");
   const [website, setWebsite] = useState(profile.website || "");
   const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
   const [partnerType, setPartnerType] = useState(profile.partner_type || "");
@@ -1067,7 +1057,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       role,
       full_name: fullName,
       email,
-      phone,
       website,
       linkedin_url: linkedinUrl,
       partner_type: partnerType,
@@ -1145,12 +1134,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                             <Mail className="w-3.5 h-3.5 text-white/30" />
                             <span className="text-white/70">{profile.email}</span>
                           </div>
-                          {profile.phone && (
-                            <div className="flex items-center gap-3 text-sm">
-                              <Phone className="w-3.5 h-3.5 text-white/30" />
-                              <span className="text-white/70">{profile.phone}</span>
-                            </div>
-                          )}
                           <div className="flex items-center gap-3 text-sm">
                             <Linkedin className="w-3.5 h-3.5 text-white/30" />
                             <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn Profile &rarr;</a>
@@ -1250,7 +1233,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                       <FormField label="Full Name" value={fullName} onChange={setFullName} />
                       <FormField label="Role" value={role} onChange={setRole} />
                       <FormField label="Email" value={email} onChange={setEmail} type="email" />
-                      <FormField label="Phone" value={phone} onChange={setPhone} />
                       <FormField label="Website" value={website} onChange={setWebsite} />
                       <FormField label="LinkedIn" value={linkedinUrl} onChange={setLinkedinUrl} />
                     </div>
@@ -1411,7 +1393,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
               </div>
             ) : (
               <div className="text-center py-8 space-y-3">
-                <Building2 className="w-12 h-12 text-white/20 mx-auto" />
                 <div>
                   <p className="text-white/50 text-sm">No businesses yet</p>
                   <p className="text-white/25 text-xs mt-1">Create a business profile to manage campaigns and team members</p>
@@ -1593,7 +1574,6 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
               </div>
             ) : (
               <div className="text-center py-8 space-y-3">
-                <Building2 className="w-12 h-12 text-white/20 mx-auto" />
                 <div>
                   <p className="text-white/50 text-sm">No businesses yet</p>
                   <p className="text-white/25 text-xs mt-1">Create a business profile to manage campaigns and team members</p>

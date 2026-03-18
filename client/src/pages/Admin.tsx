@@ -66,7 +66,7 @@ function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; 
               : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Pending</span>
             }
           </div>
-          <p className="text-white/35 text-xs mt-0.5 truncate">{profile.full_name} · {profile.role} · {profile.email} · {profile.phone}</p>
+          <p className="text-white/35 text-xs mt-0.5 truncate">{profile.full_name} · {profile.role} · {profile.email}</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -343,7 +343,7 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
               : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/15 text-yellow-400 border border-yellow-500/20">Pending</span>
             }
           </div>
-          <p className="text-white/35 text-xs mt-0.5 truncate">{profile.full_name} · {profile.email} · {profile.phone}</p>
+          <p className="text-white/35 text-xs mt-0.5 truncate">{profile.full_name} · {profile.email}</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -395,7 +395,6 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Contact</p>
                 <div className="flex flex-wrap gap-4 text-xs text-white/50">
                   <span>Email: <span className="text-white/75">{profile.email}</span></span>
-                  <span>Phone: <span className="text-white/75">{profile.phone}</span></span>
                   {profile.website && <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">Website</a>}
                   {profile.linkedin_url && <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">LinkedIn</a>}
                 </div>

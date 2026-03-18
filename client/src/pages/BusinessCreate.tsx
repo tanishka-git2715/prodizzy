@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { insertBusinessSchema } from "@shared/schema";
 import { z } from "zod";
-import { Building2, ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 
 const BUSINESS_TYPES = ["Startup", "Agency", "Enterprise", "Institution"];
 
@@ -144,11 +144,6 @@ export default function BusinessCreate() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-[#E63946]/10 border border-[#E63946]/20 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-[#E63946]" />
-            </div>
-          </div>
           <h1 className="text-3xl font-bold mb-2">Create Business Profile</h1>
           <p className="text-white/60">
             Set up your company profile to start posting campaigns and inviting team members

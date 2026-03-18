@@ -1,5 +1,5 @@
-import { Mail, Phone, Linkedin, Globe, FileText } from "lucide-react";
-import { ensureHttps } from "@/lib/utils";
+import { Mail, Linkedin, Globe, FileText } from "lucide-react";
+import { ensureHttps, downloadBase64File } from "@/lib/utils";
 import type { IndividualProfile } from "@shared/schema";
 
 interface ProfileDetailViewProps {
@@ -68,12 +68,6 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                 <Mail className="w-3.5 h-3.5 text-white/30" />
                                 <span className="text-white/70">{profile.email}</span>
                             </div>
-                            {profile.phone && (
-                                <div className="flex items-center gap-3 text-sm">
-                                    <Phone className="w-3.5 h-3.5 text-white/30" />
-                                    <span className="text-white/70">{profile.phone}</span>
-                                </div>
-                            )}
                             {profile.linkedin_url && (
                                 <div className="flex items-center gap-3 text-sm">
                                     <Linkedin className="w-3.5 h-3.5 text-white/30" />
@@ -89,7 +83,12 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                             {profile.resume_url && (
                                 <div className="flex items-center gap-3 text-sm">
                                     <FileText className="w-3.5 h-3.5 text-white/30" />
-                                    <a href={ensureHttps(profile.resume_url)} target="_blank" rel="noreferrer" className="text-teal-400 hover:underline transition-colors uppercase text-[10px] font-bold tracking-wider">View Resume</a>
+                                    <button 
+                                        onClick={() => downloadBase64File(profile.resume_url!, `${profile.full_name?.replace(/\s+/g, '_')}_Resume.pdf`)}
+                                        className="text-teal-400 hover:underline transition-colors uppercase text-[10px] font-bold tracking-wider text-left"
+                                    >
+                                        View Resume
+                                    </button>
                                 </div>
                             )}
                         </div>

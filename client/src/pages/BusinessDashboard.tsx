@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown } from "lucide-react";
+import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown } from "lucide-react";
 import type { Business, TeamMember } from "@shared/schema";
 
 export default function BusinessDashboard() {
@@ -152,9 +152,6 @@ export default function BusinessDashboard() {
             </Button>
 
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-[#E63946]/10 border border-[#E63946]/20 flex items-center justify-center">
-                <Building2 className="w-8 h-8 text-[#E63946]" />
-              </div>
               <div>
                 <h1 className="text-3xl font-bold mb-1">{business.business_name}</h1>
                 <div className="flex items-center gap-2 text-sm text-white/60">
@@ -192,7 +189,6 @@ export default function BusinessDashboard() {
             <Card className="bg-white/5 border-white/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5" />
                   Business Information
                 </CardTitle>
               </CardHeader>

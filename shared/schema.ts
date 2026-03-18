@@ -90,7 +90,6 @@ export const insertProfileSchema = z.object({
   role: z.string().min(1, "Your role is required"),
   full_name: z.string().min(1, "Full name is required"),
   email: z.string().email("Valid email required").optional(), // Often handled by auth but good to have
-  phone: z.string().optional(),
   website: z.string().regex(/^(https?:\/\/)?([\da-z\.\-]+)\.([a-z\.]{2,6})([\/\w \.\-]*)*\/?$/, "Invalid website URL format").optional().or(z.literal("")),
   linkedin_url: z.string().regex(/^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/, "Invalid LinkedIn URL format").optional().or(z.literal("")),
 
@@ -222,7 +221,6 @@ export const insertPartnerSchema = z.object({
   role: z.string().min(1, "Your role is required"),
   full_name: z.string().min(1, "Full name is required"),
   email: z.string().email("Valid email required"),
-  phone: z.string().optional(),
   website: z.string().optional(),
   linkedin_url: z.string().optional(),
   partner_type: z.enum(["Agency", "Investor", "Service Provider", "Institutional Firm"]),
@@ -262,7 +260,6 @@ export const insertIndividualSchema = z.object({
   email: z.string().email("Valid email required"),
   dob: z.string().optional(),
   location: z.string().optional(),
-  phone: z.string().optional(),
   linkedin_url: z.string().optional(),
   portfolio_url: z.string().optional(),
   profile_photo: z.string().optional(),
