@@ -251,9 +251,17 @@ export function setupAuth(app: Express) {
             user.otpExpiresAt = undefined;
             await user.save();
 
-            req.login(user, (err) => {
+            req.login(user, async (err) => {
                 if (err) return next(err);
-                res.json(user);
+                
+                // Return complete user object with profileStatus, consistent with /api/auth/me
+                const userId = user._id?.toString() || user.id;
+                const profileStatus = await storage.getProfileStatus(userId);
+                res.json({
+                    ...user.toObject ? user.toObject() : user,
+                    id: userId,
+                    profileStatus
+                });
             });
         } catch (error) {
             next(error);

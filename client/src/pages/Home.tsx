@@ -122,8 +122,9 @@ export default function Home() {
 
   // 2. Intent Processing: Handles redirections for users immediately after auth
   useEffect(() => {
-    if (!session || showAuthModal || loadingProfile || !profileStatus || !authSuccess) return;
+    if (!session || loadingProfile || !profileStatus || !authSuccess) return;
 
+    // We proceed even if showAuthModal is still technically true for a frame
     if (profileStatus.hasCompletedProfile) {
       // Returning user: go to dashboard
       setLocation("/dashboard");

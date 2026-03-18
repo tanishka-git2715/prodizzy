@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,9 @@ export default function BusinessCreate() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+
+  // Scroll to top when the page loads
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const [formData, setFormData] = useState({
     business_name: "",
