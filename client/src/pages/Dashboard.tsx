@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import type { StartupProfile, PartnerProfile, IndividualProfile } from "@shared/schema";
-import { LogOut, ChevronRight, Check, Edit2, X, Mail, Linkedin, Globe, Github, FileText, MapPin, Briefcase, Plus } from "lucide-react";
+import { LogOut, ChevronRight, Check, Edit2, X, Mail, Linkedin, Globe, Github, FileText, MapPin, Briefcase, Plus, Camera } from "lucide-react";
 import { ensureHttps } from "@/lib/utils";
 import { BusinessCard } from "@/components/business/BusinessCard";
 import { ProfileDetailView } from "@/components/ProfileDetailView";
@@ -152,6 +152,23 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
     }
   };
 
+  const handleProfilePhotoChangeImmediate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        alert("Image size should be less than 1MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setProfilePhoto(base64);
+        patchMutation.mutate({ profile_photo: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   function saveCore() {
     const finalIndustry = industry.includes("Other") && customIndustry.trim()
@@ -247,8 +264,16 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                       <p className="text-white/45 text-sm mt-1 leading-relaxed max-w-xl">{profile.product_description}</p>
                     </div>
                     <div className="shrink-0 flex items-center gap-3 bg-white/[0.03] px-4 py-3 rounded-2xl border border-white/5">
-                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white font-medium border border-white/10 text-xs">
-                        {profile.full_name?.[0]?.toUpperCase() || profile.company_name?.[0]?.toUpperCase()}
+                      <div className="relative group w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white font-medium border border-white/10 text-xs overflow-hidden">
+                        {profile.profile_photo ? (
+                          <img src={profile.profile_photo} alt={profile.full_name} className="w-full h-full object-cover" />
+                        ) : (
+                          profile.full_name?.[0]?.toUpperCase() || profile.company_name?.[0]?.toUpperCase()
+                        )}
+                        <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                          <Camera className="w-4 h-4 text-white/70" />
+                          <input type="file" className="hidden" accept="image/*" onChange={handleProfilePhotoChangeImmediate} />
+                        </label>
                       </div>
                       <div>
                         <p className="text-white font-medium text-sm leading-tight">{profile.full_name}</p>
@@ -601,6 +626,11 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
     }
   };
 
+  const handleDirectPhotoUpload = (base64: string) => {
+    setProfilePhoto(base64);
+    patchMutation.mutate({ profile_photo: base64 });
+  };
+
   function DetailRow({ label, value }: { label: string; value: string | string[] | undefined | null }) {
     if (!value || (Array.isArray(value) && value.length === 0)) return null;
     const displayValue = Array.isArray(value) ? value.join(", ") : value;
@@ -699,7 +729,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             <AnimatePresence mode="wait">
               {!editingCore ? (
                 <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-                  <ProfileDetailView profile={profile} />
+                  <ProfileDetailView profile={profile} onPhotoUpload={handleDirectPhotoUpload} />
                 </motion.div>
 
               ) : (
@@ -1178,6 +1208,23 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
     }
   };
 
+  const handleProfilePhotoChangeImmediate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        alert("Image size should be less than 1MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setProfilePhoto(base64);
+        patchMutation.mutate({ profile_photo: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const [partnerTypeOther, setPartnerTypeOther] = useState("");
   const [pricingModelOther, setPricingModelOther] = useState("");
 
@@ -1249,8 +1296,16 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                       <p className="text-white/45 text-sm mt-1">{profile.partner_type}</p>
                     </div>
                     <div className="shrink-0 flex items-center gap-3 bg-white/[0.03] px-4 py-3 rounded-2xl border border-white/5">
-                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white font-medium border border-white/10 text-xs">
-                        {profile.full_name?.[0]?.toUpperCase()}
+                      <div className="relative group w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white font-medium border border-white/10 text-xs overflow-hidden">
+                        {profile.profile_photo ? (
+                          <img src={profile.profile_photo} alt={profile.full_name} className="w-full h-full object-cover" />
+                        ) : (
+                          profile.full_name?.[0]?.toUpperCase()
+                        )}
+                        <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                          <Camera className="w-4 h-4 text-white/70" />
+                          <input type="file" className="hidden" accept="image/*" onChange={handleProfilePhotoChangeImmediate} />
+                        </label>
                       </div>
                       <div>
                         <p className="text-white font-medium text-sm leading-tight">{profile.full_name}</p>
@@ -1289,6 +1344,14 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                             <p className="text-[10px] text-white/20 uppercase mb-1.5">Services Offered</p>
                             <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{profile.services_offered || "Not specified"}</p>
                           </div>
+                          {profile.stages_served && profile.stages_served.length > 0 && (
+                            <div>
+                              <p className="text-[10px] text-white/20 uppercase mb-1.5">Stages Served</p>
+                              <div className="flex flex-wrap gap-1.5 mt-1">
+                                {profile.stages_served.map(s => <Tag key={s} label={s} />)}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1337,18 +1400,25 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                             <p className="text-sm text-white/70">{profile.monthly_capacity || "Not specified"}</p>
                           </div>
                         </div>
-                        </div>
                       </div>
+
+                      {profile.certifications && (
+                        <div className="space-y-3 pt-2">
+                          <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Certifications</h3>
+                          <div className="text-xs text-white/60 text-white/70 leading-relaxed">{profile.certifications}</div>
+                        </div>
+                      )}
 
                       {profile.portfolio_links && (
                         <div className="space-y-3 pt-2">
-                          <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Portfolio</h3>
+                          <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Portfolio / Work Links</h3>
                           <div className="text-xs text-white/60">
-                            <p className="leading-relaxed break-words">{profile.portfolio_links}</p>
+                            <p className="leading-relaxed break-words text-blue-400/80">{profile.portfolio_links}</p>
                           </div>
                         </div>
                       )}
                     </div>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">

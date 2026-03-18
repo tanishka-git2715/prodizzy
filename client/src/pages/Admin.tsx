@@ -101,6 +101,12 @@ function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; 
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Product Description</p>
                 <p className="text-white/65 leading-relaxed">{profile.product_description}</p>
               </div>
+              {profile.problem_solved && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Problem Solved</p>
+                  <p className="text-white/65 leading-relaxed">{profile.problem_solved}</p>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Target audience</p>
                 <p className="text-white/65">{profile.target_audience}</p>
@@ -392,6 +398,38 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Experience</p>
                 <p className="text-white/65">{profile.years_experience || "—"}</p>
               </div>
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Work Mode</p>
+                <p className="text-white/65">{profile.work_mode || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Pricing Model</p>
+                <p className="text-white/65">{profile.pricing_model || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Avg Deal Size</p>
+                <p className="text-white/65">{profile.average_deal_size || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Preferred Budget</p>
+                <p className="text-white/65">{profile.preferred_budget_range || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Monthly Capacity</p>
+                <p className="text-white/65">{profile.monthly_capacity || "—"}</p>
+              </div>
+              {profile.certifications && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Certifications</p>
+                  <p className="text-white/65 text-xs">{profile.certifications}</p>
+                </div>
+              )}
+              {profile.portfolio_links && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Portfolio / Work Links</p>
+                  <p className="text-white/65 text-xs break-words">{profile.portfolio_links}</p>
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Contact</p>
                 <div className="flex flex-wrap gap-4 text-xs text-white/50">

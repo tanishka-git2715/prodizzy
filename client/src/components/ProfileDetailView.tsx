@@ -1,10 +1,11 @@
-import { Mail, Linkedin, Globe, FileText, Github } from "lucide-react";
+import { Mail, Linkedin, Globe, FileText, Github, Camera } from "lucide-react";
 import { ensureHttps, downloadBase64File } from "@/lib/utils";
 import type { IndividualProfile } from "@shared/schema";
 
 interface ProfileDetailViewProps {
     profile: IndividualProfile;
     isAdmin?: boolean;
+    onPhotoUpload?: (base64: string) => void;
 }
 
 function Tag({ label, color }: { label: string; color?: string }) {
@@ -26,7 +27,7 @@ function DetailRow({ label, value }: { label: string; value: string | string[] |
     );
 }
 
-export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) {
+export function ProfileDetailView({ profile, isAdmin, onPhotoUpload }: ProfileDetailViewProps) {
     const roles = profile.roles || [];
     const location = profile.location || "NA";
     const skills = profile.skills || [];
@@ -42,10 +43,12 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
     const isInvestor = roles.includes("Investor");
     const isShortPath = roles.length === 1 && (roles.includes("Founder") || roles.includes("Other (Specify)"));
 
+    const hasPreferences = profile.experience_level || profile.tools_used || profile.preferred_roles || profile.preferred_industries || profile.availability || profile.work_mode;
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl font-bold text-white shadow-2xl overflow-hidden shrink-0">
+                <div className="relative group w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl font-bold text-white shadow-2xl overflow-hidden shrink-0">
                     {profile.profile_photo ? (
                         <img
                             src={profile.profile_photo}
@@ -58,6 +61,29 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                         />
                     ) : (
                         profile.full_name?.[0]?.toUpperCase() || '?'
+                    )}
+                    
+                    {onPhotoUpload && (
+                        <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            <Camera className="w-8 h-8 text-white/70" />
+                            <input 
+                                type="file" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        if (file.size > 1024 * 1024) {
+                                            alert("Image size should be less than 1MB");
+                                            return;
+                                        }
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => onPhotoUpload(reader.result as string);
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                            />
+                        </label>
                     )}
                 </div>
                 <div className="space-y-1">
@@ -123,6 +149,37 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                             </div>
                         </div>
                     )}
+
+                    {hasPreferences && (
+                        <div className="space-y-3">
+                            <h3 className="text-[10px] font-bold text-white/25 uppercase tracking-[0.2em]">Preferences & Availability</h3>
+                            <div className="space-y-4 bg-white/[0.02] border border-white/5 p-4 rounded-xl">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <DetailRow label="Experience" value={profile.experience_level} />
+                                    <DetailRow label="Availability" value={profile.availability} />
+                                    <DetailRow label="Work Mode" value={profile.work_mode} />
+                                </div>
+                                {profile.tools_used && (
+                                    <div>
+                                        <p className="text-[10px] text-white/20 uppercase mb-1">Tools Used</p>
+                                        <p className="text-sm text-white/70">{profile.tools_used}</p>
+                                    </div>
+                                )}
+                                {profile.preferred_roles && (
+                                    <div>
+                                        <p className="text-[10px] text-white/20 uppercase mb-1">Preferred Roles</p>
+                                        <p className="text-sm text-white/70">{profile.preferred_roles}</p>
+                                    </div>
+                                )}
+                                {profile.preferred_industries && (
+                                    <div>
+                                        <p className="text-[10px] text-white/20 uppercase mb-1">Preferred Industries</p>
+                                        <p className="text-sm text-white/70">{Array.isArray(profile.preferred_industries) ? profile.preferred_industries.join(", ") : profile.preferred_industries}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Column 2 */}
@@ -143,6 +200,12 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                             <DetailRow label="Team Size" value={startupData?.team_size} />
                                             <DetailRow label="Registered" value={startupData?.is_registered} />
                                         </div>
+                                        {startupData?.problem_solved && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Problem Solved</p>
+                                                <p className="text-sm text-white/70">{startupData.problem_solved}</p>
+                                            </div>
+                                        )}
                                         {startupData?.product_description && (
                                             <div className="pt-2">
                                                 <p className="text-[10px] text-white/20 uppercase mb-1">Product Description</p>
@@ -225,6 +288,12 @@ export function ProfileDetailView({ profile, isAdmin }: ProfileDetailViewProps) 
                                                         </a>
                                                     ))}
                                                 </div>
+                                            </div>
+                                        )}
+                                        {isAdmin && studentData.communities?.admin_contact && (
+                                            <div className="pt-2">
+                                                <p className="text-[10px] text-white/20 uppercase mb-1">Community Admin Contact</p>
+                                                <p className="text-sm text-white/70">{studentData.communities.admin_contact}</p>
                                             </div>
                                         )}
                                         {skills.length > 0 && (
