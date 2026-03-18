@@ -214,7 +214,7 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
 
       <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}</h1>
           <p className="text-white/35 mt-1 text-sm">{profile.company_name} · {profile.role} · {profile.stage}</p>
         </div>
 
@@ -683,7 +683,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}</h1>
             <p className="text-white/35 mt-1 text-sm">
               {(profile as any).roles?.join(" · ") || "User"} · {profile.location}
             </p>
@@ -1244,7 +1244,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
 
       <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}.</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}</h1>
           <p className="text-white/35 mt-1 text-sm">{profile.company_name} · {profile.partner_type}</p>
         </div>
 

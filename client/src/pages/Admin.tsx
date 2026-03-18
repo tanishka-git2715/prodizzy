@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2, Users, TrendingUp, Activity, FileText, Rocket } from "lucide-react";
+import { LogOut, Check, X, ChevronDown, ChevronUp, Trash2, Users, TrendingUp, Activity, FileText, Rocket, CheckCircle } from "lucide-react";
 import type { StartupProfile, PartnerProfile, IndividualProfile, Business } from "@shared/schema";
 import { MetricCard } from "@/components/admin/MetricCard";
 import { GrowthChart } from "@/components/admin/GrowthChart";
@@ -57,6 +57,7 @@ function StartupProfileRow({ profile, profileType }: { profile: StartupProfile; 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-white font-medium text-sm">{profile.company_name}</span>
+            {profile.approved && <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10" />}
             {Array.isArray(profile.industry)
               ? profile.industry.map(ind => <Tag key={ind} label={ind} />)
               : <Tag label={profile.industry} />
@@ -186,6 +187,7 @@ function BusinessProfileRow({ profile, profileType }: { profile: Business; profi
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-white font-medium text-sm">{profile.business_name}</span>
+            {profile.approved && <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10" />}
             <Tag label={profile.business_type} />
             {profile.industry && profile.industry.length > 0 && (
               Array.isArray(profile.industry)
@@ -344,6 +346,7 @@ function PartnerProfileRow({ profile, profileType }: { profile: PartnerProfile; 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-white font-medium text-sm">{profile.company_name}</span>
+            {profile.approved && <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10" />}
             <Tag label={profile.partner_type} />
             {profile.approved
               ? <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/15 text-green-400 border border-green-500/20">Approved</span>
@@ -508,6 +511,7 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-white font-medium text-sm">{profile.full_name}</span>
+            {profile.approved && <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10" />}
             <div className="flex gap-1">
               {profile.roles?.map(r => <Tag key={r} label={r} />)}
             </div>

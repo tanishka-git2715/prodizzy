@@ -1,4 +1,4 @@
-import { Mail, Linkedin, Globe, FileText, Github, Camera } from "lucide-react";
+import { Mail, Linkedin, Globe, FileText, Github, Camera, CheckCircle } from "lucide-react";
 import { ensureHttps, downloadBase64File } from "@/lib/utils";
 import type { IndividualProfile } from "@shared/schema";
 
@@ -87,7 +87,12 @@ export function ProfileDetailView({ profile, isAdmin, onPhotoUpload }: ProfileDe
                     )}
                 </div>
                 <div className="space-y-1">
-                    <h2 className="text-2xl font-semibold tracking-tight text-white">{profile.full_name}</h2>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-semibold tracking-tight text-white">{profile.full_name}</h2>
+                        {profile.approved && (
+                            <CheckCircle className="w-5 h-5 text-blue-500 fill-blue-500/10" />
+                        )}
+                    </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-white/45 text-sm">
                         <span>{roles.join(", ")}</span>
                         <span className="w-1 h-1 rounded-full bg-white/20" />
@@ -359,7 +364,7 @@ export function ProfileDetailView({ profile, isAdmin, onPhotoUpload }: ProfileDe
                                 )}
 
                                 {hasPreferences && (
-                                    <div className="pt-4 border-t border-white/5 space-y-3">
+                                    <div className="pt-2 space-y-3">
                                         <p className="text-[10px] text-white/20 uppercase font-bold">Preferences & Availability</p>
                                         <div className="grid grid-cols-2 gap-4">
                                             <DetailRow label="Experience" value={profile.experience_level} />
