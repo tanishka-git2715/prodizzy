@@ -223,7 +223,7 @@ export const insertPartnerSchema = z.object({
   email: z.string().email("Valid email required"),
   website: z.string().optional(),
   linkedin_url: z.string().optional(),
-  partner_type: z.enum(["Agency", "Investor", "Service Provider", "Institutional Firm"]),
+  partner_type: z.string().min(1, "Partner type is required"),
   services_offered: z.array(z.string()).default([]),
   stages_served: z.array(z.string()).default([]),
   pricing_model: z.string().optional(),
@@ -354,7 +354,7 @@ export type MatchedStartup = PublicStartupProfile & {
 
 export const insertBusinessSchema = z.object({
   business_name: z.string().min(1, "Business name is required"),
-  business_type: z.enum(["Startup", "Agency", "Enterprise", "Institution"]),
+  business_type: z.string().min(1, "Business type is required"),
   industry: z.array(z.string()).optional(),
   website: z.string().regex(/^(https?:\/\/)?([\da-z\.\-]+)\.([a-z\.]{2,6})([\/\w \.\-]*)*\/?$/, "Please enter a valid website (e.g., example.com)").optional().or(z.literal("")),
   linkedin_url: z.string().regex(/^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/, "Please enter a valid LinkedIn URL").optional().or(z.literal("")),

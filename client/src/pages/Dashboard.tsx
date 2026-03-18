@@ -498,7 +498,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K – 1L", "1L+"];
   const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other (Specify)"];
   const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other (Specify)"];
-  const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
   const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
   const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
 
@@ -547,7 +546,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   
   const [experienceLevel, setExperienceLevel] = useState(profile.experience_level || "");
   const [toolsUsed, setToolsUsed] = useState(profile.tools_used || "");
-  const [lookingFor, setLookingFor] = useState<string[]>(Array.isArray(profile.looking_for) ? profile.looking_for : []);
   const [preferredRoles, setPreferredRoles] = useState(profile.preferred_roles || "");
   const [preferredIndustries, setPreferredIndustries] = useState<string[]>(typeof profile.preferred_industries === 'string' ? profile.preferred_industries.split(", ") : []);
   const [availability, setAvailability] = useState(profile.availability || "");
@@ -590,7 +588,6 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       creator_data: roles.includes("Content Creator / Community Admin") ? creatorData : undefined,
       other_role_spec: roles.includes("Other (Specify)") ? otherRoleSpec : undefined,
       skills: skills.includes("Other (Specify)") ? [...skills.filter(s => s !== "Other (Specify)"), ...skillOther.split(",").map(s => s.trim())].filter(Boolean) : skills,
-      looking_for: lookingFor,
       experience_level: experienceLevel,
       tools_used: toolsUsed,
       preferred_roles: preferredRoles,
@@ -1099,17 +1096,16 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
   const [workMode, setWorkMode] = useState(profile.work_mode || "");
   const [portfolioLinks, setPortfolioLinks] = useState(profile.portfolio_links || "");
   const [certifications, setCertifications] = useState(profile.certifications || "");
-  const [lookingFor, setLookingFor] = useState(
-    Array.isArray(profile.looking_for) ? (profile.looking_for[0] || "") : (profile.looking_for || "")
-  );
   const [monthlyCapacity, setMonthlyCapacity] = useState(profile.monthly_capacity || "");
   const [preferredBudgetRange, setPreferredBudgetRange] = useState(profile.preferred_budget_range || "");
 
-  const PARTNER_TYPES = ["Agency", "Investor", "Service Provider", "Institutional Firm"];
-  const PRICING_MODELS = ["Fixed", "Hourly", "Commission", "Retainer"];
+  const [partnerTypeOther, setPartnerTypeOther] = useState("");
+  const [pricingModelOther, setPricingModelOther] = useState("");
+
+  const PARTNER_TYPES = ["Agency", "Investor", "Service Provider", "Institutional Firm", "Other (Specify)"];
+  const PRICING_MODELS = ["Fixed", "Hourly", "Commission", "Retainer", "Other (Specify)"];
   const TEAM_SIZE_OPTIONS = ["Solo", "2-10", "11-50", "51-200", "200+"];
   const STAGE_OPTIONS = ["Pre-Seed", "Seed", "Series A", "Expansion", "MNC"];
-  const LOOKING_FOR_OPTIONS = ["Clients", "Deal flow", "Partnerships"];
 
   function saveCore() {
     patchMutation.mutate({
@@ -1119,17 +1115,16 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       email,
       website,
       linkedin_url: linkedinUrl,
-      partner_type: partnerType,
+      partner_type: partnerType === "Other (Specify)" ? partnerTypeOther : partnerType,
       services_offered: services,
       stages_served: stages,
-      pricing_model: pricingModel,
+      pricing_model: pricingModel === "Other (Specify)" ? pricingModelOther : pricingModel,
       average_deal_size: averageDealSize,
       team_size: teamSize,
       years_experience: yearsExperience,
       work_mode: workMode,
       portfolio_links: portfolioLinks,
       certifications: certifications,
-      looking_for: lookingFor || undefined,
       monthly_capacity: monthlyCapacity,
       preferred_budget_range: preferredBudgetRange
     });
@@ -1262,13 +1257,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                             <p className="text-sm text-white/70">{profile.monthly_capacity || "Not specified"}</p>
                           </div>
                         </div>
-                        <div className="mt-3">
-                          <p className="text-[10px] text-white/20 uppercase mb-1.5">Looking For</p>
-                          <div className="flex flex-wrap gap-2">
-                            {(Array.isArray(profile.looking_for) ? profile.looking_for[0] : profile.looking_for) && (
-                              <Tag label={Array.isArray(profile.looking_for) ? profile.looking_for[0] : profile.looking_for} color="bg-purple-500/10 text-purple-300 border-purple-500/10" />
-                            )}
-                          </div>
                         </div>
                       </div>
 
@@ -1281,7 +1269,6 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                         </div>
                       )}
                     </div>
-                  </div>
                 </motion.div>
               ) : (
                 <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
@@ -1306,6 +1293,9 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
                         <div className="space-y-1.5">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Partner Type</p>
                           <PickOne options={PARTNER_TYPES} value={partnerType} onChange={(v) => setPartnerType(v as any)} />
+                          {partnerType === "Other (Specify)" && (
+                            <FormField label="Specify Partner Type" value={partnerTypeOther} onChange={setPartnerTypeOther} placeholder="e.g. Legal Firm" />
+                          )}
                         </div>
                         <div className="space-y-1.5">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Work Mode</p>
@@ -1325,14 +1315,13 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
 
                     <div className="space-y-4">
                       <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest pb-2">Requirements</h3>
-                      <div className="space-y-1.5">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">What are you looking for?</p>
-                        <PickOne options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
-                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <p className="text-xs text-white/35 uppercase tracking-wider">Pricing Model</p>
                           <PickOne options={PRICING_MODELS} value={pricingModel} onChange={setPricingModel} />
+                          {pricingModel === "Other (Specify)" && (
+                            <FormField label="Specify Pricing Model" value={pricingModelOther} onChange={setPricingModelOther} placeholder="e.g. Performance-based" />
+                          )}
                         </div>
                         <FormField label="Average Deal Size" value={averageDealSize} onChange={setAverageDealSize} placeholder="e.g. $5k" />
                         <FormField label="Preferred Budget Range" value={preferredBudgetRange} onChange={setPreferredBudgetRange} placeholder="e.g. $10k+" />

@@ -233,7 +233,6 @@ const AUDIENCE_SIZE_OPTIONS = ["Below 1K", "1K – 10K", "10K – 50K", "50K –
 const NICHE_OPTIONS = ["Technology / Web3 / AI", "Startups & Business", "Finance & Investing", "Education & Careers", "Productivity", "Marketing & Growth", "Design & Creativity", "Lifestyle", "Gaming", "Entertainment", "Student Community", "Founder Community", "Other (Specify)"];
 
 const SKILL_OPTIONS = ["Software development", "AI & Automation", "Branding & Marketing", "UI/UX & Graphic Designing", "Content Creation & Copywriting", "Video editing", "Research & Data Analytics", "Finance & Trading", "Product & Operations", "Community & Event Management", "Other (Specify)"];
-const LOOKING_FOR_OPTIONS = ["Internships", "Freelance Projects", "Full-time Roles", "Part-time Roles", "Collaborations", "Co-founders", "Mentorship (Giving/Seeking)", "Investment (Giving/Seeking)", "Hiring talent"];
 const AVAILABILITY_OPTIONS = ["Full-time", "Part-time", "Nights & Weekends", "Project-based"];
 const WORK_MODE_OPTIONS = ["Remote", "Hybrid", "On-site", "Flexible"];
 
@@ -367,7 +366,6 @@ export default function IndividualOnboard() {
   const [skillOther, setSkillOther] = useState("");
   const [availability, setAvailability] = useState("");
   const [workMode, setWorkMode] = useState("");
-  const [lookingFor, setLookingFor] = useState<string[]>([]);
 
   const hasThreeStepRole = roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r));
   const hasTwoStepRole = roles.some(r => ["Founder", "Investor", "Consultant / Mentor / Advisor", "Content Creator / Community Admin"].includes(r));
@@ -476,13 +474,13 @@ export default function IndividualOnboard() {
       return fullName.trim() && roles.length > 0 && userLocation.trim() && isEmailValid;
     }
     if (step === 1) {
-      if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || !startupIndustry || !startupTeamSize || !isRegistered || !productDesc)) return false;
-      if (roles.includes("Investor") && (!investorType || !ticketSize || preferredIndustries.length === 0)) return false;
+      if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || !startupIndustry || (startupIndustry === "Other (Specify)" && !startupIndustryOther) || !startupTeamSize || !isRegistered || !productDesc)) return false;
+      if (roles.includes("Investor") && (!investorType || (investorType === "Other (Specify)" && !investorTypeOther) || !ticketSize || preferredIndustries.length === 0 || (preferredIndustries.includes("Other (Specify)") && !preferredIndustriesOther))) return false;
       if (roles.includes("Student") && (!institution || !course || !studyYear)) return false;
       if (roles.includes("Working Professional") && (!currentCompany || !jobTitle || !totalExp)) return false;
       if (roles.includes("Freelancer / Service Provider") && (!freelanceExp || !engagementModel || !budgetRange)) return false;
-      if (roles.includes("Consultant / Mentor / Advisor") && (!consultantExp || supportTypes.length === 0 || niche.length === 0)) return false;
-      if (roles.includes("Content Creator / Community Admin") && (platforms.length === 0 || !audienceSize || niche.length === 0)) return false;
+      if (roles.includes("Consultant / Mentor / Advisor") && (!consultantExp || supportTypes.length === 0 || (supportTypes.includes("Other (Specify)") && !adminContact) || niche.length === 0 || (niche.includes("Other (Specify)") && !otherRoleSpec))) return false;
+      if (roles.includes("Content Creator / Community Admin") && (platforms.length === 0 || (platforms.includes("Other (Specify)") && !platformOther) || !audienceSize || niche.length === 0 || (niche.includes("Other (Specify)") && !nicheOther))) return false;
       return true;
     }
     if (step === 2) {
@@ -518,7 +516,6 @@ export default function IndividualOnboard() {
 
       founder_status: isFounderRole ? founderStatus : undefined,
       skills: skills.includes("Other (Specify)") ? [...skills.filter(s => s !== "Other (Specify)"), skillOther].filter(Boolean) : skills,
-      looking_for: lookingFor, // Using existing lookingFor state
       availability, // Using existing availability state
       work_mode: workMode, // Using existing workMode state
 
@@ -839,13 +836,7 @@ export default function IndividualOnboard() {
               <Dropdown label="Availability" options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
               <Dropdown label="Preferred Work Mode" options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
             </div>
-            <MultiSelectDropdown
-              label="Looking For"
-              options={LOOKING_FOR_OPTIONS}
-              selected={lookingFor}
-              onToggle={(v) => toggle(setLookingFor, v)}
-              placeholder="What are you looking for?"
-            />
+            <p className="text-xs text-white/40 italic">We'll use your profile details to find relevant matches.</p>
           </div>
         )}
         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">

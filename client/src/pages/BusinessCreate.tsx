@@ -41,7 +41,8 @@ export default function BusinessCreate() {
     description: "",
     team_size: "",
     location: "",
-    founded_year: new Date().getFullYear()
+    founded_year: new Date().getFullYear(),
+    business_type_other: ""
   });
 
   const handleInputChange = (field: string, value: any) => {
@@ -64,6 +65,10 @@ export default function BusinessCreate() {
     }
     if (!formData.business_type) {
       toast({ title: "Business type is required", variant: "destructive" });
+      return false;
+    }
+    if (formData.business_type === "Other (Specify)" && !formData.business_type_other.trim()) {
+      toast({ title: "Please specify business type", variant: "destructive" });
       return false;
     }
     return true;
@@ -90,6 +95,7 @@ export default function BusinessCreate() {
       // Validate with Zod
       const validated = insertBusinessSchema.parse({
         ...formData,
+        business_type: formData.business_type === "Other (Specify)" ? formData.business_type_other : formData.business_type,
         industry: formData.industry.length > 0 ? formData.industry : undefined,
         website: formatUrl(formData.website),
         linkedin_url: formatUrl(formData.linkedin_url),
@@ -199,9 +205,23 @@ export default function BusinessCreate() {
                       {BUSINESS_TYPES.map(type => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
+                      <SelectItem value="Other (Specify)">Other (Specify)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                {formData.business_type === "Other (Specify)" && (
+                  <div>
+                    <Label htmlFor="business_type_other">Specify Business Type *</Label>
+                    <Input
+                      id="business_type_other"
+                      value={formData.business_type_other}
+                      onChange={(e) => handleInputChange("business_type_other", e.target.value)}
+                      placeholder="e.g. Cooperative, Non-profit"
+                      className="bg-white/5 border-white/10"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <Label>Industry</Label>

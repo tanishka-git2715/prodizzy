@@ -228,10 +228,12 @@ export default function PartnerOnboard() {
   const [certifications, setCertifications] = useState("");
 
   // Step 6: Intent + Account
-  const [lookingFor, setLookingFor] = useState("");
   const [monthlyCapacity, setMonthlyCapacity] = useState("");
   const [preferredBudgetRange, setPreferredBudgetRange] = useState("");
   const [password, setPassword] = useState("");
+
+  const [partnerTypeOther, setPartnerTypeOther] = useState("");
+  const [pricingModelOther, setPricingModelOther] = useState("");
 
   // --- Persistence Logic ---
   const STORAGE_KEY = "prodizzy_onboard_partner_v1";
@@ -258,9 +260,10 @@ export default function PartnerOnboard() {
         if (data.workMode) setWorkMode(data.workMode);
         if (data.portfolioLinks) setPortfolioLinks(data.portfolioLinks);
         if (data.certifications) setCertifications(data.certifications);
-        if (data.lookingFor) setLookingFor(data.lookingFor);
         if (data.monthlyCapacity) setMonthlyCapacity(data.monthlyCapacity);
         if (data.preferredBudgetRange) setPreferredBudgetRange(data.preferredBudgetRange);
+        if (data.partnerTypeOther) setPartnerTypeOther(data.partnerTypeOther);
+        if (data.pricingModelOther) setPricingModelOther(data.pricingModelOther);
         if (typeof data.step === "number") setStep(data.step);
       } catch (e) {
         console.error("Failed to parse saved onboarding data", e);
@@ -274,7 +277,8 @@ export default function PartnerOnboard() {
       companyName, role, fullName, email, website, linkedinUrl,
       partnerType, servicesOffered, stagesServed, pricingModel, averageDealSize,
       teamSize, yearsExperience, workMode, portfolioLinks, certifications,
-      lookingFor, monthlyCapacity, preferredBudgetRange,
+      monthlyCapacity, preferredBudgetRange,
+      partnerTypeOther, pricingModelOther,
       step
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -282,7 +286,8 @@ export default function PartnerOnboard() {
     companyName, role, fullName, email, website, linkedinUrl,
     partnerType, servicesOffered, stagesServed, pricingModel, averageDealSize,
     teamSize, yearsExperience, workMode, portfolioLinks, certifications,
-    lookingFor, monthlyCapacity, preferredBudgetRange,
+     monthlyCapacity, preferredBudgetRange,
+     partnerTypeOther, pricingModelOther,
     step
   ]);
 
@@ -317,8 +322,8 @@ export default function PartnerOnboard() {
   function canProceed() {
     switch (step) {
       case 0: return companyName.trim() && role.trim() && fullName.trim() && email.trim();
-      case 1: return partnerType && servicesOffered.trim() && teamSize && yearsExperience.trim() && workMode;
-      case 2: return lookingFor && pricingModel;
+      case 1: return partnerType && (partnerType !== "Other (Specify)" || partnerTypeOther.trim()) && servicesOffered.trim() && teamSize && yearsExperience.trim() && workMode;
+      case 2: return pricingModel && (pricingModel !== "Other (Specify)" || pricingModelOther.trim());
       default: return true;
     }
   }
@@ -345,17 +350,16 @@ export default function PartnerOnboard() {
         email,
         website: website || undefined,
         linkedin_url: linkedinUrl || undefined,
-        partner_type: partnerType,
+        partner_type: partnerType === "Other (Specify)" ? partnerTypeOther : partnerType,
         services_offered: servicesOffered,
         stages_served: stagesServed,
-        pricing_model: pricingModel,
+        pricing_model: pricingModel === "Other (Specify)" ? pricingModelOther : pricingModel,
         average_deal_size: averageDealSize || undefined,
         team_size: teamSize,
         years_experience: yearsExperience,
         work_mode: workMode,
         portfolio_links: portfolioLinks || undefined,
         certifications: certifications || undefined,
-        looking_for: lookingFor,
         monthly_capacity: monthlyCapacity || undefined,
         preferred_budget_range: preferredBudgetRange || undefined,
         onboarding_completed: true,
@@ -392,10 +396,19 @@ export default function PartnerOnboard() {
       <div className="space-y-4">
         <Dropdown
           label="What type of partner are you?"
-          options={["Agency", "Investor", "Service Provider", "Institutional Firm"]}
+          options={["Agency", "Investor", "Service Provider", "Institutional Firm", "Other (Specify)"]}
           value={partnerType}
           onChange={setPartnerType}
         />
+
+        {partnerType === "Other (Specify)" && (
+          <Field
+            label="Specify Partner Type"
+            value={partnerTypeOther}
+            onChange={setPartnerTypeOther}
+            placeholder="e.g. Legal Firm, Marketing Agency"
+          />
+        )}
 
         <Field
           label="What services do you offer?"
@@ -429,18 +442,20 @@ export default function PartnerOnboard() {
       <StepHeader step={2} title="Requirements" />
       <div className="space-y-4">
         <Dropdown
-          label="What are you looking for?"
-          options={["Clients", "Deal flow", "Partnerships"]}
-          value={lookingFor}
-          onChange={setLookingFor}
-        />
-
-        <Dropdown
           label="Pricing model"
-          options={["Fixed", "Hourly", "Commission", "Retainer"]}
+          options={["Fixed", "Hourly", "Commission", "Retainer", "Other (Specify)"]}
           value={pricingModel}
           onChange={setPricingModel}
         />
+
+        {pricingModel === "Other (Specify)" && (
+          <Field
+            label="Specify Pricing Model"
+            value={pricingModelOther}
+            onChange={setPricingModelOther}
+            placeholder="e.g. Performance-based, Hybrid"
+          />
+        )}
 
         <Field label="Average deal size (optional)" value={averageDealSize} onChange={setAverageDealSize} placeholder="e.g. $5k" />
         <Field label="Monthly capacity (optional)" value={monthlyCapacity} onChange={setMonthlyCapacity} placeholder="e.g. 2 new slots" />
