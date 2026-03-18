@@ -110,17 +110,13 @@ export default function Home() {
     return false;
   });
 
-  // 1. PRIORITY: Redirect returning users to dashboard or onboarding
+  // 1. PRIORITY: Cleanup intents for returning users
   useEffect(() => {
     if (session && !loadingProfile && profileStatus) {
-      if (profileStatus.hasCompletedProfile) {
-        if (location === "/") setLocation("/dashboard");
+      // Cleanup any pending intents for returning users who have completed profile
+      if (profileStatus.hasCompletedProfile && pendingRole) {
+        setPendingRole(null);
       }
-      // REMOVED: Automatic redirect to /individual-onboard. 
-      // This allows users to remain on the landing page if they choose.
-
-      // Cleanup any pending intents for returning users
-      if (profileStatus.hasCompletedProfile && pendingRole) setPendingRole(null);
     }
   }, [session, profileStatus, loadingProfile, location, setLocation, pendingRole, showAuthModal]);
 
