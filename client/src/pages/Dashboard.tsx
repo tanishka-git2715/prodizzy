@@ -943,23 +943,25 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
                       </div>
                     )}
 
-                    <div className="space-y-6 pt-4 border-t border-white/5">
-                      <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Preferences & Availability</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
-                          <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                    {roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r)) && (
+                      <div className="space-y-6 pt-4 border-t border-white/5">
+                        <h3 className="text-xs font-semibold text-white/20 uppercase tracking-widest border-b border-white/5 pb-2">Preferences & Availability</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Availability</p>
+                            <PickOne options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-xs text-white/35 uppercase tracking-wider">Preferred Work Mode</p>
+                            <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                          </div>
                         </div>
                         <div className="space-y-2">
-                          <p className="text-xs text-white/35 uppercase tracking-wider">Preferred Work Mode</p>
-                          <PickOne options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+                          <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
+                          <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-xs text-white/35 uppercase tracking-wider">Looking For</p>
-                        <PickMany options={LOOKING_FOR_OPTIONS} value={lookingFor} onChange={setLookingFor} />
-                      </div>
-                    </div>
+                    )}
 
 
                   <div className="pt-6 border-t border-white/10 flex gap-4">

@@ -367,9 +367,13 @@ export default function IndividualOnboard() {
   const [workMode, setWorkMode] = useState("");
   const [lookingFor, setLookingFor] = useState<string[]>([]);
 
-  const effectiveTotalSteps = roles.includes("Other (Specify)") ? 1
-    : (roles.includes("Founder") || roles.includes("Investor") || roles.includes("Consultant / Mentor / Advisor") || roles.includes("Content Creator / Community Admin")) ? 2
-      : 3;
+  const hasThreeStepRole = roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r));
+  const hasTwoStepRole = roles.some(r => ["Founder", "Investor", "Consultant / Mentor / Advisor", "Content Creator / Community Admin"].includes(r));
+
+  const effectiveTotalSteps = roles.includes("Other (Specify)") && roles.length === 1 ? 1
+    : hasThreeStepRole ? 3
+      : hasTwoStepRole ? 2
+        : 1;
 
   // --- Logic ---
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
@@ -377,6 +381,26 @@ export default function IndividualOnboard() {
   useEffect(() => {
     if (session?.user?.email && !email) setEmail(session.user.email);
   }, [session, email]);
+
+  // If already logged in with a completed profile, send to dashboard
+  const { data: existingProfile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const r = await fetch("/api/profile", {
+        headers: { "Content-Type": "application/json" },
+      });
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error("Failed to fetch profile");
+      return r.json();
+    },
+    enabled: !!session,
+  });
+
+  useEffect(() => {
+    if (existingProfile?.onboarding_completed) {
+      setLocation("/dashboard");
+    }
+  }, [existingProfile, setLocation]);
 
   useEffect(() => {
     setError(""); // Clear any errors when switching roles
@@ -399,7 +423,6 @@ export default function IndividualOnboard() {
     setCurrentCompany("");
     setJobTitle("");
     setTotalExp("");
-    setNoticePeriod("");
     setFreelanceExp("");
     setNotableClients("");
     setEngagementModel("");
@@ -454,7 +477,7 @@ export default function IndividualOnboard() {
       if (roles.includes("Founder") && (!founderStatus || !startupCompanyName || !startupRole || !startupIndustry || !startupTeamSize || !isRegistered || !productDesc)) return false;
       if (roles.includes("Investor") && (!investorType || !ticketSize || preferredIndustries.length === 0)) return false;
       if (roles.includes("Student") && (!institution || !course || !studyYear)) return false;
-      if (roles.includes("Working Professional") && (!currentCompany || !jobTitle || !totalExp || !noticePeriod)) return false;
+      if (roles.includes("Working Professional") && (!currentCompany || !jobTitle || !totalExp)) return false;
       if (roles.includes("Freelancer / Service Provider") && (!freelanceExp || !engagementModel || !budgetRange)) return false;
       if (roles.includes("Consultant / Mentor / Advisor") && (!consultantExp || supportTypes.length === 0 || niche.length === 0)) return false;
       if (roles.includes("Content Creator / Community Admin") && (platforms.length === 0 || !audienceSize || niche.length === 0)) return false;
@@ -794,8 +817,21 @@ export default function IndividualOnboard() {
             )}
           </div>
         )}
-        <Dropdown label="Availability" options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
-        <Dropdown label="Preferred Work Mode" options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+        {roles.some(r => ["Student", "Working Professional", "Freelancer / Service Provider"].includes(r)) && (
+          <div className="space-y-6 pt-4 border-t border-white/5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Dropdown label="Availability" options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+              <Dropdown label="Preferred Work Mode" options={WORK_MODE_OPTIONS} value={workMode} onChange={setWorkMode} />
+            </div>
+            <MultiSelectDropdown
+              label="Looking For"
+              options={LOOKING_FOR_OPTIONS}
+              selected={lookingFor}
+              onToggle={(v) => toggle(setLookingFor, v)}
+              placeholder="What are you looking for?"
+            />
+          </div>
+        )}
         <div className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
           <p className="text-[11px] text-white/30 leading-relaxed italic">By completing this profile, you'll be matched with founders, collaborators, and opportunities tailored to your expertise.</p>
         </div>
