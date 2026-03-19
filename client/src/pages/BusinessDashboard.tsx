@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy } from "lucide-react";
+import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy, BadgeCheck } from "lucide-react";
 import type { Business, TeamMember } from "@shared/schema";
 import { ApplicationsList } from "@/components/applications/ApplicationsList";
 
@@ -200,7 +200,7 @@ export default function BusinessDashboard() {
             <Button
               variant="ghost"
               onClick={() => setLocation("/dashboard")}
-              className="mb-4 text-white/60 hover:text-white"
+              className="mb-4 text-white/60 hover:text-white p-0 h-auto hover:bg-transparent"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
@@ -208,7 +208,15 @@ export default function BusinessDashboard() {
 
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold mb-1">{business.business_name}</h1>
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-3xl font-bold">{business.business_name}</h1>
+                  {business.approved && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      <BadgeCheck className="w-3.5 h-3.5" />
+                      Verified
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 text-sm text-white/60">
                   <span>{business.business_type}</span>
                   {business.location && (
@@ -227,15 +235,6 @@ export default function BusinessDashboard() {
               </div>
             </div>
           </div>
-
-          <Button
-            onClick={() => setLocation(`/business/${businessId}/settings`)}
-            variant="outline"
-            className="bg-white/5 border-white/10"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
