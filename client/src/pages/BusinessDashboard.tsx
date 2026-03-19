@@ -4,7 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy, BadgeCheck } from "lucide-react";
+import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy, BadgeCheck, Edit2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const BUSINESS_TYPES = ["Startup", "Agency", "Enterprise", "Institution"];
+const INDUSTRIES = [
+  "SaaS", "FinTech", "EdTech", "HealthTech", "E-commerce",
+  "AI/ML", "Gaming", "Enterprise Software", "Consumer Apps", "Other"
+];
 import type { Business, TeamMember } from "@shared/schema";
 import { ApplicationsList } from "@/components/applications/ApplicationsList";
 
@@ -14,7 +25,7 @@ export default function BusinessDashboard() {
   const { toast } = useToast();
   const businessId = params?.id;
 
-  const { data: business, isLoading: loadingBusiness } = useQuery<Business>({
+  const { data: business, isLoading: loadingBusiness, refetch: refetchBusiness } = useQuery<Business>({
     queryKey: ["business", businessId],
     queryFn: async () => {
       const response = await fetch(`/api/business/${businessId}`, {
@@ -27,6 +38,114 @@ export default function BusinessDashboard() {
     },
     enabled: !!businessId
   });
+
+  const [showEditBusiness, setShowEditBusiness] = useState(false);
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    business_name: "",
+    business_type: "",
+    industry: [] as string[],
+    website: "",
+    linkedin_url: "",
+    description: "",
+    team_size: "",
+    location: "",
+    founded_year: new Date().getFullYear(),
+    business_type_other: ""
+  });
+
+  useEffect(() => {
+    if (business && showEditBusiness) {
+      setEditFormData({
+        business_name: business.business_name || "",
+        business_type: BUSINESS_TYPES.includes(business.business_type || "") ? business.business_type : (business.business_type ? "Other (Specify)" : ""),
+        industry: business.industry || [],
+        website: business.website || "",
+        linkedin_url: business.linkedin_url || "",
+        description: business.description || "",
+        team_size: business.team_size || "",
+        location: business.location || "",
+        founded_year: business.founded_year || new Date().getFullYear(),
+        business_type_other: business.business_type && !BUSINESS_TYPES.includes(business.business_type) ? business.business_type : ""
+      });
+    }
+  }, [business, showEditBusiness]);
+
+  const handleEditInputChange = (field: string, value: any) => {
+    setEditFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleEditIndustryToggle = (industry: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      industry: prev.industry.includes(industry)
+        ? prev.industry.filter(i => i !== industry)
+        : [...prev.industry, industry]
+    }));
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editFormData.business_name.trim()) {
+      toast({ title: "Business name is required", variant: "destructive" });
+      return;
+    }
+    if (!editFormData.business_type) {
+      toast({ title: "Business type is required", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      setSubmittingEdit(true);
+      const formatUrl = (url?: string) => {
+        if (!url || !url.trim()) return undefined;
+        let formatted = url.trim();
+        if (!/^https?:\/\//i.test(formatted)) {
+          formatted = `https://${formatted}`;
+        }
+        return formatted;
+      };
+
+      const payload = {
+        business_name: editFormData.business_name,
+        business_type: editFormData.business_type === "Other (Specify)" ? editFormData.business_type_other : editFormData.business_type,
+        industry: editFormData.industry.length > 0 ? editFormData.industry : [],
+        website: formatUrl(editFormData.website) || "",
+        linkedin_url: formatUrl(editFormData.linkedin_url) || "",
+        description: editFormData.description || "",
+        team_size: editFormData.team_size || "",
+        location: editFormData.location || "",
+        founded_year: editFormData.founded_year || undefined
+      };
+
+      const response = await fetch(`/api/business/${businessId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update business");
+      }
+
+      toast({
+        title: "Success",
+        description: "Business profile updated successfully"
+      });
+
+      setShowEditBusiness(false);
+      refetchBusiness();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update business",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
 
   const { data: members, isLoading: loadingMembers, refetch: refetchMembers } = useQuery<TeamMember[]>({
     queryKey: ["business-members", businessId],
@@ -241,10 +360,147 @@ export default function BusinessDashboard() {
           {/* Business Info */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="bg-white/5 border-white/10">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   Business Information
                 </CardTitle>
+                <Dialog open={showEditBusiness} onOpenChange={setShowEditBusiness}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white/60 hover:text-white">
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px] border-white/10 bg-zinc-950 text-white max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Edit Business Information</DialogTitle>
+                      <DialogDescription className="text-white/60">Update your company profile details here.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4 text-left">
+                      <div>
+                        <Label htmlFor="business_name">Business Name *</Label>
+                        <Input
+                          id="business_name"
+                          value={editFormData.business_name}
+                          onChange={(e) => handleEditInputChange("business_name", e.target.value)}
+                          className="bg-white/5 border-white/10 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="business_type">Business Type *</Label>
+                        <Select
+                          value={editFormData.business_type}
+                          onValueChange={(value) => handleEditInputChange("business_type", value)}
+                        >
+                          <SelectTrigger className="bg-white/5 border-white/10 mt-1">
+                            <SelectValue placeholder="Select business type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {BUSINESS_TYPES.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                            <SelectItem value="Other (Specify)">Other (Specify)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {editFormData.business_type === "Other (Specify)" && (
+                        <div>
+                          <Label htmlFor="business_type_other">Specify Business Type *</Label>
+                          <Input
+                            id="business_type_other"
+                            value={editFormData.business_type_other}
+                            onChange={(e) => handleEditInputChange("business_type_other", e.target.value)}
+                            className="bg-white/5 border-white/10 mt-1"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <Label>Industry</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {INDUSTRIES.map(industry => (
+                            <button
+                              key={industry}
+                              type="button"
+                              onClick={() => handleEditIndustryToggle(industry)}
+                              className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                                editFormData.industry.includes(industry)
+                                  ? 'bg-[#E63946]/15 border-[#E63946]/30 text-[#E63946]'
+                                  : 'bg-white/5 border-white/10 text-white/70 hover:border-white/30'
+                              }`}
+                            >
+                              {industry}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          value={editFormData.location}
+                          onChange={(e) => handleEditInputChange("location", e.target.value)}
+                          className="bg-white/5 border-white/10 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          value={editFormData.description}
+                          onChange={(e) => handleEditInputChange("description", e.target.value)}
+                          rows={4}
+                          className="bg-white/5 border-white/10 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="website">Website</Label>
+                        <Input
+                          id="website"
+                          value={editFormData.website}
+                          onChange={(e) => handleEditInputChange("website", e.target.value)}
+                          className="bg-white/5 border-white/10 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+                        <Input
+                          id="linkedin_url"
+                          value={editFormData.linkedin_url}
+                          onChange={(e) => handleEditInputChange("linkedin_url", e.target.value)}
+                          className="bg-white/5 border-white/10 mt-1"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="team_size">Team Size</Label>
+                          <Input
+                            id="team_size"
+                            value={editFormData.team_size}
+                            onChange={(e) => handleEditInputChange("team_size", e.target.value)}
+                            className="bg-white/5 border-white/10 mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="founded_year">Founded Year</Label>
+                          <Input
+                            id="founded_year"
+                            type="number"
+                            value={editFormData.founded_year || ""}
+                            onChange={(e) => handleEditInputChange("founded_year", parseInt(e.target.value) || undefined)}
+                            className="bg-white/5 border-white/10 mt-1"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={() => setShowEditBusiness(false)} className="bg-white/5 border-white/10">
+                          Cancel
+                        </Button>
+                        <Button onClick={handleEditSubmit} disabled={submittingEdit} className="bg-[#E63946] hover:bg-[#E63946]/90 text-white">
+                          {submittingEdit ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardHeader>
               <CardContent className="space-y-4">
                 {business.description && (
@@ -270,7 +526,7 @@ export default function BusinessDashboard() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                <div className="grid grid-cols-2 gap-4">
                   {business.website && (
                     <div>
                       <h3 className="text-sm font-medium text-white/60 mb-1">Website</h3>
