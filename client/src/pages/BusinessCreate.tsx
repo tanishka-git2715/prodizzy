@@ -14,15 +14,16 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 const BUSINESS_TYPES = ["Startup", "Agency", "Enterprise", "Institution"];
 
 const INDUSTRIES = [
-  "SaaS",
-  "FinTech",
-  "EdTech",
-  "HealthTech",
-  "E-commerce",
-  "AI/ML",
-  "Gaming",
-  "Enterprise Software",
-  "Consumer Apps",
+  "Software & AI",
+  "E-commerce & Retail",
+  "Finance & Payments",
+  "Healthcare & Wellness",
+  "Education & Training",
+  "Food & Beverage",
+  "Transportation & Delivery",
+  "Real Estate & Construction",
+  "Marketing & Advertising",
+  "Energy & Sustainability",
   "Other"
 ];
 
@@ -74,11 +75,44 @@ export default function BusinessCreate() {
       toast({ title: "Please specify business type", variant: "destructive" });
       return false;
     }
+    if (formData.industry.length === 0) {
+      toast({ title: "Please select at least one industry", variant: "destructive" });
+      return false;
+    }
+    if (!formData.location.trim()) {
+      toast({ title: "Location is required", variant: "destructive" });
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (!formData.description.trim()) {
+      toast({ title: "Description is required", variant: "destructive" });
+      return false;
+    }
+    if (!formData.website.trim()) {
+      toast({ title: "Website URL is required", variant: "destructive" });
+      return false;
+    }
+    if (!formData.linkedin_url.trim()) {
+      toast({ title: "LinkedIn URL is required", variant: "destructive" });
+      return false;
+    }
+    if (!formData.team_size.trim()) {
+      toast({ title: "Team size is required", variant: "destructive" });
+      return false;
+    }
+    if (!formData.founded_year) {
+      toast({ title: "Founded year is required", variant: "destructive" });
+      return false;
+    }
     return true;
   };
 
   const handleNext = () => {
     if (step === 1 && !validateStep1()) return;
+    if (step === 2 && !validateStep2()) return;
     setStep(prev => prev + 1);
   };
 
@@ -151,6 +185,15 @@ export default function BusinessCreate() {
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-2xl mx-auto">
+        <Button
+          variant="ghost"
+          onClick={() => setLocation("/dashboard")}
+          className="mb-6 -ml-4 text-white/50 hover:text-white hover:bg-white/10"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Button>
+
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold mb-2">Create Business Profile</h1>
@@ -227,7 +270,7 @@ export default function BusinessCreate() {
                 )}
 
                 <div>
-                  <Label>Industry</Label>
+                  <Label>Industry *</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {INDUSTRIES.map(industry => (
                       <button
@@ -247,7 +290,7 @@ export default function BusinessCreate() {
                 </div>
 
                 <div>
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">Location *</Label>
                   <Input
                     id="location"
                     value={formData.location}
@@ -263,21 +306,21 @@ export default function BusinessCreate() {
             {step === 2 && (
               <>
                 <div>
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Description *</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => handleInputChange("description", e.target.value)}
                     placeholder="Tell us about your business..."
                     rows={4}
-                    className="bg-white/5 border-white/10"
+                    className="bg-white/5 border-white/10 resize-none"
                   />
                 </div>
 
 
 
                 <div>
-                  <Label htmlFor="website">Website</Label>
+                  <Label htmlFor="website">Website *</Label>
                   <Input
                     id="website"
                     value={formData.website}
@@ -288,7 +331,7 @@ export default function BusinessCreate() {
                 </div>
 
                 <div>
-                  <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+                  <Label htmlFor="linkedin_url">LinkedIn URL *</Label>
                   <Input
                     id="linkedin_url"
                     value={formData.linkedin_url}
@@ -300,7 +343,7 @@ export default function BusinessCreate() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="team_size">Team Size</Label>
+                    <Label htmlFor="team_size">Team Size *</Label>
                     <Input
                       id="team_size"
                       value={formData.team_size}
@@ -311,7 +354,7 @@ export default function BusinessCreate() {
                   </div>
 
                   <div>
-                    <Label htmlFor="founded_year">Founded Year</Label>
+                    <Label htmlFor="founded_year">Founded Year *</Label>
                     <Input
                       id="founded_year"
                       type="number"
@@ -358,13 +401,6 @@ export default function BusinessCreate() {
                       </div>
                     )}
                   </div>
-                </div>
-
-                <div className="p-4 rounded-lg bg-[#E63946]/10 border border-[#E63946]/20">
-                  <p className="text-sm text-[#E63946]">
-                    Your business profile will be reviewed by our admin team before going live.
-                    You'll be notified via email once approved.
-                  </p>
                 </div>
               </div>
             )}
