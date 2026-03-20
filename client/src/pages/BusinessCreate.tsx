@@ -24,7 +24,7 @@ const INDUSTRIES = [
   "Real Estate & Construction",
   "Marketing & Advertising",
   "Energy & Sustainability",
-  "Other"
+  "Other (Specify)"
 ];
 
 export default function BusinessCreate() {
@@ -46,7 +46,8 @@ export default function BusinessCreate() {
     team_size: "",
     location: "",
     founded_year: new Date().getFullYear(),
-    business_type_other: ""
+    business_type_other: "",
+    industry_other: ""
   });
 
   const handleInputChange = (field: string, value: any) => {
@@ -77,6 +78,10 @@ export default function BusinessCreate() {
     }
     if (formData.industry.length === 0) {
       toast({ title: "Please select at least one industry", variant: "destructive" });
+      return false;
+    }
+    if (formData.industry.includes("Other (Specify)") && !formData.industry_other.trim()) {
+      toast({ title: "Please specify your industry", variant: "destructive" });
       return false;
     }
     if (!formData.location.trim()) {
@@ -133,7 +138,7 @@ export default function BusinessCreate() {
       const validated = insertBusinessSchema.parse({
         ...formData,
         business_type: formData.business_type === "Other (Specify)" ? formData.business_type_other : formData.business_type,
-        industry: formData.industry.length > 0 ? formData.industry : undefined,
+        industry: formData.industry.map(i => i === "Other (Specify)" ? formData.industry_other : i),
         website: formatUrl(formData.website),
         linkedin_url: formatUrl(formData.linkedin_url),
         description: formData.description || undefined,
@@ -289,6 +294,19 @@ export default function BusinessCreate() {
                   </div>
                 </div>
 
+                {formData.industry.includes("Other (Specify)") && (
+                  <div>
+                    <Label htmlFor="industry_other">Specify Industry *</Label>
+                    <Input
+                      id="industry_other"
+                      value={formData.industry_other}
+                      onChange={(e) => handleInputChange("industry_other", e.target.value)}
+                      placeholder="e.g. Space Tech, AgriTech"
+                      className="bg-white/5 border-white/10"
+                    />
+                  </div>
+                )}
+
                 <div>
                   <Label htmlFor="location">Location *</Label>
                   <Input
@@ -385,21 +403,33 @@ export default function BusinessCreate() {
                     {formData.industry.length > 0 && (
                       <div className="flex justify-between">
                         <span className="text-white/60">Industry:</span>
-                        <span>{formData.industry.join(", ")}</span>
+                        <span>{formData.industry.map(i => i === "Other (Specify)" ? formData.industry_other : i).join(", ")}</span>
                       </div>
                     )}
-                    {formData.location && (
-                      <div className="flex justify-between">
-                        <span className="text-white/60">Location:</span>
-                        <span>{formData.location}</span>
-                      </div>
-                    )}
-                    {formData.team_size && (
-                      <div className="flex justify-between">
-                        <span className="text-white/60">Team Size:</span>
-                        <span>{formData.team_size}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Location:</span>
+                      <span>{formData.location}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Team Size:</span>
+                      <span>{formData.team_size}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Founded Year:</span>
+                      <span>{formData.founded_year}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Website:</span>
+                      <span className="truncate max-w-[300px] text-right">{formData.website}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/60">LinkedIn:</span>
+                      <span className="truncate max-w-[300px] text-right">{formData.linkedin_url}</span>
+                    </div>
+                    <div className="pt-3 mt-3 border-t border-white/10">
+                      <span className="text-white/60 text-xs uppercase tracking-wider block mb-2">Description</span>
+                      <p className="text-sm leading-relaxed text-white/90 whitespace-pre-wrap">{formData.description}</p>
+                    </div>
                   </div>
                 </div>
               </div>

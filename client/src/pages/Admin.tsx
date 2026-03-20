@@ -240,40 +240,62 @@ function BusinessProfileRow({ profile, profileType }: { profile: Business; profi
             transition={{ duration: 0.25 }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-5 border-t border-white/6 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              {profile.description && (
+            <div className="px-5 pb-6 border-t border-white/6 pt-5 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                <div>
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Company Name</h3>
+                  <p className="text-white font-medium">{profile.business_name || "—"}</p>
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Business Type</h3>
+                  <p className="text-white font-medium">{profile.business_type || "—"}</p>
+                </div>
                 <div className="sm:col-span-2">
-                  <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Description</p>
-                  <p className="text-white/65 leading-relaxed">{profile.description}</p>
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-2">Industries</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.industry?.map((ind: string) => <Tag key={ind} label={ind} />)}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Location</h3>
+                  <p className="text-white font-medium">{profile.location || "—"}</p>
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Team Size</h3>
+                  <p className="text-white font-medium">{profile.team_size || "—"}</p>
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Founded Year</h3>
+                  <p className="text-white font-medium">{profile.founded_year || "—"}</p>
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Website</h3>
+                  {profile.website ? (
+                    <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-medium">
+                      {profile.website.replace(/^https?:\/\//, '')}
+                    </a>
+                  ) : (
+                    <p className="text-white/20 italic">Not specified</p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">LinkedIn</h3>
+                  {profile.linkedin_url ? (
+                    <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-medium">
+                      View Profile
+                    </a>
+                  ) : (
+                    <p className="text-white/20 italic">Not specified</p>
+                  )}
+                </div>
+              </div>
+
+              {profile.description && (
+                <div className="pt-4 border-t border-white/6">
+                  <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-2">Description</h3>
+                  <p className="text-white/75 leading-relaxed text-sm whitespace-pre-wrap">{profile.description}</p>
                 </div>
               )}
-              <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Location</p>
-                <p className="text-white/65">{profile.location || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Team Size</p>
-                <p className="text-white/65">{profile.team_size || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Founded Year</p>
-                <p className="text-white/65">{profile.founded_year || "—"}</p>
-              </div>
-              <div className="sm:col-span-2 pt-2 border-t border-white/6">
-                <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Links</p>
-                <div className="flex flex-wrap gap-4 text-xs text-white/50">
-                  {profile.website && (
-                    <a href={ensureHttps(profile.website)} target="_blank" rel="noreferrer" className="text-white/75 hover:underline">
-                      Website
-                    </a>
-                  )}
-                  {profile.linkedin_url && (
-                    <a href={ensureHttps(profile.linkedin_url)} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
-                      LinkedIn
-                    </a>
-                  )}
-                </div>
-              </div>
             </div>
           </motion.div>
         )}

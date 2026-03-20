@@ -13,8 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const BUSINESS_TYPES = ["Startup", "Agency", "Enterprise", "Institution"];
 const INDUSTRIES = [
-  "SaaS", "FinTech", "EdTech", "HealthTech", "E-commerce",
-  "AI/ML", "Gaming", "Enterprise Software", "Consumer Apps", "Other"
+  "Software & AI",
+  "E-commerce & Retail",
+  "Finance & Payments",
+  "Healthcare & Wellness",
+  "Education & Training",
+  "Food & Beverage",
+  "Transportation & Delivery",
+  "Real Estate & Construction",
+  "Marketing & Advertising",
+  "Energy & Sustainability",
+  "Other (Specify)"
 ];
 import type { Business, TeamMember } from "@shared/schema";
 import { ApplicationsList } from "@/components/applications/ApplicationsList";
@@ -51,7 +60,8 @@ export default function BusinessDashboard() {
     team_size: "",
     location: "",
     founded_year: new Date().getFullYear(),
-    business_type_other: ""
+    business_type_other: "",
+    industry_other: ""
   });
 
   useEffect(() => {
@@ -59,14 +69,15 @@ export default function BusinessDashboard() {
       setEditFormData({
         business_name: business.business_name || "",
         business_type: BUSINESS_TYPES.includes(business.business_type || "") ? business.business_type : (business.business_type ? "Other (Specify)" : ""),
-        industry: business.industry || [],
+        industry: (business.industry || []).map(ind => INDUSTRIES.includes(ind) ? ind : "Other (Specify)"),
         website: business.website || "",
         linkedin_url: business.linkedin_url || "",
         description: business.description || "",
         team_size: business.team_size || "",
         location: business.location || "",
         founded_year: business.founded_year || new Date().getFullYear(),
-        business_type_other: business.business_type && !BUSINESS_TYPES.includes(business.business_type) ? business.business_type : ""
+        business_type_other: business.business_type && !BUSINESS_TYPES.includes(business.business_type) ? business.business_type : "",
+        industry_other: (business.industry || []).find(ind => !INDUSTRIES.includes(ind)) || ""
       });
     }
   }, [business, showEditBusiness]);
@@ -93,6 +104,42 @@ export default function BusinessDashboard() {
       toast({ title: "Business type is required", variant: "destructive" });
       return;
     }
+    if (editFormData.business_type === "Other (Specify)" && !editFormData.business_type_other.trim()) {
+      toast({ title: "Please specify business type", variant: "destructive" });
+      return;
+    }
+    if (editFormData.industry.length === 0) {
+      toast({ title: "Please select at least one industry", variant: "destructive" });
+      return;
+    }
+    if (editFormData.industry.includes("Other (Specify)") && !editFormData.industry_other.trim()) {
+      toast({ title: "Please specify your industry", variant: "destructive" });
+      return;
+    }
+    if (!editFormData.location.trim()) {
+      toast({ title: "Location is required", variant: "destructive" });
+      return;
+    }
+    if (!editFormData.description.trim()) {
+      toast({ title: "Description is required", variant: "destructive" });
+      return;
+    }
+    if (!editFormData.website.trim()) {
+      toast({ title: "Website URL is required", variant: "destructive" });
+      return;
+    }
+    if (!editFormData.linkedin_url.trim()) {
+      toast({ title: "LinkedIn URL is required", variant: "destructive" });
+      return;
+    }
+    if (!editFormData.team_size.trim()) {
+      toast({ title: "Team size is required", variant: "destructive" });
+      return;
+    }
+    if (!editFormData.founded_year) {
+      toast({ title: "Founded year is required", variant: "destructive" });
+      return;
+    }
     
     try {
       setSubmittingEdit(true);
@@ -108,7 +155,7 @@ export default function BusinessDashboard() {
       const payload = {
         business_name: editFormData.business_name,
         business_type: editFormData.business_type === "Other (Specify)" ? editFormData.business_type_other : editFormData.business_type,
-        industry: editFormData.industry.length > 0 ? editFormData.industry : [],
+        industry: editFormData.industry.map(i => i === "Other (Specify)" ? editFormData.industry_other : i),
         website: formatUrl(editFormData.website) || "",
         linkedin_url: formatUrl(editFormData.linkedin_url) || "",
         description: editFormData.description || "",
@@ -414,7 +461,7 @@ export default function BusinessDashboard() {
                         </div>
                       )}
                       <div>
-                        <Label>Industry</Label>
+                        <Label>Industry *</Label>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {INDUSTRIES.map(industry => (
                             <button
@@ -432,8 +479,20 @@ export default function BusinessDashboard() {
                           ))}
                         </div>
                       </div>
+                      {editFormData.industry.includes("Other (Specify)") && (
+                        <div>
+                          <Label htmlFor="industry_other">Specify Industry *</Label>
+                          <Input
+                            id="industry_other"
+                            value={editFormData.industry_other}
+                            onChange={(e) => handleEditInputChange("industry_other", e.target.value)}
+                            placeholder="e.g. Space Tech, AgriTech"
+                            className="bg-white/5 border-white/10 mt-1"
+                          />
+                        </div>
+                      )}
                       <div>
-                        <Label htmlFor="location">Location</Label>
+                        <Label htmlFor="location">Location *</Label>
                         <Input
                           id="location"
                           value={editFormData.location}
@@ -442,45 +501,48 @@ export default function BusinessDashboard() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="description">Description *</Label>
                         <Textarea
                           id="description"
                           value={editFormData.description}
                           onChange={(e) => handleEditInputChange("description", e.target.value)}
                           rows={4}
-                          className="bg-white/5 border-white/10 mt-1"
+                          className="bg-white/5 border-white/10 mt-1 resize-none"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="website">Website</Label>
+                        <Label htmlFor="website">Website *</Label>
                         <Input
                           id="website"
                           value={editFormData.website}
                           onChange={(e) => handleEditInputChange("website", e.target.value)}
+                          placeholder="https://example.com"
                           className="bg-white/5 border-white/10 mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+                        <Label htmlFor="linkedin_url">LinkedIn URL *</Label>
                         <Input
                           id="linkedin_url"
                           value={editFormData.linkedin_url}
                           onChange={(e) => handleEditInputChange("linkedin_url", e.target.value)}
+                          placeholder="https://linkedin.com/company/..."
                           className="bg-white/5 border-white/10 mt-1"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="team_size">Team Size</Label>
+                          <Label htmlFor="team_size">Team Size *</Label>
                           <Input
                             id="team_size"
                             value={editFormData.team_size}
                             onChange={(e) => handleEditInputChange("team_size", e.target.value)}
+                            placeholder="e.g. 1-10"
                             className="bg-white/5 border-white/10 mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="founded_year">Founded Year</Label>
+                          <Label htmlFor="founded_year">Founded Year *</Label>
                           <Input
                             id="founded_year"
                             type="number"
@@ -502,72 +564,66 @@ export default function BusinessDashboard() {
                   </DialogContent>
                 </Dialog>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {business.description && (
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-8">
                   <div>
-                    <h3 className="text-sm font-medium text-white/60 mb-1">Description</h3>
-                    <p className="text-white/90">{business.description}</p>
+                    <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Company Name</h3>
+                    <p className="text-white font-medium">{business.business_name}</p>
                   </div>
-                )}
-
-                {business.industry && business.industry.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-white/60 mb-2">Industries</h3>
+                    <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Business Type</h3>
+                    <p className="text-white font-medium">{business.business_type}</p>
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-2">
+                    <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Industries</h3>
                     <div className="flex flex-wrap gap-2">
-                      {business.industry.map((ind) => (
+                      {business.industry?.map((ind) => (
                         <span
                           key={ind}
-                          className="px-3 py-1 rounded-full text-sm bg-blue-500/20 border border-blue-500/30 text-blue-300"
+                          className="px-3 py-1 rounded-full text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400"
                         >
                           {ind}
                         </span>
                       ))}
                     </div>
                   </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  {business.website && (
-                    <div>
-                      <h3 className="text-sm font-medium text-white/60 mb-1">Website</h3>
-                      <a
-                        href={business.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline text-sm"
-                      >
-                        {business.website}
+                  <div>
+                    <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Location</h3>
+                    <p className="text-white font-medium">{business.location}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Team Size</h3>
+                    <p className="text-white font-medium">{business.team_size}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Founded</h3>
+                    <p className="text-white font-medium">{business.founded_year}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Website</h3>
+                    {business.website ? (
+                      <a href={business.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline font-medium truncate block max-w-[200px]">
+                        {business.website.replace(/^https?:\/\//, '')}
                       </a>
-                    </div>
-                  )}
-
-                  {business.linkedin_url && (
-                    <div>
-                      <h3 className="text-sm font-medium text-white/60 mb-1">LinkedIn</h3>
-                      <a
-                        href={business.linkedin_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline text-sm"
-                      >
+                    ) : (
+                      <p className="text-white/30 text-sm italic">Not specified</p>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">LinkedIn</h3>
+                    {business.linkedin_url ? (
+                      <a href={business.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline font-medium">
                         View Profile
                       </a>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-white/30 text-sm italic">Not specified</p>
+                    )}
+                  </div>
+                </div>
 
-                  {business.team_size && (
-                    <div>
-                      <h3 className="text-sm font-medium text-white/60 mb-1">Team Size</h3>
-                      <p className="text-sm">{business.team_size}</p>
-                    </div>
-                  )}
-
-                  {business.founded_year && (
-                    <div>
-                      <h3 className="text-sm font-medium text-white/60 mb-1">Founded</h3>
-                      <p className="text-sm">{business.founded_year}</p>
-                    </div>
-                  )}
+                <div className="pt-5 border-t border-white/10">
+                  <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Description</h3>
+                  <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap">{business.description}</p>
                 </div>
               </CardContent>
             </Card>
