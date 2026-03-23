@@ -6,6 +6,7 @@ import { WebGLMeshBackground } from "@/components/WebGLMeshBackground";
 import { useAuth } from "@/hooks/use-auth";
 import { Instagram, Linkedin, Youtube } from "lucide-react";
 import { AuthForm } from "@/components/AuthForm";
+import { Button } from "@/components/ui/button";
 
 const RED = "#E63946";
 
@@ -259,15 +260,13 @@ export default function Home() {
               >
                 Get started →
               </button>
-              <button
+              <Button
+                size="lg"
                 onClick={() => setLocation("/campaigns/discover")}
-                className="h-[50px] px-8 rounded-xl text-[14px] font-medium transition-colors duration-200"
-                style={{ color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
+                className="bg-transparent hover:bg-white/5 text-white border-2 border-white px-8 py-6 text-lg rounded-2xl h-auto font-medium transition-all"
               >
                 Discover campaigns
-              </button>
+              </Button>
             </motion.div>
           </motion.div>
         </section>
