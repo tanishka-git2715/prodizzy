@@ -57,7 +57,7 @@ export function ApplicationFormModal({
         <DialogHeader>
           <DialogTitle>Apply to {campaignTitle}</DialogTitle>
           <DialogDescription className="text-white/60">
-            Submit your application. All fields are optional unless marked as required.
+            Submit your application. Both fields are required.
           </DialogDescription>
         </DialogHeader>
 
@@ -70,8 +70,9 @@ export function ApplicationFormModal({
               placeholder="Why are you interested in this opportunity?"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              className="bg-white/5 border-white/10 text-white min-h-32"
+              className="bg-white/5 border-white/10 text-white min-h-32 resize-none"
               maxLength={500}
+              required
             />
             <p className="text-xs text-white/40 mt-1">{formData.message.length}/500</p>
           </div>
@@ -86,6 +87,7 @@ export function ApplicationFormModal({
               value={formData.contact_details}
               onChange={(e) => setFormData({ ...formData, contact_details: e.target.value })}
               className="bg-white/5 border-white/10 text-white"
+              required
             />
           </div>
 

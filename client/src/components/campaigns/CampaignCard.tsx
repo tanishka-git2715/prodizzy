@@ -17,9 +17,10 @@ import type { Campaign } from "@shared/schema";
 
 interface CampaignCardProps {
   campaign: Campaign;
+  onApply?: (campaign: Campaign) => void;
 }
 
-export function CampaignCard({ campaign }: CampaignCardProps) {
+export function CampaignCard({ campaign, onApply }: CampaignCardProps) {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -32,14 +33,17 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
     e.stopPropagation();
     if (!user) {
       // Pass redirect info to login page
-      setLocation(`/login?redirect=/c/${campaign._id}&action=apply`);
+      setLocation(`/login?redirect=${encodeURIComponent(`/c/${campaign._id}?apply=true`)}`);
     } else if (user.profileStatus?.needsOnboarding) {
       // Should already be handled by global redirects but just in case
       const dashboardPath = user.profileType === 'startup' ? '/business/onboard' : '/onboard';
       setLocation(dashboardPath);
+    } else if (onApply) {
+      // If we have an onApply callback, use it (direct apply from discovery)
+      onApply(campaign);
     } else {
-      // Go to the campaign page to apply
-      setLocation(`/c/${campaign._id}?action=apply`);
+      // Go to the campaign page to apply (fallback)
+      setLocation(`/c/${campaign._id}?apply=true`);
     }
   };
 

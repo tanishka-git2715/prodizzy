@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CampaignCard } from "@/components/campaigns/CampaignCard";
+import { ApplicationFormModal } from "@/components/applications/ApplicationFormModal";
+import { ApplicationSuccessDialog } from "@/components/applications/ApplicationSuccessDialog";
 import { Filter, X, Search, Loader2 } from "lucide-react";
 import type { Campaign } from "@shared/schema";
 
@@ -76,6 +78,9 @@ export default function CampaignDiscover() {
   const [location, setLocationFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const params = useMemo(() => {
     const p = new URLSearchParams();
@@ -113,6 +118,16 @@ export default function CampaignDiscover() {
         campaign.skills?.some((skill) => skill.toLowerCase().includes(query))
     );
   }, [campaigns, searchQuery]);
+
+  const handleApplyClick = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setShowApplicationModal(true);
+  };
+
+  const handleApplicationSuccess = () => {
+    setShowApplicationModal(false);
+    setShowSuccessDialog(true);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -295,11 +310,33 @@ export default function CampaignDiscover() {
         {!isLoading && filteredCampaigns && filteredCampaigns.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredCampaigns.map((campaign) => (
-              <CampaignCard key={campaign._id} campaign={campaign} />
+              <CampaignCard 
+                key={campaign._id} 
+                campaign={campaign} 
+                onApply={handleApplyClick}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {/* Application Modals */}
+      {selectedCampaign && (
+        <>
+          <ApplicationFormModal
+            campaignId={selectedCampaign._id}
+            campaignTitle={selectedCampaign.title}
+            open={showApplicationModal}
+            onOpenChange={setShowApplicationModal}
+            onSuccess={handleApplicationSuccess}
+          />
+          <ApplicationSuccessDialog
+            open={showSuccessDialog}
+            onOpenChange={setShowSuccessDialog}
+            campaignTitle={selectedCampaign.title}
+          />
+        </>
+      )}
     </div>
   );
 }
