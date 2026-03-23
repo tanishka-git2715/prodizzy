@@ -266,13 +266,13 @@ export default function Home() {
                 Get started →
               </button>
               <button
-                onClick={scrollToHow}
+                onClick={() => setLocation("/campaigns/discover")}
                 className="h-[50px] px-8 rounded-xl text-[14px] font-medium transition-colors duration-200"
                 style={{ color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)" }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
               >
-                How it works
+                Discover campaigns
               </button>
             </motion.div>
           </motion.div>

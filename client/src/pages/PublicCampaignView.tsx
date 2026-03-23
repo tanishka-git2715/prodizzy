@@ -16,9 +16,12 @@ import {
   Users,
   ExternalLink,
   Share2,
-  CheckCircle
+  CheckCircle,
+  ArrowRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CampaignCard } from "@/components/campaigns/CampaignCard";
+import type { Campaign } from "@shared/schema";
 
 export default function PublicCampaignView() {
   const [, params] = useRoute("/c/:id");
@@ -335,8 +338,38 @@ export default function PublicCampaignView() {
           </div>
         </div>
 
+        {/* More Opportunities Section */}
+        <div className="mt-16 sm:mt-24 pt-12 border-t border-white/10">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">More Opportunities</h2>
+              <p className="text-white/40 text-sm mt-1">Discover other active campaigns you might like</p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setLocation("/campaigns/discover")}
+              className="border-white/10 bg-white/5 hover:bg-white/10 hidden sm:flex"
+            >
+              Browse all
+              <ExternalLink className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+
+          <MoreCampaigns currentCampaignId={campaignId!} />
+          
+          <div className="mt-8 text-center sm:hidden">
+            <Button 
+              variant="outline" 
+              onClick={() => setLocation("/campaigns/discover")}
+              className="border-white/10 bg-white/5 hover:bg-white/10 w-full"
+            >
+              Browse all opportunities
+            </Button>
+          </div>
+        </div>
+
         {/* Footer Info */}
-        <div className="mt-8 sm:mt-12 text-center text-xs sm:text-sm text-white/40">
+        <div className="mt-12 sm:mt-16 text-center text-xs sm:text-sm text-white/40">
           <p>
             Posted {new Date(campaign.createdAt).toLocaleDateString()} • {campaign.views || 0}{" "}
             views
@@ -364,6 +397,45 @@ export default function PublicCampaignView() {
         onOpenChange={setShowSuccessDialog}
         campaignTitle={campaign.title}
       />
+    </div>
+  );
+}
+
+function MoreCampaigns({ currentCampaignId }: { currentCampaignId: string }) {
+  const { data: campaigns, isLoading } = useQuery<Campaign[]>({
+    queryKey: ["campaigns-more", currentCampaignId],
+    queryFn: async () => {
+      const response = await fetch("/api/campaigns/discover");
+      if (!response.ok) throw new Error("Failed to load more campaigns");
+      return response.json();
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-64 bg-white/5 animate-pulse rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+  const otherCampaigns = campaigns?.filter(c => c._id !== currentCampaignId).slice(0, 3) || [];
+
+  if (otherCampaigns.length === 0) {
+    return (
+      <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl">
+        <p className="text-white/30 text-sm">No other opportunities found at this time.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {otherCampaigns.map((campaign) => (
+        <CampaignCard key={campaign._id} campaign={campaign} />
+      ))}
     </div>
   );
 }
