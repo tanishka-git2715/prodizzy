@@ -34,7 +34,7 @@ export function Navbar() {
           size="sm"
           className="font-medium bg-white/5 hover:bg-white/10 text-white border border-white/5"
         >
-          Join Waitlist
+          Join Now
         </Button>
       </div>
     </motion.header>

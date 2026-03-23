@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,18 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
   const daysAgo = Math.floor(
     (Date.now() - new Date(campaign.createdAt).getTime()) / (1000 * 60 * 60 * 24)
   );
+
+  const highlights = useMemo(() => {
+    const importantFields = ['role', 'experience', 'duration', 'platform', 'equity', 'product', 'stage', 'amount', 'domain'];
+    return Object.entries(campaign.customFields || {})
+      .filter(([key, value]) => importantFields.includes(key) && value)
+      .map(([key, value]) => ({
+        key,
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        value: String(value)
+      }))
+      .slice(0, 3);
+  }, [campaign.customFields]);
 
   return (
     <Card className="bg-white/[0.03] border-white/8 hover:border-white/15 transition-all duration-200 cursor-pointer group" onClick={handleViewCampaign}>
@@ -66,6 +79,20 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             {campaign.description}
           </p>
         </div>
+
+        {/* Campaign Highlights (Custom Fields) */}
+        {highlights.length > 0 && (
+          <div className="flex flex-wrap gap-x-4 gap-y-2 py-2 px-3 bg-white/[0.02] border border-white/5 rounded-xl">
+            {highlights.map((h) => (
+              <div key={h.key} className="flex flex-col">
+                <span className="text-[10px] text-white/30 uppercase tracking-wider">{h.label}</span>
+                <span className="text-xs text-white/80 font-medium truncate max-w-[120px]">
+                  {h.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Category & Engagement Type */}
         <div className="flex flex-wrap gap-2">

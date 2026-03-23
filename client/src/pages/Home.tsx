@@ -212,12 +212,6 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setLocation("/campaigns/discover")}
-                className="hidden sm:block text-[13px] text-white/60 hover:text-white transition-colors font-medium"
-              >
-                Discover Campaigns
-              </button>
-              <button
                 onClick={handleJoinNow}
                 className="h-[38px] px-6 rounded-lg font-medium text-[13px] text-white transition-all hover:opacity-90"
                 style={{ background: RED, boxShadow: `0 0 20px -6px rgba(230,57,70,0.4)` }}
