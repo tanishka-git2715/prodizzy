@@ -206,9 +206,17 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
             <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
             <span className="font-semibold tracking-tight">Prodizzy</span>
           </div>
-          <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
-            <LogOut className="w-3.5 h-3.5" /> Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLocation("/campaigns/discover")}
+              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+            >
+              Discover campaigns
+            </button>
+            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
+              <LogOut className="w-3.5 h-3.5" /> Sign out
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -674,9 +682,17 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
             <span className="font-semibold tracking-tight">Prodizzy</span>
           </div>
-          <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
-            <LogOut className="w-3.5 h-3.5" /> Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLocation("/campaigns/discover")}
+              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+            >
+              Discover campaigns
+            </button>
+            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
+              <LogOut className="w-3.5 h-3.5" /> Sign out
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -1236,9 +1252,17 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
             <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
             <span className="font-semibold tracking-tight">Prodizzy</span>
           </div>
-          <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
-            <LogOut className="w-3.5 h-3.5" /> Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLocation("/campaigns/discover")}
+              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+            >
+              Discover campaigns
+            </button>
+            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
+              <LogOut className="w-3.5 h-3.5" /> Sign out
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -1603,9 +1627,15 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
           <div className="flex items-center gap-4">
             <button
               onClick={() => setLocation('/discover')}
-              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+              className="px-4 py-2 bg-white/5 border border-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
             >
               Discover Startups
+            </button>
+            <button
+              onClick={() => setLocation("/campaigns/discover")}
+              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+            >
+              Discover campaigns
             </button>
             <button onClick={signOut} className="text-white/50 hover:text-white/80 text-sm flex items-center gap-2 transition-colors">
               <LogOut className="w-4 h-4" />

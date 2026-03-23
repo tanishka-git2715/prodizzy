@@ -28,12 +28,12 @@ export default function Login() {
   useEffect(() => {
     if (!authLoading && session && session.user?.profileStatus) {
       // If there's a redirect URL, use it
-      if (redirectUrl) {
-        setLocation(redirectUrl);
-      } else if (session.user.profileStatus.hasCompletedProfile) {
-        setLocation("/dashboard");
-      } else {
+      if (!session.user.profileStatus.hasCompletedProfile) {
         setLocation("/individual-onboard");
+      } else if (redirectUrl) {
+        setLocation(redirectUrl);
+      } else {
+        setLocation("/dashboard");
       }
     }
   }, [session, authLoading, setLocation, authSuccess, redirectUrl]);

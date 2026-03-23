@@ -338,34 +338,16 @@ export default function PublicCampaignView() {
           </div>
         </div>
 
-        {/* More Opportunities Section */}
-        <div className="mt-16 sm:mt-24 pt-12 border-t border-white/10">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">More Opportunities</h2>
-              <p className="text-white/40 text-sm mt-1">Discover other active campaigns you might like</p>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setLocation("/campaigns/discover")}
-              className="border-white/10 bg-white/5 hover:bg-white/10 hidden sm:flex"
-            >
-              Browse all
-              <ExternalLink className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-
-          <MoreCampaigns currentCampaignId={campaignId!} />
-          
-          <div className="mt-8 text-center sm:hidden">
-            <Button 
-              variant="outline" 
-              onClick={() => setLocation("/campaigns/discover")}
-              className="border-white/10 bg-white/5 hover:bg-white/10 w-full"
-            >
-              Browse all opportunities
-            </Button>
-          </div>
+        {/* Browse More CTA */}
+        <div className="mt-16 sm:mt-24 pt-12 border-t border-white/10 text-center">
+          <Button 
+            size="lg"
+            onClick={() => setLocation("/campaigns/discover")}
+            className="bg-white/5 border-white/10 hover:bg-white/10 text-white px-8 py-6 h-auto text-lg rounded-2xl transition-all"
+          >
+            Browse more campaigns
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
         </div>
 
         {/* Footer Info */}
@@ -381,12 +363,6 @@ export default function PublicCampaignView() {
       <ApplicationFormModal
         campaignId={campaignId!}
         campaignTitle={campaign.title}
-        customFields={campaign.customFields ? Object.entries(campaign.customFields).map(([name, config]: [string, any]) => ({
-          name,
-          label: config.label || name,
-          type: config.type || "text",
-          required: config.required || false,
-        })) : []}
         open={showApplicationModal}
         onOpenChange={setShowApplicationModal}
         onSuccess={handleApplicationSuccess}
@@ -401,41 +377,3 @@ export default function PublicCampaignView() {
   );
 }
 
-function MoreCampaigns({ currentCampaignId }: { currentCampaignId: string }) {
-  const { data: campaigns, isLoading } = useQuery<Campaign[]>({
-    queryKey: ["campaigns-more", currentCampaignId],
-    queryFn: async () => {
-      const response = await fetch("/api/campaigns/discover");
-      if (!response.ok) throw new Error("Failed to load more campaigns");
-      return response.json();
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-64 bg-white/5 animate-pulse rounded-2xl" />
-        ))}
-      </div>
-    );
-  }
-
-  const otherCampaigns = campaigns?.filter(c => c._id !== currentCampaignId).slice(0, 3) || [];
-
-  if (otherCampaigns.length === 0) {
-    return (
-      <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl">
-        <p className="text-white/30 text-sm">No other opportunities found at this time.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {otherCampaigns.map((campaign) => (
-        <CampaignCard key={campaign._id} campaign={campaign} />
-      ))}
-    </div>
-  );
-}

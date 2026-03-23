@@ -31,29 +31,18 @@ export function ApplicationFormModal({
   const [formData, setFormData] = useState({
     message: "",
     contact_details: "",
-    resume_url: "",
-    portfolio_url: "",
     answers: {} as Record<string, any>,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate URLs if provided
-    if (formData.resume_url && !isValidUrl(formData.resume_url)) {
-      toast({ title: "Invalid URL", description: "Please enter a valid resume URL", variant: "destructive" });
-      return;
-    }
-    if (formData.portfolio_url && !isValidUrl(formData.portfolio_url)) {
-      toast({ title: "Invalid URL", description: "Please enter a valid portfolio URL", variant: "destructive" });
-      return;
-    }
 
     try {
       await createApplication.mutateAsync(formData);
       onSuccess();
       // Reset form
-      setFormData({ message: "", contact_details: "", resume_url: "", portfolio_url: "", answers: {} });
+      setFormData({ message: "", contact_details: "", answers: {} });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -100,70 +89,6 @@ export function ApplicationFormModal({
               className="bg-white/5 border-white/10 text-white"
             />
           </div>
-
-          {/* Resume URL */}
-          <div>
-            <Label htmlFor="resume">Resume URL</Label>
-            <Input
-              id="resume"
-              type="url"
-              placeholder="https://..."
-              value={formData.resume_url}
-              onChange={(e) => setFormData({ ...formData, resume_url: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
-            />
-          </div>
-
-          {/* Portfolio URL */}
-          <div>
-            <Label htmlFor="portfolio">Portfolio / Work Samples URL</Label>
-            <Input
-              id="portfolio"
-              type="url"
-              placeholder="https://..."
-              value={formData.portfolio_url}
-              onChange={(e) => setFormData({ ...formData, portfolio_url: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
-            />
-          </div>
-
-          {/* Dynamic Custom Fields */}
-          {customFields.map((field) => (
-            <div key={field.name}>
-              <Label htmlFor={field.name}>
-                {field.label}
-                {field.required && <span className="text-red-400 ml-1">*</span>}
-              </Label>
-              {field.type === "textarea" ? (
-                <Textarea
-                  id={field.name}
-                  required={field.required}
-                  value={formData.answers[field.name] || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      answers: { ...formData.answers, [field.name]: e.target.value },
-                    })
-                  }
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              ) : (
-                <Input
-                  id={field.name}
-                  type={field.type || "text"}
-                  required={field.required}
-                  value={formData.answers[field.name] || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      answers: { ...formData.answers, [field.name]: e.target.value },
-                    })
-                  }
-                  className="bg-white/5 border-white/10 text-white"
-                />
-              )}
-            </div>
-          ))}
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">

@@ -260,13 +260,12 @@ export default function Home() {
               >
                 Get started →
               </button>
-              <Button
-                size="lg"
+              <button
                 onClick={() => setLocation("/campaigns/discover")}
-                className="bg-transparent hover:bg-white/5 text-white border-2 border-white px-8 py-6 text-lg rounded-2xl h-auto font-medium transition-all"
+                className="h-[50px] px-8 border-2 border-white text-white text-[15px] font-semibold rounded-xl hover:bg-white/10 transition-all"
               >
                 Discover campaigns
-              </Button>
+              </button>
             </motion.div>
           </motion.div>
         </section>

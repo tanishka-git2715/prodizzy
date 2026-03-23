@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { useMemo } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,10 +20,27 @@ interface CampaignCardProps {
 }
 
 export function CampaignCard({ campaign }: CampaignCardProps) {
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  const handleViewCampaign = () => {
+  const handleViewCampaign = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setLocation(`/c/${campaign._id}`);
+  };
+
+  const handleApplyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      // Pass redirect info to login page
+      setLocation(`/login?redirect=/c/${campaign._id}&action=apply`);
+    } else if (user.profileStatus?.needsOnboarding) {
+      // Should already be handled by global redirects but just in case
+      const dashboardPath = user.profileType === 'startup' ? '/business/onboard' : '/onboard';
+      setLocation(dashboardPath);
+    } else {
+      // Go to the campaign page to apply
+      setLocation(`/c/${campaign._id}?action=apply`);
+    }
   };
 
   const daysAgo = Math.floor(
@@ -155,15 +173,24 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
           </div>
         )}
 
-        {/* View Button */}
-        <Button
-          size="sm"
-          className="w-full bg-[#E63946] hover:bg-[#E63946]/90 group-hover:scale-[1.02] transition-transform"
-          onClick={handleViewCampaign}
-        >
-          <Briefcase className="w-4 h-4 mr-2" />
-          View Details
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 bg-white/5 border-white/10 hover:bg-white/10 text-white/80 transition-all"
+            onClick={handleViewCampaign}
+          >
+            View Details
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 bg-[#E63946] hover:bg-[#E63946]/90 font-medium transition-all"
+            onClick={handleApplyNow}
+          >
+            Apply Now
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
