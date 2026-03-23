@@ -20,7 +20,6 @@ interface ApplicationFormModalProps {
 export function ApplicationFormModal({
   campaignId,
   campaignTitle,
-  customFields = [],
   open,
   onOpenChange,
   onSuccess,
