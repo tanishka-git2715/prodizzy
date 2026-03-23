@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,8 +13,39 @@ interface CampaignsSectionProps {
 
 export function CampaignsSection({ businessId }: CampaignsSectionProps) {
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedCampaignForApps, setSelectedCampaignForApps] = useState<string | null>(null);
+
+  const createBusinessMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          business_name: "My Business",
+          business_type: "Startup",
+          description: "Personal business for launching campaigns"
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create business profile");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      setLocation(`/business/${data._id}/campaigns/new`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   if (!businessId) {
     return (
@@ -30,17 +61,14 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
         </CardHeader>
         <CardContent className="relative z-10">
           <div className="text-center py-12 border-2 border-dashed border-white/10 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all cursor-pointer group/box"
-               onClick={() => setLocation("/business/create")}>
-            <div className="w-16 h-16 bg-[#E63946]/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover/box:scale-110 transition-transform">
-              <Rocket className="w-8 h-8 text-[#E63946]" />
-            </div>
-            <h4 className="text-xl font-bold text-white mb-2">Launch your first campaign</h4>
-            <p className="text-sm text-white/50 mb-6 max-w-xs mx-auto">Create a business profile in seconds to start finding talent, partners, and customers through targeted campaigns.</p>
+               onClick={() => createBusinessMutation.mutate()}>
+            <h4 className="text-xl font-bold text-white mb-6">Launch your first campaign</h4>
             <Button
               className="bg-[#E63946] hover:bg-[#E63946]/90 shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+              disabled={createBusinessMutation.isPending}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Launch Opportunity
+              {createBusinessMutation.isPending ? "Starting..." : "Launch Opportunity"}
             </Button>
           </div>
         </CardContent>

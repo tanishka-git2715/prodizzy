@@ -562,4 +562,5 @@ export type CampaignApplication = {
     title: string;
     business_id: string;
   };
+  profile?: any;
 };

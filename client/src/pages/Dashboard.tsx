@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
@@ -105,7 +106,8 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
 }) {
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
+  const navigate = setLocation;
 
   // Fetch user's businesses
   const { data: businesses, isLoading: businessesLoading } = useQuery({
@@ -117,6 +119,39 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
     }
   });
 
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const createBusinessMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          business_name: "My Business",
+          business_type: "Startup",
+          description: "Personal business for launching campaigns"
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create business profile");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      setLocation(`/business/${data._id}/campaigns/new`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Core profile edit state (pre-fill from profile)
   const [companyName, setCompanyName] = useState(profile.company_name || "");
   const [fullName, setFullName] = useState(profile.full_name || "");
@@ -124,7 +159,7 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
   const [email, setEmail] = useState(profile.email || "");
   const [website, setWebsite] = useState(profile.website || "");
   const [linkedinUrl, setLinkedinUrl] = useState(profile.linkedin_url || "");
-  const [location, setLocation] = useState(profile.location || "");
+  const [location, setLocationState] = useState(profile.location || "");
   const [industry, setIndustry] = useState<string[]>(Array.isArray(profile.industry) ? profile.industry : profile.industry ? [profile.industry] : []);
   const [customIndustry, setCustomIndustry] = useState("");
   const [stage, setStage] = useState<string>(profile.stage || "");
@@ -217,11 +252,16 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
             <button
               onClick={() => {
                 const bId = businesses?.[0]?._id;
-                setLocation(bId ? `/business/${bId}/campaigns/new` : "/business/create");
+                if (bId) {
+                  setLocation(`/business/${bId}/campaigns/new`);
+                } else {
+                  createBusinessMutation.mutate();
+                }
               }}
-              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+              disabled={createBusinessMutation.isPending}
+              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              Launch campaign
+              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -252,7 +292,7 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     setEmail(profile.email || "");
                     setWebsite(profile.website || "");
                     setLinkedinUrl(profile.linkedin_url || "");
-                    setLocation(profile.location || "");
+                    setLocationState(profile.location || "");
                     setIndustry(Array.isArray(profile.industry) ? profile.industry : profile.industry ? [profile.industry] : []);
                     setStage(profile.stage || "");
                     setTeamSize(profile.team_size || "");
@@ -378,7 +418,7 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                     <FormField label="Email" value={email} onChange={setEmail} type="email" placeholder="jane@prodizzy.com" />
                     <FormField label="Website" value={website} onChange={setWebsite} placeholder="https://yourco.com" />
                     <FormField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/..." />
-                    <FormField label="Location" value={location} onChange={setLocation} placeholder="Delhi, India" />
+                    <FormField label="Location" value={location} onChange={setLocationState} placeholder="Delhi, India" />
                   </div>
 
                   <div className="space-y-4">
@@ -565,7 +605,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
   const [, setLocation] = useLocation();
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
-  const [, navigate] = useLocation();
+  const navigate = setLocation;
 
   // Fetch user's businesses
   const { data: businesses, isLoading: businessesLoading } = useQuery({
@@ -575,6 +615,39 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
       if (!response.ok) throw new Error("Failed to fetch businesses");
       return response.json();
     }
+  });
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const createBusinessMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          business_name: "My Business",
+          business_type: "Startup",
+          description: "Personal business for launching campaigns"
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create business profile");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      setLocation(`/business/${data._id}/campaigns/new`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Form state
@@ -703,11 +776,16 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             <button
               onClick={() => {
                 const bId = businesses?.[0]?._id;
-                setLocation(bId ? `/business/${bId}/campaigns/new` : "/business/create");
+                if (bId) {
+                  setLocation(`/business/${bId}/campaigns/new`);
+                } else {
+                  createBusinessMutation.mutate();
+                }
               }}
-              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+              disabled={createBusinessMutation.isPending}
+              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              Launch campaign
+              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -1157,7 +1235,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
   showInvestorSection?: boolean; investorMatches?: any[]; investorConnections?: any[];
 }) {
   const [, setLocation] = useLocation();
-  const [, navigate] = useLocation();
+  const navigate = setLocation;
   const [editingCore, setEditingCore] = useState(false);
   const firstName = profile.full_name?.split(" ")[0] || "there";
 
@@ -1169,6 +1247,39 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       if (!response.ok) throw new Error("Failed to fetch businesses");
       return response.json();
     }
+  });
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const createBusinessMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          business_name: "My Business",
+          business_type: "Startup",
+          description: "Personal business for launching campaigns"
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create business profile");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      setLocation(`/business/${data._id}/campaigns/new`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Form state
@@ -1279,11 +1390,16 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
             <button
               onClick={() => {
                 const bId = businesses?.[0]?._id;
-                setLocation(bId ? `/business/${bId}/campaigns/new` : "/business/create");
+                if (bId) {
+                  setLocation(`/business/${bId}/campaigns/new`);
+                } else {
+                  createBusinessMutation.mutate();
+                }
               }}
-              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+              disabled={createBusinessMutation.isPending}
+              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_200px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              Launch campaign
+              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -1641,6 +1757,39 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
     }
   });
 
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const createBusinessMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          business_name: "My Business",
+          business_type: "Startup",
+          description: "Personal business for launching campaigns"
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create business profile");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      setLocation(`/business/${data._id}/campaigns/new`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <div className="min-h-screen bg-black">
       {/* Sticky Navigation */}
@@ -1663,11 +1812,16 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
             <button
               onClick={() => {
                 const bId = businesses?.[0]?._id;
-                setLocation(bId ? `/business/${bId}/campaigns/new` : "/business/create");
+                if (bId) {
+                  setLocation(`/business/${bId}/campaigns/new`);
+                } else {
+                  createBusinessMutation.mutate();
+                }
               }}
-              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+              disabled={createBusinessMutation.isPending}
+              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              Launch campaign
+              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
             </button>
             <button onClick={signOut} className="text-white/50 hover:text-white/80 text-sm flex items-center gap-2 transition-colors">
               <LogOut className="w-4 h-4" />

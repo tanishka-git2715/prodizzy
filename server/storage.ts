@@ -1274,7 +1274,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCampaignStats(businessId: string): Promise<any> {
-    const campaigns = await Campaign.find({ business_id: businessId });
+    const campaigns = await Campaign.find({ business_id: businessId }).lean() as any[];
 
     const stats = {
       total: campaigns.length,
@@ -1283,8 +1283,8 @@ export class DatabaseStorage implements IStorage {
       closed: campaigns.filter(c => c.status === "closed").length,
       approved: campaigns.filter(c => c.approved).length,
       pendingApproval: campaigns.filter(c => c.status === "active" && !c.approved).length,
-      totalViews: campaigns.reduce((sum, c) => sum + c.views, 0),
-      totalApplications: campaigns.reduce((sum, c) => sum + c.applications, 0)
+      totalViews: campaigns.reduce((sum, c) => sum + (Number(c.views) || 0), 0),
+      totalApplications: campaigns.reduce((sum, c) => sum + (Number(c.applications) || 0), 0)
     };
 
     return stats;
@@ -1340,34 +1340,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCampaignApplications(campaignId: string, campaignApproved: boolean): Promise<any[]> {
-    // Only return APPROVED applications to campaign creators
+    // Only return applications if the campaign is approved
     if (!campaignApproved) {
       return [];
     }
 
     const applications = await CampaignApplication.find({
       campaign_id: campaignId,
-      status: "approved" // Only show approved applications to campaign creators
     })
       .sort({ createdAt: -1 })
       .lean();
 
-    // Populate user details
-    const applicationsWithUser = await Promise.all(
+    // Populate user and profile details
+    const applicationsWithDetails = await Promise.all(
       applications.map(async (app) => {
-        const user = await User.findOne({ _id: app.user_id }).lean();
+        const [user, profile] = await Promise.all([
+          User.findOne({ _id: app.user_id }).lean(),
+          this.getProfileByUserId(app.user_id)
+        ]);
+
         return {
           ...app,
           user: user ? {
             displayName: user.displayName,
             email: user.email,
             avatarUrl: user.avatarUrl
-          } : null
+          } : null,
+          profile
         };
       })
     );
 
-    return applicationsWithUser;
+    return applicationsWithDetails;
   }
 
   async getAllCampaignApplicationsForAdmin(campaignId: string): Promise<any[]> {
@@ -1376,22 +1380,27 @@ export class DatabaseStorage implements IStorage {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Populate user details for each application
-    const applicationsWithUser = await Promise.all(
+    // Populate user and profile details for each application
+    const applicationsWithDetails = await Promise.all(
       applications.map(async (app) => {
-        const user = await User.findOne({ _id: app.user_id }).lean();
+        const [user, profile] = await Promise.all([
+          User.findOne({ _id: app.user_id }).lean(),
+          this.getProfileByUserId(app.user_id)
+        ]);
+
         return {
           ...app,
           user: user ? {
             displayName: user.displayName,
             email: user.email,
             avatarUrl: user.avatarUrl
-          } : null
+          } : null,
+          profile
         };
       })
     );
 
-    return applicationsWithUser;
+    return applicationsWithDetails;
   }
 
   async getUserApplications(userId: string): Promise<any[]> {

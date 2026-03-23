@@ -4,8 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, X, ExternalLink, FileText, Briefcase, Calendar, Loader2 } from "lucide-react";
+import { CheckCircle, X, ExternalLink, FileText, Briefcase, Calendar, Loader2, User } from "lucide-react";
 import type { CampaignApplication } from "@shared/schema";
+import { ProfileDetailView } from "@/components/ProfileDetailView";
 
 interface ApplicationsListProps {
   campaignId: string;
@@ -198,36 +199,52 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
 
                 {/* Expanded Content */}
                 {isExpanded && (
-                  <div className="border-t border-white/10 pt-3 space-y-3">
-                    {application.message && (
+                  <div className="border-t border-white/10 pt-4 mt-2 space-y-6">
+                    {/* Profile Preview */}
+                    {application.profile && (
                       <div>
-                        <h5 className="text-sm font-medium text-white/80 mb-1">Message</h5>
-                        <p className="text-sm text-white/60 whitespace-pre-wrap">{application.message}</p>
-                      </div>
-                    )}
-
-                    {application.contact_details && (
-                      <div>
-                        <h5 className="text-sm font-medium text-white/80 mb-1">Contact Details</h5>
-                        <p className="text-sm text-white/60">{application.contact_details}</p>
-                      </div>
-                    )}
-
-                    {application.answers && Object.keys(application.answers).length > 0 && (
-                      <div>
-                        <h5 className="text-sm font-medium text-white/80 mb-2">Additional Answers</h5>
-                        <div className="space-y-2">
-                          {Object.entries(application.answers).map(([key, value]) => (
-                            <div key={key}>
-                              <span className="text-xs text-white/60 capitalize">
-                                {key.replace(/_/g, " ")}:
-                              </span>
-                              <p className="text-sm text-white/80">{String(value)}</p>
-                            </div>
-                          ))}
+                        <div className="flex items-center gap-2 mb-4">
+                          <User className="w-4 h-4 text-[#E63946]" />
+                          <h5 className="text-sm font-bold uppercase tracking-wider text-white/40">Applicant Profile Preview</h5>
+                        </div>
+                        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                          <ProfileDetailView profile={application.profile} isAdmin={true} />
                         </div>
                       </div>
                     )}
+
+                    {/* Application details if profile is not enough or to complement */}
+                    <div className="space-y-4">
+                      {application.message && (
+                        <div>
+                          <h5 className="text-xs font-bold text-white/25 uppercase tracking-wider mb-2">Application Message</h5>
+                          <p className="text-sm text-white/70 bg-white/5 p-3 rounded-lg border border-white/5 whitespace-pre-wrap">{application.message}</p>
+                        </div>
+                      )}
+
+                      {application.contact_details && (
+                        <div>
+                          <h5 className="text-xs font-bold text-white/25 uppercase tracking-wider mb-1">Contact Details</h5>
+                          <p className="text-sm text-white/70">{application.contact_details}</p>
+                        </div>
+                      )}
+
+                      {application.answers && Object.keys(application.answers).length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-white/25 uppercase tracking-wider mb-2">Additional Answers</h5>
+                          <div className="space-y-3">
+                            {Object.entries(application.answers).map(([key, value]) => (
+                              <div key={key} className="bg-white/5 p-3 rounded-lg border border-white/5">
+                                <span className="text-[10px] text-white/30 uppercase font-bold block mb-1">
+                                  {key.replace(/_/g, " ")}
+                                </span>
+                                <p className="text-sm text-white/80">{String(value)}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
