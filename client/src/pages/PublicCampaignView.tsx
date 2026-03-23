@@ -44,6 +44,14 @@ export default function PublicCampaignView() {
     enabled: !!campaignId,
   });
 
+  // Handle auto-apply from query param
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("apply") === "true") {
+      setShowApplicationModal(true);
+    }
+  }, []);
+
   // Update meta tags for social sharing
   useEffect(() => {
     if (campaign) {
@@ -339,7 +347,7 @@ export default function PublicCampaignView() {
         </div>
 
         {/* Browse More CTA */}
-        <div className="mt-16 sm:mt-24 pt-12 border-t border-white/10 text-center">
+        <div className="mt-8 text-center">
           <Button 
             size="lg"
             onClick={() => setLocation("/campaigns/discover")}
