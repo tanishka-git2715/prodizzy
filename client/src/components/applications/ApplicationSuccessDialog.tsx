@@ -19,22 +19,22 @@ export function ApplicationSuccessDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-black border-white/10 text-white max-w-md text-center">
-        <DialogHeader>
+        <DialogHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
           </div>
-          <DialogTitle className="text-2xl">Application Submitted!</DialogTitle>
+          <DialogTitle className="text-2xl text-center">Application Submitted!</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-4">
+        <div className="space-y-4 mt-4 text-center">
           <p className="text-white/60">
             Your application to <span className="text-white font-medium">{campaignTitle}</span> has
             been submitted successfully.
           </p>
           <p className="text-sm text-white/40">
-            You'll be notified once the business owner reviews your application.
+            you'll be notified once owner reviews your application.
           </p>
 
           <div className="flex flex-col gap-2 pt-4">

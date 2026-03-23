@@ -8,6 +8,7 @@ import { LogOut, ChevronRight, Check, Edit2, X, Mail, Linkedin, Globe, Github, F
 import { ensureHttps } from "@/lib/utils";
 import { BusinessCard } from "@/components/business/BusinessCard";
 import { ProfileDetailView } from "@/components/ProfileDetailView";
+import { CampaignsSection } from "@/components/campaigns/CampaignsSection";
 
 function authHeaders() {
   return { "Content-Type": "application/json" };
@@ -209,9 +210,18 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
           <div className="flex items-center gap-4">
             <button
               onClick={() => setLocation("/campaigns/discover")}
-              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
             >
               Discover campaigns
+            </button>
+            <button
+              onClick={() => {
+                const bId = businesses?.[0]?._id;
+                setLocation(bId ? `/business/${bId}/campaigns/new` : "/business/create");
+              }}
+              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+            >
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -420,6 +430,7 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
             </AnimatePresence>
           </div>
 
+          <CampaignsSection businessId={businesses?.[0]?._id} />
 
           {/* ── Connection Requests ──────────────────────────────────────────────────────── */}
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
@@ -685,9 +696,18 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
           <div className="flex items-center gap-4">
             <button
               onClick={() => setLocation("/campaigns/discover")}
-              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
             >
               Discover campaigns
+            </button>
+            <button
+              onClick={() => {
+                const bId = businesses?.[0]?._id;
+                setLocation(bId ? `/business/${bId}/campaigns/new` : "/business/create");
+              }}
+              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+            >
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -1086,6 +1106,8 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             </AnimatePresence>
           </div>
 
+          <CampaignsSection businessId={businesses?.[0]?._id} />
+
           {/* ── Your Businesses ────────────────────────────────────────────── */}
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
             <div className="flex items-center justify-between">
@@ -1250,9 +1272,18 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
           <div className="flex items-center gap-4">
             <button
               onClick={() => setLocation("/campaigns/discover")}
-              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
             >
               Discover campaigns
+            </button>
+            <button
+              onClick={() => {
+                const bId = businesses?.[0]?._id;
+                setLocation(bId ? `/business/${bId}/campaigns/new` : "/business/create");
+              }}
+              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+            >
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -1482,10 +1513,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
             </AnimatePresence>
           </div>
 
-          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
-            <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Matches</h2>
-            <p className="text-white/25 text-sm">Coming soon — we're curating based on your profile.</p>
-          </div>
+          <CampaignsSection businessId={businesses?.[0]?._id} />
 
           {/* Investor section: only for approved partner-investors, added below original dashboard */}
           {showInvestorSection && (
@@ -1628,9 +1656,18 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
             </button>
             <button
               onClick={() => setLocation("/campaigns/discover")}
-              className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-white/90 transition-colors"
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
             >
               Discover campaigns
+            </button>
+            <button
+              onClick={() => {
+                const bId = businesses?.[0]?._id;
+                setLocation(bId ? `/business/${bId}/campaigns/new` : "/business/create");
+              }}
+              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+            >
+              Launch campaign
             </button>
             <button onClick={signOut} className="text-white/50 hover:text-white/80 text-sm flex items-center gap-2 transition-colors">
               <LogOut className="w-4 h-4" />
