@@ -264,7 +264,7 @@ export default function CampaignDiscover() {
         )}
 
         {/* Empty State */}
-        {!isLoading && filteredCampaigns?.length === 0 && (
+        {!isLoading && !error && filteredCampaigns?.length === 0 && (
           <div className="border border-white/10 bg-white/[0.02] rounded-2xl p-10 text-center">
             <div className="text-white font-semibold">No campaigns found</div>
             <div className="text-white/40 text-sm mt-1">
