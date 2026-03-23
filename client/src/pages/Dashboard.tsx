@@ -2080,21 +2080,21 @@ export default function Dashboard() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-  if (profile.type === "startup") {
+  if (profile?.type === "startup") {
     return <StartupDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} acceptMutation={acceptMutation} declineMutation={declineMutation} />;
   }
 
   // Dedicated investor profile: full Investor dashboard
-  if (profile.type === "investor") {
+  if (profile?.type === "investor") {
     return <InvestorDashboard profile={profile} session={session} signOut={signOut} connections={connections ?? []} matches={matches ?? []} greeting={greeting} />;
   }
 
-  if (profile.type === "individual") {
+  if (profile?.type === "individual") {
     return <IndividualDashboard profile={profile} session={session} signOut={signOut} patchMutation={patchMutation} connections={connections ?? []} greeting={greeting} />;
   }
 
   // Partner: always show original Partner dashboard; add investor section below only for approved partner-investors
-  if (profile.type === "partner") {
+  if (profile?.type === "partner") {
     const showInvestorSection = profile.partner_type === "Investor" && !!profile.approved;
     return (
       <PartnerDashboard
