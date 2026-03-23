@@ -1078,6 +1078,23 @@ export async function registerRoutes(
     }
   });
 
+  // Admin approve/reject application
+  app.patch("/api/admin/applications/:id/status", ensureAdmin, async (req, res) => {
+    try {
+      const applicationId = req.params.id;
+      const { status } = req.body;
+
+      if (!["approved", "rejected", "pending"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const application = await storage.updateApplicationStatus(applicationId, status);
+      res.json(application);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
 
   return httpServer;
 }

@@ -1340,25 +1340,58 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCampaignApplications(campaignId: string, campaignApproved: boolean): Promise<any[]> {
-    // Only return applications if campaign is approved
+    // Only return APPROVED applications to campaign creators
     if (!campaignApproved) {
       return [];
     }
 
-    const applications = await CampaignApplication.find({ campaign_id: campaignId })
+    const applications = await CampaignApplication.find({
+      campaign_id: campaignId,
+      status: "approved" // Only show approved applications to campaign creators
+    })
       .sort({ createdAt: -1 })
       .lean();
 
-    return applications;
+    // Populate user details
+    const applicationsWithUser = await Promise.all(
+      applications.map(async (app) => {
+        const user = await User.findOne({ _id: app.user_id }).lean();
+        return {
+          ...app,
+          user: user ? {
+            displayName: user.displayName,
+            email: user.email,
+            avatarUrl: user.avatarUrl
+          } : null
+        };
+      })
+    );
+
+    return applicationsWithUser;
   }
 
   async getAllCampaignApplicationsForAdmin(campaignId: string): Promise<any[]> {
-    // Admin can see all applications regardless of approval
+    // Admin can see all applications regardless of approval, with full user details
     const applications = await CampaignApplication.find({ campaign_id: campaignId })
       .sort({ createdAt: -1 })
       .lean();
 
-    return applications;
+    // Populate user details for each application
+    const applicationsWithUser = await Promise.all(
+      applications.map(async (app) => {
+        const user = await User.findOne({ _id: app.user_id }).lean();
+        return {
+          ...app,
+          user: user ? {
+            displayName: user.displayName,
+            email: user.email,
+            avatarUrl: user.avatarUrl
+          } : null
+        };
+      })
+    );
+
+    return applicationsWithUser;
   }
 
   async getUserApplications(userId: string): Promise<any[]> {

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Eye, Calendar, Users, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, X, Eye, Calendar, Users, ExternalLink, ChevronDown, ChevronUp, Mail, Phone, FileText, Briefcase } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Campaign {
@@ -20,6 +20,199 @@ interface Campaign {
     business_name: string;
     logo_url?: string;
   };
+}
+
+function ApplicationRow({ application, onStatusUpdate }: { application: any; onStatusUpdate: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (status: "approved" | "rejected" | "pending") =>
+      fetch(`/api/admin/applications/${application._id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      }).then((r) => r.json()),
+    onSuccess: () => {
+      onStatusUpdate();
+    },
+  });
+
+  return (
+    <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3 flex-1">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+            {application.user?.avatarUrl ? (
+              <img
+                src={application.user.avatarUrl}
+                alt={application.user.displayName}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-white font-medium">
+                {(application.user?.displayName || application.user?.email || "A")[0].toUpperCase()}
+              </span>
+            )}
+          </div>
+
+          {/* User Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white">
+              {application.user?.displayName || "Anonymous"}
+            </p>
+            {application.user?.email && (
+              <p className="text-xs text-white/60 flex items-center gap-1">
+                <Mail className="w-3 h-3" />
+                {application.user.email}
+              </p>
+            )}
+            <p className="text-xs text-white/40 mt-1">
+              Applied {new Date(application.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
+        {/* Status Badge */}
+        <Badge
+          variant="outline"
+          className={`text-xs ${
+            application.status === "approved"
+              ? "bg-green-500/20 text-green-400 border-green-500/30"
+              : application.status === "rejected"
+              ? "bg-red-500/20 text-red-400 border-red-500/30"
+              : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+          }`}
+        >
+          {application.status}
+        </Badge>
+      </div>
+
+      {/* Quick Info */}
+      <div className="flex gap-2 mb-3 flex-wrap">
+        {application.contact_details && (
+          <div className="text-xs text-white/60 flex items-center gap-1 px-2 py-1 rounded bg-white/5">
+            <Phone className="w-3 h-3" />
+            {application.contact_details}
+          </div>
+        )}
+        {application.resume_url && (
+          <a
+            href={application.resume_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 px-2 py-1 rounded bg-white/5"
+          >
+            <FileText className="w-3 h-3" />
+            Resume
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        )}
+        {application.portfolio_url && (
+          <a
+            href={application.portfolio_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 px-2 py-1 rounded bg-white/5"
+          >
+            <Briefcase className="w-3 h-3" />
+            Portfolio
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        )}
+      </div>
+
+      {/* Message Preview */}
+      {application.message && (
+        <p className="text-xs text-white/70 line-clamp-2 mb-3">{application.message}</p>
+      )}
+
+      {/* Expand/Collapse */}
+      {(application.message || (application.answers && Object.keys(application.answers).length > 0)) && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs text-blue-400 hover:text-blue-300 mb-3 flex items-center gap-1"
+        >
+          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          {expanded ? "Show Less" : "Show More"}
+        </button>
+      )}
+
+      {/* Expanded Content */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden mb-3"
+          >
+            <div className="border-t border-white/6 pt-3 space-y-3">
+              {application.message && (
+                <div>
+                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Message</p>
+                  <p className="text-sm text-white/70 whitespace-pre-wrap">{application.message}</p>
+                </div>
+              )}
+              {application.answers && Object.keys(application.answers).length > 0 && (
+                <div>
+                  <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Additional Answers</p>
+                  <div className="space-y-2">
+                    {Object.entries(application.answers).map(([key, value]) => (
+                      <div key={key}>
+                        <span className="text-xs text-white/50 capitalize">{key.replace(/_/g, " ")}:</span>
+                        <p className="text-sm text-white/70">{String(value)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2 pt-3 border-t border-white/6">
+        {application.status !== "approved" && (
+          <Button
+            size="sm"
+            onClick={() => updateStatusMutation.mutate("approved")}
+            disabled={updateStatusMutation.isPending}
+            className="bg-green-500/15 text-green-400 border border-green-500/20 hover:bg-green-500/25"
+          >
+            <Check className="w-3 h-3 mr-1" />
+            Approve
+          </Button>
+        )}
+        {application.status !== "rejected" && (
+          <Button
+            size="sm"
+            onClick={() => updateStatusMutation.mutate("rejected")}
+            disabled={updateStatusMutation.isPending}
+            variant="outline"
+            className="bg-red-500/15 text-red-400 border border-red-500/20 hover:bg-red-500/25"
+          >
+            <X className="w-3 h-3 mr-1" />
+            Reject
+          </Button>
+        )}
+        {(application.status === "approved" || application.status === "rejected") && (
+          <Button
+            size="sm"
+            onClick={() => updateStatusMutation.mutate("pending")}
+            disabled={updateStatusMutation.isPending}
+            variant="outline"
+            className="bg-yellow-500/15 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/25"
+          >
+            Reset to Pending
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function CampaignRow({ campaign }: { campaign: Campaign }) {
@@ -175,38 +368,17 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
                   <p className="text-xs text-white/30 uppercase tracking-wider mb-3">
                     Applications ({applications.length})
                   </p>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {applications.map((app: any) => (
-                      <div
+                      <ApplicationRow
                         key={app._id}
-                        className="p-3 rounded-lg bg-white/5 border border-white/10"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="text-sm text-white/80">
-                              User ID: {app.user_id}
-                            </p>
-                            {app.message && (
-                              <p className="text-xs text-white/60 mt-1">{app.message}</p>
-                            )}
-                            <p className="text-xs text-white/40 mt-1">
-                              Applied {new Date(app.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className={`text-xs ${
-                              app.status === "accepted"
-                                ? "bg-green-500/20 text-green-400"
-                                : app.status === "rejected"
-                                ? "bg-red-500/20 text-red-400"
-                                : "bg-yellow-500/20 text-yellow-400"
-                            }`}
-                          >
-                            {app.status}
-                          </Badge>
-                        </div>
-                      </div>
+                        application={app}
+                        onStatusUpdate={() => {
+                          queryClient.invalidateQueries({
+                            queryKey: ["admin-campaign-applications", campaign._id],
+                          });
+                        }}
+                      />
                     ))}
                   </div>
                 </div>
