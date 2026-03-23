@@ -148,7 +148,31 @@ export class DatabaseStorage implements IStorage {
       })
     );
 
-    const profile = results.find(r => r !== null);
+    let profile = results.find(r => r !== null);
+
+    // 3.5. If no profile found in main models, check if they own any businesses
+    if (!profile) {
+      const ownedBusiness = await Business.findOne({
+        $or: [{ owner_user_id: actualId }, { owner_user_id: user.googleId }]
+      }).lean();
+      
+      if (ownedBusiness) {
+        profile = { ...ownedBusiness, type: "business", onboarding_completed: true };
+      } else {
+        // Finally check if they are a member of any business
+        const membership = await TeamMember.findOne({
+           $or: [{ user_id: actualId }, { user_id: user.googleId }],
+           invite_status: "accepted"
+        }).lean();
+        
+        if (membership) {
+           const memberBusiness = await Business.findById(membership.business_id).lean();
+           if (memberBusiness) {
+             profile = { ...memberBusiness, type: "business", onboarding_completed: true, user_role: membership.role };
+           }
+        }
+      }
+    }
 
     // 4. Update user's profileType if found during fallback for faster future lookups
     if (profile && profile.onboarding_completed) {
@@ -204,6 +228,24 @@ export class DatabaseStorage implements IStorage {
           needsOnboarding: !(doc as any).onboarding_completed
         };
       }
+    }
+
+    // Checking for business profile ownership or membership
+    const ownedBusiness = await Business.findOne({
+      $or: [{ owner_user_id: actualId }, { owner_user_id: user.googleId }]
+    }).lean();
+
+    if (ownedBusiness) {
+      return { hasProfile: true, hasCompletedProfile: true, needsOnboarding: false };
+    }
+
+    const membership = await TeamMember.findOne({
+      $or: [{ user_id: actualId }, { user_id: user.googleId }],
+      invite_status: "accepted"
+    }).lean();
+
+    if (membership) {
+      return { hasProfile: true, hasCompletedProfile: true, needsOnboarding: false };
     }
 
     return { hasProfile: false, hasCompletedProfile: false, needsOnboarding: true };

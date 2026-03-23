@@ -2116,6 +2116,27 @@ export default function Dashboard() {
     );
   }
 
+  // Business: Redirect or show business selector
+  if (profile?.type === "business") {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+        <h2 className="text-2xl font-bold text-white mb-4">Welcome to your Business Dashboard</h2>
+        <p className="text-white/60 mb-8 max-w-md">
+          You are currently logged in with a business profile. Please navigate to your business dashboard to manage campaigns and team members.
+        </p>
+        <button 
+          onClick={() => {
+            if (profile._id) setLocation(`/business/${profile._id}`);
+            else setLocation("/business/create");
+          }} 
+          className="px-6 py-3 bg-[#E63946] text-white font-medium rounded-xl hover:bg-[#E63946]/90 transition-colors"
+        >
+          {profile._id ? "Go to Business Dashboard" : "Create a Business"}
+        </button>
+      </div>
+    );
+  }
+
   // Fallback for unknown profile types or incomplete data
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
