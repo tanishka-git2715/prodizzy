@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -2064,6 +2064,12 @@ export default function Dashboard() {
     window.location.href = "/";
   }
 
+  useEffect(() => {
+    if (session && isFetched && !profile) {
+      setLocation("/");
+    }
+  }, [session, isFetched, profile, setLocation]);
+
   if (authLoading || (isLoading && !profile)) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -2073,8 +2079,7 @@ export default function Dashboard() {
   }
 
   if (session && isFetched && !profile) {
-    setLocation("/");
-    return null;
+    return null; // Redirecting in useEffect
   }
 
   const hour = new Date().getHours();
@@ -2111,5 +2116,14 @@ export default function Dashboard() {
     );
   }
 
-  return null;
+  // Fallback for unknown profile types or incomplete data
+  return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+      <h2 className="text-xl font-semibold text-white mb-2">Something went wrong</h2>
+      <p className="text-white/50 text-sm mb-6 max-w-sm">We couldn't determine your profile type. Please try signing out and back in.</p>
+      <button onClick={signOut} className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-white/90 transition-colors">
+        Sign Out
+      </button>
+    </div>
+  );
 }
