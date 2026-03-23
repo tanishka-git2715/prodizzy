@@ -1217,6 +1217,36 @@ export class DatabaseStorage implements IStorage {
     return campaigns;
   }
 
+  async getPublicCampaigns(filters?: { category?: string; engagementType?: string; location?: string; skills?: string[] }): Promise<any[]> {
+    const query: any = {
+      status: "active",
+      approved: true // Only show approved campaigns publicly
+    };
+
+    if (filters?.category) {
+      query.category = filters.category;
+    }
+
+    if (filters?.engagementType) {
+      query.engagementType = filters.engagementType;
+    }
+
+    if (filters?.location) {
+      query.location = { $regex: filters.location, $options: 'i' };
+    }
+
+    if (filters?.skills && filters.skills.length > 0) {
+      query.skills = { $in: filters.skills };
+    }
+
+    const campaigns = await Campaign.find(query)
+      .populate('business_id', 'business_name logo_url location')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return campaigns;
+  }
+
   async updateCampaign(campaignId: string, updates: any): Promise<any> {
     const campaign = await Campaign.findByIdAndUpdate(
       campaignId,

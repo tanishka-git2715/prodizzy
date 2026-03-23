@@ -30,6 +30,7 @@ export function ApplicationFormModal({
 
   const [formData, setFormData] = useState({
     message: "",
+    contact_details: "",
     resume_url: "",
     portfolio_url: "",
     answers: {} as Record<string, any>,
@@ -52,7 +53,7 @@ export function ApplicationFormModal({
       await createApplication.mutateAsync(formData);
       onSuccess();
       // Reset form
-      setFormData({ message: "", resume_url: "", portfolio_url: "", answers: {} });
+      setFormData({ message: "", contact_details: "", resume_url: "", portfolio_url: "", answers: {} });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -75,7 +76,7 @@ export function ApplicationFormModal({
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Message */}
           <div>
-            <Label htmlFor="message">Cover Letter / Message</Label>
+            <Label htmlFor="message">Tell us more about yourself</Label>
             <Textarea
               id="message"
               placeholder="Why are you interested in this opportunity?"
@@ -85,6 +86,19 @@ export function ApplicationFormModal({
               maxLength={500}
             />
             <p className="text-xs text-white/40 mt-1">{formData.message.length}/500</p>
+          </div>
+
+          {/* Contact Details */}
+          <div>
+            <Label htmlFor="contact_details">Add your point of contact</Label>
+            <Input
+              id="contact_details"
+              type="text"
+              placeholder="Phone number or preferred contact method"
+              value={formData.contact_details}
+              onChange={(e) => setFormData({ ...formData, contact_details: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
+            />
           </div>
 
           {/* Resume URL */}

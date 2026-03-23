@@ -10,6 +10,7 @@ import PartnerOnboard from "@/pages/PartnerOnboard";
 import IndividualOnboard from "@/pages/IndividualOnboard";
 import Dashboard from "@/pages/Dashboard";
 import Discover from "@/pages/Discover";
+import CampaignDiscover from "@/pages/CampaignDiscover";
 import Admin from "@/pages/Admin";
 import BusinessCreate from "@/pages/BusinessCreate";
 import BusinessDashboard from "@/pages/BusinessDashboard";
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/invite/:token" component={AcceptInvite} />
       <Route path="/dashboard">{() => <ProtectedRoute component={Dashboard} />}</Route>
       <Route path="/discover">{() => <ProtectedRoute component={Discover} />}</Route>
+      <Route path="/campaigns/discover" component={CampaignDiscover} />
       <Route path="/admin">{() => <ProtectedRoute component={Admin} />}</Route>
       <Route path="/business/create">{() => <ProtectedRoute component={BusinessCreate} />}</Route>
       <Route path="/business/:id">{() => <ProtectedRoute component={BusinessDashboard} />}</Route>

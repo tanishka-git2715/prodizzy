@@ -9,16 +9,34 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const [authSuccess, setAuthSuccess] = useState(false);
 
+  // Get redirect parameter from URL or sessionStorage (after OAuth)
+  const searchParams = new URLSearchParams(window.location.search);
+  let redirectUrl = searchParams.get('redirect');
+
+  // Check sessionStorage if not in URL (for post-OAuth redirects)
+  if (!redirectUrl) {
+    try {
+      const saved = sessionStorage.getItem("prodizzy-redirect-url");
+      if (saved) {
+        redirectUrl = saved;
+        sessionStorage.removeItem("prodizzy-redirect-url");
+      }
+    } catch { /* ignore */ }
+  }
+
   // If already logged in OR just authenticated, redirect straight to the right place
   useEffect(() => {
     if (!authLoading && session && session.user?.profileStatus) {
-      if (session.user.profileStatus.hasCompletedProfile) {
+      // If there's a redirect URL, use it
+      if (redirectUrl) {
+        setLocation(redirectUrl);
+      } else if (session.user.profileStatus.hasCompletedProfile) {
         setLocation("/dashboard");
       } else {
         setLocation("/individual-onboard");
       }
     }
-  }, [session, authLoading, setLocation, authSuccess]);
+  }, [session, authLoading, setLocation, authSuccess, redirectUrl]);
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-6 overflow-hidden relative">
@@ -32,9 +50,10 @@ export default function Login() {
         className="w-full max-w-[440px] z-10"
       >
         <div className="bg-[#111111] border border-white/5 rounded-3xl p-10 shadow-2xl relative overflow-hidden">
-          <AuthForm 
-            initialTab="signin" 
+          <AuthForm
+            initialTab="signin"
             onSuccess={() => setAuthSuccess(true)}
+            redirectUrl={redirectUrl || undefined}
           />
         </div>
 

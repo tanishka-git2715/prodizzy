@@ -206,6 +206,13 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
                       </div>
                     )}
 
+                    {application.contact_details && (
+                      <div>
+                        <h5 className="text-sm font-medium text-white/80 mb-1">Contact Details</h5>
+                        <p className="text-sm text-white/60">{application.contact_details}</p>
+                      </div>
+                    )}
+
                     {application.answers && Object.keys(application.answers).length > 0 && (
                       <div>
                         <h5 className="text-sm font-medium text-white/80 mb-2">Additional Answers</h5>

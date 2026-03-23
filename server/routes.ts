@@ -870,7 +870,24 @@ export async function registerRoutes(
     }
   });
 
-  // Browse active campaigns (public discover)
+  // PUBLIC: Discover active and approved campaigns (no auth required)
+  app.get("/api/campaigns/discover", async (req: any, res) => {
+    try {
+      const filters = {
+        category: req.query.category as string,
+        engagementType: req.query.engagementType as string,
+        location: req.query.location as string,
+        skills: req.query.skills ? (req.query.skills as string).split(',') : undefined
+      };
+
+      const campaigns = await storage.getPublicCampaigns(filters);
+      res.json(campaigns);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Browse active campaigns (authenticated)
   app.get("/api/campaigns", ensureAuthenticated, async (req: any, res) => {
     try {
       const filters = {

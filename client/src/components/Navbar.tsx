@@ -24,6 +24,9 @@ export function Navbar() {
         </div>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+          <Link href="/campaigns/discover" className="hover:text-foreground transition-colors">
+            Discover Campaigns
+          </Link>
           <button onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: 'smooth'})} className="hover:text-foreground transition-colors">Features</button>
           <button onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: 'smooth'})} className="hover:text-foreground transition-colors">How it Works</button>
         </nav>

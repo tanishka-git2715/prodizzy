@@ -5,9 +5,10 @@ interface AuthFormProps {
     onSuccess?: () => void;
     initialTab?: "signup" | "signin";
     pendingRole?: string | null;
+    redirectUrl?: string;
 }
 
-export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: AuthFormProps) {
+export function AuthForm({ onSuccess, initialTab = "signup", pendingRole, redirectUrl }: AuthFormProps) {
     const { loginWithGoogle, sendOtp, verifyOtp, error } = useAuth();
     const [activeTab, setActiveTab] = useState<"signup" | "signin">(initialTab);
 
@@ -165,12 +166,17 @@ export function AuthForm({ onSuccess, initialTab = "signup", pendingRole }: Auth
             <button
                 type="button"
                 onClick={() => {
-                    // Persist pendingRole and authSuccess across the Google OAuth full-page redirect
+                    // Persist pendingRole, redirectUrl, and authSuccess across the Google OAuth full-page redirect
                     sessionStorage.setItem("prodizzy-auth-success", "true");
                     if (pendingRole) {
                         sessionStorage.setItem("prodizzy-pending-role", pendingRole);
                     } else {
                         sessionStorage.removeItem("prodizzy-pending-role");
+                    }
+                    if (redirectUrl) {
+                        sessionStorage.setItem("prodizzy-redirect-url", redirectUrl);
+                    } else {
+                        sessionStorage.removeItem("prodizzy-redirect-url");
                     }
                     loginWithGoogle();
                 }}

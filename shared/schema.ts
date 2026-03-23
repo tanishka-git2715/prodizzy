@@ -532,6 +532,7 @@ export type Campaign = {
 export const insertCampaignApplicationSchema = z.object({
   campaign_id: z.string(),
   message: z.string().optional(),
+  contact_details: z.string().optional(),
   resume_url: z.string().optional(),
   portfolio_url: z.string().optional(),
   answers: z.record(z.any()).optional(), // Custom question answers
@@ -544,6 +545,7 @@ export type CampaignApplication = {
   campaign_id: string;
   user_id: string;
   message?: string;
+  contact_details?: string;
   resume_url?: string;
   portfolio_url?: string;
   answers?: Record<string, any>;
