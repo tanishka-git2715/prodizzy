@@ -101,6 +101,14 @@ export default function CampaignCreate() {
 
     return (filled / requiredFields.length) * 100;
   }, [formData, template]);
+  
+  const isFieldVisible = (fieldName: string) => {
+    if (!template) return true;
+    return (
+      template.requiredFields.includes(fieldName) ||
+      template.optionalFields.includes(fieldName)
+    );
+  };
 
 
   // Create campaign mutation
@@ -332,50 +340,56 @@ export default function CampaignCreate() {
                 </div>
               ))}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <Label htmlFor="engagementType" className="text-sm">Engagement Type</Label>
-                  <Select
-                    value={formData.engagementType}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, engagementType: value }))
-                    }
-                  >
-                    <SelectTrigger className="bg-white/5 border-white/10">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Internship">Internship</SelectItem>
-                      <SelectItem value="Project-based">Project-based</SelectItem>
-                      <SelectItem value="Part-time">Part-time</SelectItem>
-                      <SelectItem value="Full-time">Full-time</SelectItem>
-                      <SelectItem value="Partnership">Partnership</SelectItem>
-                      <SelectItem value="Open / Flexible">Open / Flexible</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {(isFieldVisible("engagementType") || isFieldVisible("compensation")) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {isFieldVisible("engagementType") && (
+                    <div>
+                      <Label htmlFor="engagementType" className="text-sm">Engagement Type</Label>
+                      <Select
+                        value={formData.engagementType}
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({ ...prev, engagementType: value }))
+                        }
+                      >
+                        <SelectTrigger className="bg-white/5 border-white/10">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Internship">Internship</SelectItem>
+                          <SelectItem value="Project-based">Project-based</SelectItem>
+                          <SelectItem value="Part-time">Part-time</SelectItem>
+                          <SelectItem value="Full-time">Full-time</SelectItem>
+                          <SelectItem value="Partnership">Partnership</SelectItem>
+                          <SelectItem value="Open / Flexible">Open / Flexible</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
-                <div>
-                  <Label htmlFor="compensation" className="text-sm">Compensation</Label>
-                  <Select
-                    value={formData.compensation}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, compensation: value }))
-                    }
-                  >
-                    <SelectTrigger className="bg-white/5 border-white/10">
-                      <SelectValue placeholder="Select compensation" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Unpaid">Unpaid</SelectItem>
-                      <SelectItem value="Paid">Paid</SelectItem>
-                      <SelectItem value="Performance-based">Performance-based</SelectItem>
-                      <SelectItem value="Equity">Equity</SelectItem>
-                      <SelectItem value="Flexible">Flexible</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {isFieldVisible("compensation") && (
+                    <div>
+                      <Label htmlFor="compensation" className="text-sm">Compensation</Label>
+                      <Select
+                        value={formData.compensation}
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({ ...prev, compensation: value }))
+                        }
+                      >
+                        <SelectTrigger className="bg-white/5 border-white/10">
+                          <SelectValue placeholder="Select compensation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Unpaid">Unpaid</SelectItem>
+                          <SelectItem value="Paid">Paid</SelectItem>
+                          <SelectItem value="Performance-based">Performance-based</SelectItem>
+                          <SelectItem value="Equity">Equity</SelectItem>
+                          <SelectItem value="Flexible">Flexible</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
@@ -405,44 +419,46 @@ export default function CampaignCreate() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="skills" className="text-sm">Skills Required</Label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    id="skills"
-                    placeholder="Type a skill and press Enter"
-                    value={skillInput}
-                    onChange={(e) => setSkillInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddSkill();
-                      }
-                    }}
-                    className="bg-white/5 border-white/10 text-sm"
-                  />
-                  <Button type="button" onClick={handleAddSkill} variant="outline" size="sm">
-                    Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="px-3 py-1 rounded-full text-sm bg-blue-500/20 border border-blue-500/30 text-blue-300 flex items-center gap-2"
-                    >
-                      {skill}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSkill(skill)}
-                        className="hover:text-red-400"
+              {isFieldVisible("skills") && (
+                <div>
+                  <Label htmlFor="skills" className="text-sm">Skills Required</Label>
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      id="skills"
+                      placeholder="Type a skill and press Enter"
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddSkill();
+                        }
+                      }}
+                      className="bg-white/5 border-white/10 text-sm"
+                    />
+                    <Button type="button" onClick={handleAddSkill} variant="outline" size="sm">
+                      Add
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="px-3 py-1 rounded-full text-sm bg-blue-500/20 border border-blue-500/30 text-blue-300 flex items-center gap-2"
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSkill(skill)}
+                          className="hover:text-red-400"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
@@ -476,7 +492,7 @@ export default function CampaignCreate() {
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="bg-white/5 border-white/10 text-sm file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                    className="bg-white/5 border-white/10 text-sm h-10 py-0 file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
                   />
                   {formData.attachments.length > 0 && (
                     <p className="text-[10px] text-green-400/70 mt-1">File ready to upload</p>

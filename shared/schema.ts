@@ -454,7 +454,7 @@ export type TeamMember = {
 
 export const insertCampaignSchema = z.object({
   title: z.string().min(1, "Campaign title is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  description: z.string().min(1, "Campaign description is required"),
   category: z.enum([
     "Hiring",
     "Freelance",

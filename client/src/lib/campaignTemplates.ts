@@ -43,7 +43,7 @@ export const campaignTemplates: CampaignTemplate[] = [
     category: "General",
     defaultFields: {},
     requiredFields: ["title", "description"],
-    optionalFields: ["compensation", "deadline", "location", "skills"],
+    optionalFields: ["engagementType", "compensation", "deadline", "location", "skills"],
     customFields: [
       {
         name: "type",
@@ -60,11 +60,10 @@ export const campaignTemplates: CampaignTemplate[] = [
     icon: TestTube,
     category: "Testing",
     defaultFields: {
-      engagementType: "Part-time",
       experience: "Beginner"
     },
     requiredFields: ["title", "description", "targetProfiles"],
-    optionalFields: ["deadline", "compensation"],
+    optionalFields: ["deadline"],
     customFields: [
       {
         name: "product",
@@ -102,7 +101,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       engagementType: "Partnership",
       compensation: "Equity"
     },
-    requiredFields: ["title", "description", "skills"],
+    requiredFields: ["title", "description", "skills", "engagementType", "compensation"],
     optionalFields: ["location", "targetProfiles"],
     customFields: [
       {
@@ -163,7 +162,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       workType: "Remote"
     },
     requiredFields: ["title", "description", "skills", "compensation"],
-    optionalFields: ["deadline", "location"],
+    optionalFields: ["engagementType", "deadline", "location"],
     customFields: [
       {
         name: "skill",
@@ -195,7 +194,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       engagementType: "Project-based"
     },
     requiredFields: ["title", "description", "targetProfiles", "compensation"],
-    optionalFields: ["deadline", "location"],
+    optionalFields: ["engagementType", "skills", "deadline", "location"],
     customFields: [
       {
         name: "platform",
@@ -231,7 +230,7 @@ export const campaignTemplates: CampaignTemplate[] = [
     category: "Agency",
     defaultFields: {},
     requiredFields: ["title", "description", "compensation"],
-    optionalFields: ["deadline", "skills"],
+    optionalFields: ["engagementType", "deadline", "skills", "location"],
     customFields: [
       {
         name: "function",
@@ -269,7 +268,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       engagementType: "Partnership"
     },
     requiredFields: ["title", "description", "skills"],
-    optionalFields: ["compensation", "location"],
+    optionalFields: ["engagementType", "compensation", "location"],
     customFields: [
       {
         name: "domain",
@@ -299,7 +298,7 @@ export const campaignTemplates: CampaignTemplate[] = [
     category: "Fundraising",
     defaultFields: {},
     requiredFields: ["title", "description"],
-    optionalFields: ["targetProfiles", "deadline"],
+    optionalFields: ["targetProfiles", "deadline", "engagementType", "compensation", "location", "skills"],
     customFields: [
       {
         name: "stage",
