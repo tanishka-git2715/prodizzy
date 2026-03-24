@@ -397,7 +397,7 @@ export default function IndividualOnboard() {
   });
 
   useEffect(() => {
-    if (existingProfile?.onboarding_completed) {
+    if (existingProfile?.type === "individual" && existingProfile?.onboarding_completed) {
       setLocation("/dashboard");
     }
   }, [existingProfile, setLocation]);
