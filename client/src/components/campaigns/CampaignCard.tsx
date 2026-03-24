@@ -52,7 +52,7 @@ export function CampaignCard({ campaign, onApply }: CampaignCardProps) {
   );
 
   const highlights = useMemo(() => {
-    const importantFields = ['role', 'experience', 'duration', 'platform', 'equity', 'product', 'stage', 'amount', 'domain'];
+    const importantFields = ['role', 'experience', 'duration', 'platform', 'equity', 'product', 'stage', 'amount', 'domain', 'compensation'];
     return Object.entries(campaign.customFields || {})
       .filter(([key, value]) => importantFields.includes(key) && value)
       .map(([key, value]) => ({
@@ -130,10 +130,10 @@ export function CampaignCard({ campaign, onApply }: CampaignCardProps) {
 
         {/* Quick Info */}
         <div className="grid grid-cols-2 gap-2 text-xs text-white/50">
-          {campaign.budget && (
+          {campaign.compensation && (
             <div className="flex items-center gap-1.5">
               <DollarSign className="w-3.5 h-3.5" />
-              <span className="truncate">{campaign.budget}</span>
+              <span className="truncate">{campaign.compensation}</span>
             </div>
           )}
           {campaign.location && (

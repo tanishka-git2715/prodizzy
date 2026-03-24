@@ -33,10 +33,11 @@ interface CampaignFormData {
   templateId?: string;
   targetProfiles: string[];
   engagementType?: string;
-  budget?: string;
+  compensation?: string;
   deadline?: string;
   skills: string[];
   location?: string;
+  referenceLink?: string;
   attachments: string[];
   customFields?: Record<string, any>;
   status: "draft" | "active";
@@ -73,13 +74,14 @@ export default function CampaignCreate() {
     templateId: templateId || undefined,
     targetProfiles: [],
     engagementType: template?.defaultFields.engagementType,
-    budget: "",
+    compensation: template?.defaultFields.compensation || "",
     deadline: "",
     skills: [],
     location: "",
     attachments: [],
+    referenceLink: "",
     customFields: {},
-    status: "draft",
+    status: "active",
   });
 
   const [skillInput, setSkillInput] = useState("");
@@ -343,28 +345,35 @@ export default function CampaignCreate() {
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Full-time">Full-time</SelectItem>
-                      <SelectItem value="Part-time">Part-time</SelectItem>
-                      <SelectItem value="Contract">Contract</SelectItem>
-                      <SelectItem value="Project-based">Project-based</SelectItem>
-                      <SelectItem value="Equity">Equity</SelectItem>
                       <SelectItem value="Internship">Internship</SelectItem>
-                      <SelectItem value="Freelance">Freelance</SelectItem>
+                      <SelectItem value="Project-based">Project-based</SelectItem>
+                      <SelectItem value="Part-time">Part-time</SelectItem>
+                      <SelectItem value="Full-time">Full-time</SelectItem>
+                      <SelectItem value="Partnership">Partnership</SelectItem>
+                      <SelectItem value="Open / Flexible">Open / Flexible</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="budget" className="text-sm">Budget</Label>
-                  <Input
-                    id="budget"
-                    placeholder="e.g., $5,000 - $8,000"
-                    value={formData.budget}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, budget: e.target.value }))
+                  <Label htmlFor="compensation" className="text-sm">Compensation</Label>
+                  <Select
+                    value={formData.compensation}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, compensation: value }))
                     }
-                    className="bg-white/5 border-white/10"
-                  />
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/10">
+                      <SelectValue placeholder="Select compensation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Unpaid">Unpaid</SelectItem>
+                      <SelectItem value="Paid">Paid</SelectItem>
+                      <SelectItem value="Performance-based">Performance-based</SelectItem>
+                      <SelectItem value="Equity">Equity</SelectItem>
+                      <SelectItem value="Flexible">Flexible</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -434,6 +443,46 @@ export default function CampaignCreate() {
                   ))}
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <Label htmlFor="referenceLink" className="text-sm">Reference Link (Optional)</Label>
+                  <Input
+                    id="referenceLink"
+                    placeholder="https://..."
+                    value={formData.referenceLink}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, referenceLink: e.target.value }))
+                    }
+                    className="bg-white/5 border-white/10 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="attachments" className="text-sm">Upload File (Optional)</Label>
+                  <Input
+                    id="attachments"
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            attachments: [reader.result as string]
+                          }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="bg-white/5 border-white/10 text-sm file:mr-4 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                  />
+                  {formData.attachments.length > 0 && (
+                    <p className="text-[10px] text-green-400/70 mt-1">File ready to upload</p>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -499,10 +548,10 @@ export default function CampaignCreate() {
                       <p className="font-medium">{formData.engagementType}</p>
                     </div>
                   )}
-                  {formData.budget && (
+                  {formData.compensation && (
                     <div>
-                      <span className="text-sm text-white/60">Budget:</span>
-                      <p className="font-medium">{formData.budget}</p>
+                      <span className="text-sm text-white/60">Compensation:</span>
+                      <p className="font-medium">{formData.compensation}</p>
                     </div>
                   )}
                   {formData.location && (

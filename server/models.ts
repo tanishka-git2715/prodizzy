@@ -324,13 +324,17 @@ const CampaignSchema = new Schema({
     targetProfiles: [String],
     engagementType: {
         type: String,
-        enum: ["Full-time", "Part-time", "Contract", "Project-based", "Equity", "Internship", "Freelance", "Long-term", "Advisory"]
+        enum: ["Internship", "Project-based", "Part-time", "Full-time", "Partnership", "Open / Flexible"]
     },
-    budget: String,
+    compensation: {
+        type: String,
+        enum: ["Unpaid", "Paid", "Performance-based", "Equity", "Flexible"]
+    },
     deadline: String, // ISO date string
     skills: { type: [String], default: [] },
     location: String,
     attachments: { type: [String], default: [] },
+    referenceLink: String,
     customFields: Schema.Types.Mixed, // Template-specific fields
     status: {
         type: String,

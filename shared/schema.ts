@@ -472,23 +472,27 @@ export const insertCampaignSchema = z.object({
   templateId: z.string().optional(),
   targetProfiles: z.array(z.string()).optional(),
   engagementType: z.enum([
-    "Full-time",
-    "Part-time",
-    "Contract",
-    "Project-based",
-    "Equity",
     "Internship",
-    "Freelance",
-    "Long-term",
-    "Advisory"
+    "Project-based",
+    "Part-time",
+    "Full-time",
+    "Partnership",
+    "Open / Flexible"
   ]).optional(),
-  budget: z.string().optional(),
+  compensation: z.enum([
+    "Unpaid",
+    "Paid",
+    "Performance-based",
+    "Equity",
+    "Flexible"
+  ]).optional(),
   deadline: z.string().optional(), // ISO date string
-  skills: z.array(z.string()).default([]),
+  skills: z.array(z.string()).optional(),
   location: z.string().optional(),
-  attachments: z.array(z.string()).default([]),
+  attachments: z.array(z.string()).optional(),
+  referenceLink: z.string().optional(),
   customFields: z.record(z.any()).optional(), // Template-specific custom fields
-  status: z.enum(["draft", "active", "paused", "closed"]).default("draft"),
+  status: z.enum(["draft", "active", "completed", "cancelled"]).default("active"),
 });
 
 export const updateCampaignSchema = insertCampaignSchema.partial();
@@ -506,7 +510,7 @@ export type Campaign = {
   templateId?: string;
   targetProfiles?: string[];
   engagementType?: string;
-  budget?: string;
+  compensation?: string;
   deadline?: string;
   skills: string[];
   location?: string;

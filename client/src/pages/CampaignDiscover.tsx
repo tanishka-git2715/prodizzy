@@ -28,15 +28,12 @@ const CATEGORIES = [
 
 const ENGAGEMENT_TYPES = [
   "All",
-  "Full-time",
-  "Part-time",
-  "Contract",
-  "Project-based",
-  "Equity",
   "Internship",
-  "Freelance",
-  "Long-term",
-  "Advisory"
+  "Project-based",
+  "Part-time",
+  "Full-time",
+  "Partnership",
+  "Open / Flexible"
 ];
 
 function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {

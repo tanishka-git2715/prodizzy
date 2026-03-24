@@ -15,14 +15,14 @@ declare module "http" {
 
 app.use(
     express.json({
-        limit: "50mb",
+        limit: "100mb",
         verify: (req: any, _res, buf) => {
             req.rawBody = buf;
         },
     }),
 );
 
-app.use(express.urlencoded({ limit: "50mb", extended: false }));
+app.use(express.urlencoded({ limit: "100mb", extended: false }));
 
 // IMPORTANT FOR VERCEL
 // Allows express-session secure cookies and passport's correct callbackUrl protocol (HTTPS)

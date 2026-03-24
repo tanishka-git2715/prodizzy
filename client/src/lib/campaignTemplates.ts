@@ -43,7 +43,7 @@ export const campaignTemplates: CampaignTemplate[] = [
     category: "General",
     defaultFields: {},
     requiredFields: ["title", "description"],
-    optionalFields: ["budget", "deadline", "location", "skills"],
+    optionalFields: ["compensation", "deadline", "location", "skills"],
     customFields: [
       {
         name: "type",
@@ -64,7 +64,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       experience: "Beginner"
     },
     requiredFields: ["title", "description", "targetProfiles"],
-    optionalFields: ["deadline", "budget"],
+    optionalFields: ["deadline", "compensation"],
     customFields: [
       {
         name: "product",
@@ -99,7 +99,7 @@ export const campaignTemplates: CampaignTemplate[] = [
     icon: Users,
     category: "Startup",
     defaultFields: {
-      engagementType: "Equity",
+      engagementType: "Partnership",
       compensation: "Equity"
     },
     requiredFields: ["title", "description", "skills"],
@@ -121,7 +121,7 @@ export const campaignTemplates: CampaignTemplate[] = [
         name: "commitment",
         label: "Time Commitment",
         type: "select",
-        options: ["Part-time", "Full-time", "Flexible"]
+        options: ["Part-time", "Full-time", "Open / Flexible"]
       }
     ]
   },
@@ -136,7 +136,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       experience: "Intermediate"
     },
     requiredFields: ["title", "description", "skills", "engagementType"],
-    optionalFields: ["budget", "location", "deadline"],
+    optionalFields: ["compensation", "location", "deadline"],
     customFields: [
       {
         name: "role",
@@ -162,7 +162,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       engagementType: "Project-based",
       workType: "Remote"
     },
-    requiredFields: ["title", "description", "skills", "budget"],
+    requiredFields: ["title", "description", "skills", "compensation"],
     optionalFields: ["deadline", "location"],
     customFields: [
       {
@@ -194,7 +194,7 @@ export const campaignTemplates: CampaignTemplate[] = [
     defaultFields: {
       engagementType: "Project-based"
     },
-    requiredFields: ["title", "description", "targetProfiles", "budget"],
+    requiredFields: ["title", "description", "targetProfiles", "compensation"],
     optionalFields: ["deadline", "location"],
     customFields: [
       {
@@ -230,7 +230,7 @@ export const campaignTemplates: CampaignTemplate[] = [
     icon: Building2,
     category: "Agency",
     defaultFields: {},
-    requiredFields: ["title", "description", "budget"],
+    requiredFields: ["title", "description", "compensation"],
     optionalFields: ["deadline", "skills"],
     customFields: [
       {
@@ -266,10 +266,10 @@ export const campaignTemplates: CampaignTemplate[] = [
     icon: Lightbulb,
     category: "Advisory",
     defaultFields: {
-      engagementType: "Advisory"
+      engagementType: "Partnership"
     },
     requiredFields: ["title", "description", "skills"],
-    optionalFields: ["budget", "location"],
+    optionalFields: ["compensation", "location"],
     customFields: [
       {
         name: "domain",
