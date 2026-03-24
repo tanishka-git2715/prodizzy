@@ -122,7 +122,10 @@ export default function MyApplications() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setLocation(`/c/${application.campaign_id}`)}
+                        onClick={() => {
+                          const id = application.campaign?._id;
+                          if (id) setLocation(`/c/${id}`);
+                        }}
                         className="text-blue-400 hover:text-blue-300 -ml-2"
                       >
                         View Campaign

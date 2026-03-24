@@ -567,6 +567,7 @@ export type CampaignApplication = {
     avatarUrl?: string;
   };
   campaign?: {
+    _id: string;
     title: string;
     business_id: string;
   };

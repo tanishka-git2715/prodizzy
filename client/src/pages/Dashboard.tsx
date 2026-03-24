@@ -245,27 +245,30 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
             <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
             <span className="font-semibold tracking-tight">Prodizzy</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setLocation("/campaigns/discover")}
-              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
             >
-              Discover campaigns
+              <span className="hidden sm:inline">Discover campaigns</span>
+              <span className="sm:hidden">Discover</span>
             </button>
             <button
               onClick={() => setLocation("/my-applications")}
-              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/5 transition-colors hidden md:block"
             >
               My Applications
             </button>
             <button
               onClick={() => setLocation(mainBusinessId ? `/business/${mainBusinessId}/campaigns/new` : '/campaigns/new')}
-              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-[#E63946] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              Launch campaign
+              <span className="hidden sm:inline">Launch campaign</span>
+              <span className="sm:hidden">Launch</span>
             </button>
-            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
-              <LogOut className="w-3.5 h-3.5" /> Sign out
+            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-xs sm:text-sm">
+              <LogOut className="w-4 h-4" /> 
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
@@ -737,27 +740,30 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
             <span className="font-semibold tracking-tight">Prodizzy</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setLocation("/campaigns/discover")}
-              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
             >
-              Discover campaigns
+              <span className="hidden sm:inline">Discover campaigns</span>
+              <span className="sm:hidden">Discover</span>
             </button>
             <button
               onClick={() => setLocation("/my-applications")}
-              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/5 transition-colors hidden md:block"
             >
               My Applications
             </button>
             <button
               onClick={() => setLocation('/campaigns/new')}
-              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-[#E63946] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              Launch campaign
+              <span className="hidden sm:inline">Launch campaign</span>
+              <span className="sm:hidden">Launch</span>
             </button>
-            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
-              <LogOut className="w-3.5 h-3.5" /> Sign out
+            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-xs sm:text-sm">
+              <LogOut className="w-4 h-4" /> 
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
@@ -1352,27 +1358,30 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
             <img src="/logo.png" alt="Prodizzy" className="w-7 h-7 rounded-md" />
             <span className="font-semibold tracking-tight">Prodizzy</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setLocation("/campaigns/discover")}
-              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
             >
-              Discover campaigns
+              <span className="hidden sm:inline">Discover campaigns</span>
+              <span className="sm:hidden">Discover</span>
             </button>
             <button
               onClick={() => setLocation("/my-applications")}
-              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/5 transition-colors hidden md:block"
             >
               My Applications
             </button>
             <button
               onClick={() => setLocation(mainBusinessId ? `/business/${mainBusinessId}/campaigns/new` : '/campaigns/new')}
-              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_200px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-[#E63946] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              Launch campaign
+              <span className="hidden sm:inline">Launch campaign</span>
+              <span className="sm:hidden">Launch</span>
             </button>
-            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
-              <LogOut className="w-3.5 h-3.5" /> Sign out
+            <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-xs sm:text-sm">
+              <LogOut className="w-4 h-4" /> 
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
@@ -1769,34 +1778,37 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
       <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-white tracking-tight">Prodizzy</h1>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setLocation('/discover')}
-              className="px-4 py-2 bg-white/5 border border-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-white/5 border border-white/10 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
             >
-              Discover Startups
+              <span className="hidden sm:inline">Discover Startups</span>
+              <span className="sm:hidden">Startups</span>
             </button>
             <button
               onClick={() => setLocation("/campaigns/discover")}
-              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
             >
-              Discover campaigns
+              <span className="hidden sm:inline">Discover campaigns</span>
+              <span className="sm:hidden">Campaigns</span>
             </button>
             <button
               onClick={() => setLocation("/my-applications")}
-              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-white/5 transition-colors hidden md:block"
             >
               My Applications
             </button>
             <button
               onClick={() => setLocation(mainBusinessId ? `/business/${mainBusinessId}/campaigns/new` : '/campaigns/new')}
-              className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-[#E63946] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              Launch campaign
+              <span className="hidden sm:inline">Launch campaign</span>
+              <span className="sm:hidden">Launch</span>
             </button>
-            <button onClick={signOut} className="text-white/50 hover:text-white/80 text-sm flex items-center gap-2 transition-colors">
+            <button onClick={signOut} className="text-white/50 hover:text-white/80 text-xs sm:text-sm flex items-center gap-2 transition-colors">
               <LogOut className="w-4 h-4" />
-              <span>Sign out</span>
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
