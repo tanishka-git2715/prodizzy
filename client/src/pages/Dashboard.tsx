@@ -119,6 +119,9 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
     }
   });
 
+  const mainBusiness = businesses?.find((b: any) => !b.is_personal) || businesses?.[0];
+  const mainBusinessId = mainBusiness?._id;
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -251,9 +254,8 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
             </button>
             <button
               onClick={() => {
-                const bId = businesses?.[0]?._id;
-                if (bId) {
-                  setLocation(`/business/${bId}/campaigns/new`);
+                if (mainBusinessId) {
+                  setLocation(`/business/${mainBusinessId}/campaigns/new`);
                 } else {
                   createBusinessMutation.mutate();
                 }
@@ -467,10 +469,10 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
                   </div>
                 </motion.div>
               )}
-            </AnimatePresence>
+          </AnimatePresence>
           </div>
 
-          <CampaignsSection businessId={businesses?.[0]?._id} />
+          <CampaignsSection businessId={mainBusinessId} />
 
           {/* ── Connection Requests ──────────────────────────────────────────────────────── */}
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
@@ -617,6 +619,9 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
     }
   });
 
+  const personalBusiness = businesses?.find((b: any) => b.is_personal);
+  const personalBusinessId = personalBusiness?._id;
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -627,9 +632,10 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          business_name: "My Business",
-          business_type: "Startup",
-          description: "Personal business for launching campaigns"
+          business_name: "My Personal Profile",
+          business_type: "Individual",
+          description: "Personal business for launching individual campaigns",
+          is_personal: true
         }),
       });
       if (!response.ok) {
@@ -775,9 +781,8 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             </button>
             <button
               onClick={() => {
-                const bId = businesses?.[0]?._id;
-                if (bId) {
-                  setLocation(`/business/${bId}/campaigns/new`);
+                if (personalBusinessId) {
+                  setLocation(`/business/${personalBusinessId}/campaigns/new`);
                 } else {
                   createBusinessMutation.mutate();
                 }
@@ -1184,7 +1189,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             </AnimatePresence>
           </div>
 
-          <CampaignsSection businessId={businesses?.[0]?._id} />
+          <CampaignsSection businessId={personalBusinessId} />
 
           {/* ── Your Businesses ────────────────────────────────────────────── */}
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
@@ -1248,6 +1253,9 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
       return response.json();
     }
   });
+
+  const mainBusiness = businesses?.find((b: any) => !b.is_personal) || businesses?.[0];
+  const mainBusinessId = mainBusiness?._id;
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -1389,9 +1397,8 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
             </button>
             <button
               onClick={() => {
-                const bId = businesses?.[0]?._id;
-                if (bId) {
-                  setLocation(`/business/${bId}/campaigns/new`);
+                if (mainBusinessId) {
+                  setLocation(`/business/${mainBusinessId}/campaigns/new`);
                 } else {
                   createBusinessMutation.mutate();
                 }
@@ -1629,7 +1636,7 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
             </AnimatePresence>
           </div>
 
-          <CampaignsSection businessId={businesses?.[0]?._id} />
+          <CampaignsSection businessId={mainBusinessId} />
 
           {/* Investor section: only for approved partner-investors, added below original dashboard */}
           {showInvestorSection && (
@@ -1757,6 +1764,9 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
     }
   });
 
+  const mainBusiness = businesses?.find((b: any) => !b.is_personal) || businesses?.[0];
+  const mainBusinessId = mainBusiness?._id;
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -1811,9 +1821,8 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
             </button>
             <button
               onClick={() => {
-                const bId = businesses?.[0]?._id;
-                if (bId) {
-                  setLocation(`/business/${bId}/campaigns/new`);
+                if (mainBusinessId) {
+                  setLocation(`/business/${mainBusinessId}/campaigns/new`);
                 } else {
                   createBusinessMutation.mutate();
                 }
@@ -2124,15 +2133,23 @@ export default function Dashboard() {
         <p className="text-white/60 mb-8 max-w-md">
           You are currently logged in with a business profile. Please navigate to your business dashboard to manage campaigns and team members.
         </p>
-        <button 
-          onClick={() => {
-            if (profile._id) setLocation(`/business/${profile._id}`);
-            else setLocation("/business/create");
-          }} 
-          className="px-6 py-3 bg-[#E63946] text-white font-medium rounded-xl hover:bg-[#E63946]/90 transition-colors"
-        >
-          {profile._id ? "Go to Business Dashboard" : "Create a Business"}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button 
+            onClick={() => {
+              if (profile._id) setLocation(`/business/${profile._id}`);
+              else setLocation("/business/create");
+            }} 
+            className="px-6 py-3 bg-[#E63946] text-white font-medium rounded-xl hover:bg-[#E63946]/90 transition-colors"
+          >
+            {profile._id ? "Go to Business Dashboard" : "Create a Business"}
+          </button>
+          <button 
+            onClick={() => setLocation("/individual-onboard")} 
+            className="px-6 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 border border-white/10 transition-colors"
+          >
+            Create Individual Profile
+          </button>
+        </div>
       </div>
     );
   }

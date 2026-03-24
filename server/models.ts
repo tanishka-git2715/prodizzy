@@ -260,6 +260,7 @@ const BusinessSchema = new Schema({
     founded_year: Number,
     approved: { type: Boolean, default: false },
     onboarding_completed: { type: Boolean, default: false },
+    is_personal: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 }, { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } });

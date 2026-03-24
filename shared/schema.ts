@@ -366,6 +366,7 @@ export const insertBusinessSchema = z.object({
   team_size: z.string().optional(),
   location: z.string().optional(),
   founded_year: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
+  is_personal: z.boolean().optional().default(false),
 });
 
 export const updateBusinessSchema = insertBusinessSchema.partial();
@@ -388,6 +389,7 @@ export type Business = {
   founded_year?: number;
   approved: boolean;
   onboarding_completed: boolean;
+  is_personal: boolean;
   createdAt: string;
   updatedAt: string;
 };

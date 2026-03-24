@@ -26,7 +26,8 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
         body: JSON.stringify({
           business_name: "My Business",
           business_type: "Startup",
-          description: "Personal business for launching campaigns"
+          description: "Personal business for launching campaigns",
+          is_personal: true
         }),
       });
       if (!response.ok) {

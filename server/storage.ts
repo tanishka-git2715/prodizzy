@@ -966,6 +966,7 @@ export class DatabaseStorage implements IStorage {
     const business = new Business({
       owner_user_id: userId,
       ...businessData,
+      is_personal: businessData.is_personal || false,
       approved: false,
       onboarding_completed: true
     });
