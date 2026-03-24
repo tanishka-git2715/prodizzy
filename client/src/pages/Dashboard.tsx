@@ -278,6 +278,14 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}</h1>
           <p className="text-white/35 mt-1 text-sm">{profile.company_name} · {profile.role} · {profile.stage}</p>
+          
+          <button
+            onClick={() => setLocation("/my-applications")}
+            className="md:hidden w-full mt-4 px-4 py-3 bg-white/5 border border-white/10 text-white text-sm font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center justify-between group"
+          >
+            <span>My Applications</span>
+            <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
+          </button>
         </div>
 
         <div className="flex flex-col gap-5">
@@ -776,6 +784,14 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             <p className="text-white/35 mt-1 text-sm">
               {(profile as any).roles?.join(" · ") || "User"} · {profile.location}
             </p>
+            
+            <button
+              onClick={() => setLocation("/my-applications")}
+              className="md:hidden w-full mt-4 px-4 py-3 bg-white/5 border border-white/10 text-white text-sm font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center justify-between group"
+            >
+              <span>My Applications</span>
+              <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
+            </button>
           </div>
 
           {isFounder && (
@@ -1391,6 +1407,14 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName}</h1>
           <p className="text-white/35 mt-1 text-sm">{profile.company_name} · {profile.partner_type}</p>
+          
+          <button
+            onClick={() => setLocation("/my-applications")}
+            className="md:hidden w-full mt-4 px-4 py-3 bg-white/5 border border-white/10 text-white text-sm font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center justify-between group"
+          >
+            <span>My Applications</span>
+            <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
+          </button>
         </div>
 
         <div className="flex flex-col gap-5">
@@ -1820,7 +1844,16 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">{greeting}, {firstName} 👋</h1>
             <p className="text-white/50">Here are your recommended startup matches</p>
+
+            <button
+              onClick={() => setLocation("/my-applications")}
+              className="md:hidden w-full mt-4 px-4 py-3 bg-white/5 border border-white/10 text-white text-sm font-medium rounded-xl hover:bg-white/10 transition-colors flex items-center justify-between group"
+            >
+              <span>My Applications</span>
+              <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/40 transition-colors" />
+            </button>
           </div>
+
 
           {/* Profile Card */}
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">

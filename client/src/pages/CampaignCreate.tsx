@@ -554,19 +554,6 @@ export default function CampaignCreate() {
             <div className="flex gap-2 sm:gap-3">
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => handleSubmit("draft")}
-                disabled={createCampaignMutation.isPending}
-                className="bg-white/5 border-white/10 flex-1 sm:flex-initial"
-                size="sm"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Save Draft</span>
-                <span className="sm:hidden">Draft</span>
-              </Button>
-
-              <Button
-                type="button"
                 onClick={() => handleSubmit("active")}
                 disabled={progress < 100 || createCampaignMutation.isPending}
                 className="bg-[#E63946] hover:bg-[#E63946]/90 flex-1 sm:flex-initial"

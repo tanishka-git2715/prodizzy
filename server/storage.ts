@@ -1238,10 +1238,23 @@ export class DatabaseStorage implements IStorage {
   private async enhanceCampaign(campaign: any): Promise<any> {
     if (!campaign) return campaign;
 
-    // If no business, fetch individual profile
-    if (!campaign.business_id) {
+    // Map populated created_by to creator and business_id to business
+    // This aligns backend data with frontend expectation (creator/business instead of created_by/business_id)
+    if (campaign.created_by && typeof campaign.created_by === 'object') {
+      campaign.creator = campaign.created_by;
+    }
+    if (campaign.business_id && typeof campaign.business_id === 'object') {
+      campaign.business = campaign.business_id;
+    }
+
+    // Resolve Individual Profile if no business association exists
+    // Use the base string ID even if created_by was populated
+    const creatorId = campaign.created_by?._id?.toString() || 
+                      campaign.created_by?.toString();
+    
+    if (!campaign.business_id && creatorId) {
       const profile = await IndividualProfile.findOne({
-        user_id: campaign.created_by
+        user_id: creatorId
       }).lean();
       if (profile) {
         campaign.individual_profile = profile;
@@ -1255,13 +1268,17 @@ export class DatabaseStorage implements IStorage {
     return Promise.all(campaigns.map(c => this.enhanceCampaign(c)));
   }
 
+
   async getCampaignsByBusiness(businessId: string): Promise<any[]> {
     const campaigns = await Campaign.find({ business_id: businessId })
+      .populate('business_id', 'business_name logo_url location industry business_type team_size website linkedin_url founded_year description')
+      .populate('created_by', 'displayName avatarUrl email')
       .sort({ createdAt: -1 })
       .lean();
 
-    return campaigns;
+    return this.enhanceCampaigns(campaigns);
   }
+
 
   async getActiveCampaigns(filters?: { category?: string; skills?: string[] }): Promise<any[]> {
     const query: any = { status: "active" };
@@ -1368,23 +1385,26 @@ export class DatabaseStorage implements IStorage {
 
     await campaign.save();
 
-    // Return the campaign with creator population
+    // Return the campaign with creator population and enhancement
     const created = await Campaign.findById(campaign._id)
       .populate('created_by', 'displayName avatarUrl email')
       .lean();
-    return created;
+    return this.enhanceCampaign(created);
   }
+
 
   async getCampaignsByUser(userId: string): Promise<any[]> {
     const campaigns = await Campaign.find({
       created_by: userId,
       business_id: { $exists: false } // Only individual campaigns (no business)
     })
+      .populate('created_by', 'displayName avatarUrl email')
       .sort({ createdAt: -1 })
       .lean();
 
-    return campaigns;
+    return this.enhanceCampaigns(campaigns);
   }
+
 
   async getUserCampaignStats(userId: string): Promise<any> {
     const campaigns = await Campaign.find({

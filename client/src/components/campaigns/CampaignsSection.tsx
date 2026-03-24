@@ -144,14 +144,10 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
       <CardContent>
         {/* Campaign Stats */}
         {campaignStats && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <div className="p-4 rounded-lg bg-white/5 border border-white/10">
               <div className="text-2xl font-bold text-white">{campaignStats.active || 0}</div>
               <div className="text-sm text-white/60">Active</div>
-            </div>
-            <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-              <div className="text-2xl font-bold text-white">{campaignStats.draft || 0}</div>
-              <div className="text-sm text-white/60">Drafts</div>
             </div>
             <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
               <div className="text-2xl font-bold text-yellow-400">{campaignStats.pendingApproval || 0}</div>
