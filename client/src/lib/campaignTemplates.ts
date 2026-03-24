@@ -28,7 +28,7 @@ export interface CampaignTemplate {
   customFields?: {
     name: string;
     label: string;
-    type: "text" | "select" | "number" | "textarea";
+    type: "text" | "select" | "number" | "textarea" | "multiselect";
     options?: string[];
     placeholder?: string;
   }[];
@@ -72,22 +72,16 @@ export const campaignTemplates: CampaignTemplate[] = [
         placeholder: "e.g., TaskFlow App"
       },
       {
-        name: "testingDuration",
-        label: "Testing Duration",
-        type: "select",
-        options: ["1 week", "2 weeks", "1 month", "Ongoing"]
+        name: "productLink",
+        label: "Product Link",
+        type: "text",
+        placeholder: "https://..."
       },
       {
         name: "incentive",
         label: "Incentive",
         type: "text",
         placeholder: "e.g., Free premium access, $50 Amazon gift card"
-      },
-      {
-        name: "feedbackType",
-        label: "Feedback Type",
-        type: "select",
-        options: ["Survey", "Interview", "Bug Reports", "Usage Analytics"]
       }
     ]
   },
@@ -101,7 +95,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       engagementType: "Partnership",
       compensation: "Equity"
     },
-    requiredFields: ["title", "description", "skills", "engagementType", "compensation"],
+    requiredFields: ["title", "description"],
     optionalFields: ["location", "targetProfiles"],
     customFields: [
       {
@@ -135,7 +129,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       experience: "Intermediate"
     },
     requiredFields: ["title", "description", "skills", "engagementType"],
-    optionalFields: ["compensation", "location", "deadline"],
+    optionalFields: ["location", "deadline"],
     customFields: [
       {
         name: "role",
@@ -148,6 +142,12 @@ export const campaignTemplates: CampaignTemplate[] = [
         label: "Experience Level",
         type: "select",
         options: ["Entry-level", "Intermediate", "Senior", "Lead"]
+      },
+      {
+        name: "budget",
+        label: "Budget",
+        type: "text",
+        placeholder: "e.g., $1000 - $5000 or $50/hr"
       }
     ]
   },
@@ -161,7 +161,7 @@ export const campaignTemplates: CampaignTemplate[] = [
       engagementType: "Project-based",
       workType: "Remote"
     },
-    requiredFields: ["title", "description", "skills", "compensation"],
+    requiredFields: ["title", "description", "skills"],
     optionalFields: ["engagementType", "deadline", "location"],
     customFields: [
       {
@@ -181,6 +181,12 @@ export const campaignTemplates: CampaignTemplate[] = [
         label: "Project Duration",
         type: "select",
         options: ["1-2 weeks", "2-4 weeks", "1-2 months", "2-3 months", "3+ months"]
+      },
+      {
+        name: "budget",
+        label: "Budget",
+        type: "text",
+        placeholder: "e.g., $1000 fixed or $50/hr"
       }
     ]
   },
@@ -193,14 +199,14 @@ export const campaignTemplates: CampaignTemplate[] = [
     defaultFields: {
       engagementType: "Project-based"
     },
-    requiredFields: ["title", "description", "targetProfiles", "compensation"],
-    optionalFields: ["engagementType", "skills", "deadline", "location"],
+    requiredFields: ["title", "description", "targetProfiles"],
+    optionalFields: ["engagementType", "deadline", "location"],
     customFields: [
       {
-        name: "platform",
-        label: "Platform Focus",
-        type: "select",
-        options: ["Instagram", "YouTube", "TikTok", "Twitter", "LinkedIn", "Multiple"]
+        name: "channel",
+        label: "Preferred Channel",
+        type: "multiselect",
+        options: ["WhatsApp", "Instagram", "LinkedIn", "YouTube", "Facebook", "X (Twitter)", "Telegram", "Discord"]
       },
       {
         name: "niche",
@@ -219,6 +225,12 @@ export const campaignTemplates: CampaignTemplate[] = [
         label: "Expected Deliverables",
         type: "text",
         placeholder: "e.g., 3 Instagram posts + 1 community shoutout"
+      },
+      {
+        name: "budget",
+        label: "Budget",
+        type: "text",
+        placeholder: "e.g., $500 - $1000"
       }
     ]
   },
@@ -229,26 +241,30 @@ export const campaignTemplates: CampaignTemplate[] = [
     icon: Building2,
     category: "Agency",
     defaultFields: {},
-    requiredFields: ["title", "description", "compensation"],
-    optionalFields: ["engagementType", "deadline", "skills", "location"],
+    requiredFields: ["title", "description"],
+    optionalFields: ["engagementType", "deadline", "location"],
     customFields: [
       {
         name: "function",
         label: "Service Type",
         type: "select",
-        options: ["Marketing", "Design", "Development", "Content", "PR", "SEO", "Social Media"]
+        options: [
+          "AI Automation",
+          "App / Web Development",
+          "Performance Marketing",
+          "Branding & Design",
+          "SEO & Content Marketing",
+          "Growth Strategy & GTM",
+          "Legal & Compliance Support",
+          "Accounting / Finance Support",
+          "Other (Specify)"
+        ]
       },
       {
-        name: "scope",
-        label: "Project Scope",
-        type: "textarea",
-        placeholder: "Describe what you need help with"
-      },
-      {
-        name: "deliverables",
-        label: "Expected Deliverables",
-        type: "textarea",
-        placeholder: "List key deliverables"
+        name: "budget",
+        label: "Budget",
+        type: "text",
+        placeholder: "e.g., $1000 - $5000"
       },
       {
         name: "timeline",
@@ -267,8 +283,8 @@ export const campaignTemplates: CampaignTemplate[] = [
     defaultFields: {
       engagementType: "Partnership"
     },
-    requiredFields: ["title", "description", "skills"],
-    optionalFields: ["engagementType", "compensation", "location"],
+    requiredFields: ["title", "description"],
+    optionalFields: ["location"],
     customFields: [
       {
         name: "domain",
@@ -298,13 +314,20 @@ export const campaignTemplates: CampaignTemplate[] = [
     category: "Fundraising",
     defaultFields: {},
     requiredFields: ["title", "description"],
-    optionalFields: ["targetProfiles", "deadline", "engagementType", "compensation", "location", "skills"],
+    optionalFields: ["targetProfiles", "deadline", "location"],
     customFields: [
       {
         name: "stage",
         label: "Funding Stage",
         type: "select",
-        options: ["Pre-Seed", "Seed", "Series A", "Series B", "Series C+"]
+        options: [
+          "Pre-seed (Ideation stage)",
+          "Seed (MVP & early traction)",
+          "Series A (Generating revenue)",
+          "Series B/C/D (Expansion and scaling)",
+          "MNC (Global)",
+          "Other (Specify)"
+        ]
       },
       {
         name: "amount",

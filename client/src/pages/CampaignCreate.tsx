@@ -303,21 +303,57 @@ export default function CampaignCreate() {
                 <div key={field.name}>
                   <Label htmlFor={field.name}>{field.label}</Label>
                   {field.type === "select" ? (
-                    <Select
-                      value={formData.customFields?.[field.name] || ""}
-                      onValueChange={(value) => updateCustomField(field.name, value)}
-                    >
-                      <SelectTrigger className="bg-white/5 border-white/10">
-                        <SelectValue placeholder={field.placeholder || "Select..."} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {field.options?.map((option) => (
-                          <SelectItem key={option} value={option}>
+                    <div className="space-y-3">
+                      <Select
+                        value={formData.customFields?.[field.name] || ""}
+                        onValueChange={(value) => updateCustomField(field.name, value)}
+                      >
+                        <SelectTrigger className="bg-white/5 border-white/10">
+                          <SelectValue placeholder={field.placeholder || "Select..."} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {field.options?.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {formData.customFields?.[field.name] === "Other (Specify)" && (
+                        <Input
+                          placeholder="Please specify..."
+                          value={formData.customFields?.[`${field.name}_other`] || ""}
+                          onChange={(e) => updateCustomField(`${field.name}_other`, e.target.value)}
+                          className="bg-white/5 border-white/10"
+                        />
+                      )}
+                    </div>
+                  ) : field.type === "multiselect" ? (
+                    <div className="flex flex-wrap gap-2">
+                      {field.options?.map((option) => {
+                        const currentSelections = (formData.customFields?.[field.name] as string[]) || [];
+                        const isSelected = currentSelections.includes(option);
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => {
+                              const newSelections = isSelected
+                                ? currentSelections.filter((item) => item !== option)
+                                : [...currentSelections, option];
+                              updateCustomField(field.name, newSelections);
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                              isSelected
+                                ? "bg-blue-500/20 border-blue-500/30 text-blue-300"
+                                : "bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white"
+                            }`}
+                          >
                             {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          </button>
+                        );
+                      })}
+                    </div>
                   ) : field.type === "textarea" ? (
                     <Textarea
                       id={field.name}
@@ -492,7 +528,7 @@ export default function CampaignCreate() {
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="bg-white/5 border-white/10 text-sm h-10 py-0 file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
+                    className="bg-white/5 border-white/10 text-sm h-10 py-0 file:mr-4 file:h-full file:px-4 file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
                   />
                   {formData.attachments.length > 0 && (
                     <p className="text-[10px] text-green-400/70 mt-1">File ready to upload</p>
