@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
 import { Check, X, Eye, Calendar, Users, ExternalLink, ChevronDown, ChevronUp, Mail, Phone, FileText, Briefcase, User as UserIcon, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProfileDetailView } from "@/components/ProfileDetailView";
@@ -19,6 +20,7 @@ interface Campaign {
   applications: number;
   createdAt: string;
   business?: {
+    _id: string;
     business_name: string;
     logo_url?: string;
     location?: string;
@@ -31,9 +33,11 @@ interface Campaign {
     description?: string;
   };
   creator?: {
+    _id: string;
     displayName?: string;
     email?: string;
     avatarUrl?: string;
+    profileId?: string;
   };
   individual_profile?: any;
 }
@@ -315,8 +319,22 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
             )}
           </div>
           <p className="text-white/40 text-xs">
-            {campaign.business?.business_name || campaign.creator?.displayName || "Unknown Creator"} •{" "}
-            {new Date(campaign.createdAt).toLocaleDateString()} • {campaign.views} views •{" "}
+            {campaign.business ? (
+              <Link href={`/business/${campaign.business._id}/view`}>
+                <span className="hover:text-[#E63946] transition-colors cursor-pointer">
+                  {campaign.business.business_name}
+                </span>
+              </Link>
+            ) : campaign.creator?.profileId ? (
+              <Link href={`/profile/${campaign.creator.profileId}`}>
+                <span className="hover:text-[#E63946] transition-colors cursor-pointer">
+                  {campaign.creator.displayName || "Unknown Creator"}
+                </span>
+              </Link>
+            ) : (
+              <span>{campaign.creator?.displayName || "Unknown Creator"}</span>
+            )}
+             • {new Date(campaign.createdAt).toLocaleDateString()} • {campaign.views} views •{" "}
             {campaign.applications} applications
           </p>
         </div>

@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -89,9 +89,23 @@ export function CampaignCard({ campaign, onApply }: CampaignCardProps) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium text-white/80 truncate">
-                {campaign.business?.business_name || campaign.creator?.displayName || "Unknown Creator"}
-              </h4>
+              {campaign.business ? (
+                <Link href={`/business/${campaign.business._id}/view`}>
+                  <h4 className="text-sm font-medium text-white/80 truncate hover:text-[#E63946] transition-colors cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                    {campaign.business.business_name}
+                  </h4>
+                </Link>
+              ) : campaign.creator?.profileId ? (
+                <Link href={`/profile/${campaign.creator.profileId}`}>
+                  <h4 className="text-sm font-medium text-white/80 truncate hover:text-[#E63946] transition-colors cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                    {campaign.creator.displayName || "Unknown Creator"}
+                  </h4>
+                </Link>
+              ) : (
+                <h4 className="text-sm font-medium text-white/80 truncate">
+                  {campaign.creator?.displayName || "Unknown Creator"}
+                </h4>
+              )}
               <p className="text-xs text-white/40 flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}

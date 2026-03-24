@@ -1258,6 +1258,9 @@ export class DatabaseStorage implements IStorage {
       }).lean();
       if (profile) {
         campaign.individual_profile = profile;
+        if (campaign.creator && typeof campaign.creator === 'object') {
+          campaign.creator.profileId = profile._id.toString();
+        }
       }
     }
     return campaign;
@@ -1549,7 +1552,11 @@ export class DatabaseStorage implements IStorage {
       .sort({ createdAt: -1 })
       .lean();
 
-    return applications;
+    return applications.map(app => ({
+      ...app,
+      campaign: app.campaign_id,
+      campaign_id: (app.campaign_id as any)?._id?.toString() || app.campaign_id?.toString()
+    }));
   }
 
   async getCampaignApplicationById(applicationId: string): Promise<any | null> {

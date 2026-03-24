@@ -20,7 +20,7 @@ export default function MyApplications() {
   const statusCounts = {
     total: applications?.length || 0,
     pending: applications?.filter((a) => a.status === "pending").length || 0,
-    accepted: applications?.filter((a) => a.status === "accepted").length || 0,
+    accepted: applications?.filter((a) => a.status === "accepted" || a.status === "approved").length || 0,
     rejected: applications?.filter((a) => a.status === "rejected").length || 0,
   };
 
@@ -136,7 +136,7 @@ export default function MyApplications() {
                     {/* Status Badge */}
                     <Badge
                       className={
-                        application.status === "accepted"
+                        application.status === "accepted" || application.status === "approved"
                           ? "bg-green-500/20 text-green-400 border-green-500/30"
                           : application.status === "rejected"
                           ? "bg-red-500/20 text-red-400 border-red-500/30"

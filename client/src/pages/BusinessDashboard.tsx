@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy, BadgeCheck, Edit2 } from "lucide-react";
+import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy, BadgeCheck, Edit2, Building2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -374,6 +374,15 @@ export default function BusinessDashboard() {
             </Button>
 
             <div className="flex items-center gap-4">
+              {business.logo_url ? (
+                <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 overflow-hidden shrink-0">
+                  <img src={business.logo_url} alt={business.business_name} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  <Building2 className="w-8 h-8 text-white/20" />
+                </div>
+              )}
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h1 className="text-3xl font-bold">{business.business_name}</h1>

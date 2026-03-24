@@ -247,6 +247,48 @@ export async function registerRoutes(
     }
   });
 
+  // Public Business Profile (Read-only)
+  app.get("/api/public/business/:id", async (req, res) => {
+    try {
+      const business = await storage.getBusinessById(req.params.id);
+      if (!business) {
+        return res.status(404).json({ message: "Business not found" });
+      }
+      // Return subset of fields for public view
+      const {
+        _id,
+        business_name,
+        business_type,
+        logo_url,
+        industry,
+        location,
+        description,
+        website,
+        linkedin_url,
+        team_size,
+        founded_year,
+        approved
+      } = business;
+      
+      res.json({
+        _id,
+        business_name,
+        business_type,
+        logo_url,
+        industry,
+        location,
+        description,
+        website,
+        linkedin_url,
+        team_size,
+        founded_year,
+        approved
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
 
   // Admin Routes
   app.get("/api/admin", ensureAdmin, async (req, res) => {

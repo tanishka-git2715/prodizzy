@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useRoute } from "wouter";
+import { useLocation, useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -210,13 +210,32 @@ export default function PublicCampaignView() {
               </div>
             )}
           </div>
+          {/* Business Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base sm:text-lg truncate">
-              {campaign.business?.business_name || campaign.creator?.displayName || "Unknown Creator"}
-            </h3>
-            <p className="text-xs sm:text-sm text-white/60">
-              {campaign.business ? "Business opportunity" : "Individual opportunity"}
-            </p>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              {campaign.business ? (
+                <Link href={`/business/${campaign.business._id}/view`}>
+                  <h4 className="text-sm font-semibold text-white hover:text-[#E63946] transition-colors cursor-pointer">
+                    {campaign.business.business_name}
+                  </h4>
+                </Link>
+              ) : campaign.creator?.profileId ? (
+                <Link href={`/profile/${campaign.creator.profileId}`}>
+                  <h4 className="text-sm font-semibold text-white hover:text-[#E63946] transition-colors cursor-pointer">
+                    {campaign.creator.displayName || "Unknown Creator"}
+                  </h4>
+                </Link>
+              ) : (
+                <h4 className="text-sm font-semibold text-white">
+                  {campaign.creator?.displayName || "Unknown Creator"}
+                </h4>
+              )}
+              <span className="text-white/20 text-xs">•</span>
+              <span className="text-xs text-white/40">{campaign.category}</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60 leading-tight">
+              {campaign.title}
+            </h1>
           </div>
         </div>
 

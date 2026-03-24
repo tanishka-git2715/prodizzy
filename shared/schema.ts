@@ -524,6 +524,7 @@ export type Campaign = {
   updatedAt: string;
   // Populated fields
   business?: {
+    _id: string;
     business_name: string;
     logo_url?: string;
     location?: string;
@@ -536,9 +537,11 @@ export type Campaign = {
     description?: string;
   };
   creator?: {
+    _id: string;
     displayName?: string;
     email?: string;
     avatarUrl?: string;
+    profileId?: string;
   };
   individual_profile?: IndividualProfile;
 };

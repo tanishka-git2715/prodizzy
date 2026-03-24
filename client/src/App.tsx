@@ -18,6 +18,7 @@ import AcceptInvite from "@/pages/AcceptInvite";
 import TemplateSelection from "@/pages/TemplateSelection";
 import CampaignCreate from "@/pages/CampaignCreate";
 import PublicCampaignView from "@/pages/PublicCampaignView";
+import PublicBusinessProfile from "@/pages/PublicBusinessProfile";
 import MyApplications from "@/pages/MyApplications";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/campaigns/discover" component={CampaignDiscover} />
       <Route path="/admin">{() => <ProtectedRoute component={Admin} />}</Route>
       <Route path="/business/create">{() => <ProtectedRoute component={BusinessCreate} />}</Route>
+      <Route path="/business/:id/view" component={PublicBusinessProfile} />
       <Route path="/business/:id">{() => <ProtectedRoute component={BusinessDashboard} />}</Route>
       <Route path="/business/:businessId/campaigns/new">{() => <ProtectedRoute component={TemplateSelection} />}</Route>
       <Route path="/business/:businessId/campaigns/create">{() => <ProtectedRoute component={CampaignCreate} />}</Route>
