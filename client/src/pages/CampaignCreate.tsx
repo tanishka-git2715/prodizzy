@@ -67,7 +67,7 @@ export default function CampaignCreate() {
 
   // Initialize form with template defaults
   const [formData, setFormData] = useState<CampaignFormData>({
-    title: "",
+    title: template?.title || "",
     description: "",
     category: template?.category || "Other",
     templateId: templateId || undefined,
@@ -100,20 +100,6 @@ export default function CampaignCreate() {
     return (filled / requiredFields.length) * 100;
   }, [formData, template]);
 
-  // Auto-fill title based on template placeholders
-  useEffect(() => {
-    if (template && template.defaultTitle && formData.customFields) {
-      let title = template.defaultTitle;
-      Object.entries(formData.customFields).forEach(([key, value]) => {
-        if (value) {
-          title = title.replace(`{${key}}`, value);
-        }
-      });
-      if (title !== formData.title && !title.includes("{")) {
-        setFormData((prev) => ({ ...prev, title }));
-      }
-    }
-  }, [formData.customFields, template]);
 
   // Create campaign mutation
   const createCampaignMutation = useMutation({
@@ -273,6 +259,35 @@ export default function CampaignCreate() {
               <CardTitle className="text-base sm:text-lg">Basic Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
+              <div>
+                <Label htmlFor="title">Campaign Title *</Label>
+                <Input
+                  id="title"
+                  placeholder="e.g., Hiring Senior React Developer"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                  className="bg-white/5 border-white/10"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Describe the opportunity in detail..."
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                  className="bg-white/5 border-white/10"
+                  rows={5}
+                  required
+                />
+              </div>
+
               {/* Custom Template Fields */}
               {template?.customFields?.map((field) => (
                 <div key={field.name}>
@@ -314,35 +329,6 @@ export default function CampaignCreate() {
                   )}
                 </div>
               ))}
-
-              <div>
-                <Label htmlFor="title">Campaign Title *</Label>
-                <Input
-                  id="title"
-                  placeholder="e.g., Hiring Senior React Developer"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  className="bg-white/5 border-white/10"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe the opportunity in detail..."
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, description: e.target.value }))
-                  }
-                  className="bg-white/5 border-white/10"
-                  rows={5}
-                  required
-                />
-              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>

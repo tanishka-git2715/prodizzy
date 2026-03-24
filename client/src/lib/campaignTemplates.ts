@@ -16,7 +16,6 @@ export interface CampaignTemplate {
   description: string;
   icon: any;
   category: string;
-  defaultTitle: string;
   defaultFields: {
     engagementType?: string;
     experience?: string;
@@ -42,7 +41,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Post a flexible opportunity according to your current requirements",
     icon: FileText,
     category: "General",
-    defaultTitle: "Flexible Opportunity",
     defaultFields: {},
     requiredFields: ["title", "description"],
     optionalFields: ["budget", "deadline", "location", "skills"],
@@ -61,7 +59,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Get early users to try your product and share valuable feedback",
     icon: TestTube,
     category: "Testing",
-    defaultTitle: "Need testers for {product}",
     defaultFields: {
       engagementType: "Part-time",
       experience: "Beginner"
@@ -101,7 +98,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Find the right partner to build, launch, and grow your startup",
     icon: Users,
     category: "Startup",
-    defaultTitle: "Looking for Co-founder (Equity Based)",
     defaultFields: {
       engagementType: "Equity",
       compensation: "Equity"
@@ -135,7 +131,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Recruit interns, part-time, or full-time team members for your startup",
     icon: Briefcase,
     category: "Hiring",
-    defaultTitle: "Hiring {role} for {project}",
     defaultFields: {
       engagementType: "Full-time",
       experience: "Intermediate"
@@ -163,7 +158,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Hire freelancers for short-term tasks and accelerate execution",
     icon: Code,
     category: "Freelance",
-    defaultTitle: "Need {skill} for {project}",
     defaultFields: {
       engagementType: "Project-based",
       workType: "Remote"
@@ -197,7 +191,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Collaborate with creators and communities to drive reach and user growth",
     icon: Video,
     category: "Growth",
-    defaultTitle: "Distribution campaign for {product}",
     defaultFields: {
       engagementType: "Project-based"
     },
@@ -236,7 +229,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Work with specialised agencies for marketing, tech, design, or branding needs",
     icon: Building2,
     category: "Agency",
-    defaultTitle: "Looking for agency for {function}",
     defaultFields: {},
     requiredFields: ["title", "description", "budget"],
     optionalFields: ["deadline", "skills"],
@@ -273,7 +265,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Connect with experienced mentors for strategic guidance and support",
     icon: Lightbulb,
     category: "Advisory",
-    defaultTitle: "Looking for advisor in {domain}",
     defaultFields: {
       engagementType: "Advisory"
     },
@@ -306,7 +297,6 @@ export const campaignTemplates: CampaignTemplate[] = [
     description: "Showcase your startup and connect with potential investors to raise capital",
     icon: TrendingUp,
     category: "Fundraising",
-    defaultTitle: "Raising {stage} round",
     defaultFields: {},
     requiredFields: ["title", "description"],
     optionalFields: ["targetProfiles", "deadline"],

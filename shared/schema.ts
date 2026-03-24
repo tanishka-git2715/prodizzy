@@ -465,6 +465,8 @@ export const insertCampaignSchema = z.object({
     "Advisory",
     "Fundraising",
     "Agency",
+    "General",
+    "Growth",
     "Other"
   ]),
   templateId: z.string().optional(),

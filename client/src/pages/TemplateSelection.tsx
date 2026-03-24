@@ -54,7 +54,7 @@ export default function TemplateSelection() {
           <div className="flex items-start gap-3 mb-2">
             <div className="flex-1 min-w-0">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold uppercase tracking-tight flex items-center gap-2">
-                <span>⭐</span> PRODIZZY CAMPAIGN TEMPLATES
+                <span>⭐</span> LAUNCH CAMPAIGN
               </h1>
               <p className="text-sm sm:text-base text-white/60">Choose a template to get started</p>
             </div>

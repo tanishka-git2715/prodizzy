@@ -21,6 +21,8 @@ const CATEGORIES = [
   "Advisory",
   "Fundraising",
   "Agency",
+  "General",
+  "Growth",
   "Other"
 ];
 
