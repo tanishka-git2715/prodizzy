@@ -800,6 +800,49 @@ export async function registerRoutes(
     }
   });
 
+  // INDIVIDUAL CAMPAIGN ROUTES (for users without a business)
+
+  // Create individual campaign
+  app.post("/api/campaigns", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const input = insertCampaignSchema.parse(req.body);
+      const campaign = await storage.createIndividualCampaign(userId, input);
+
+      res.status(201).json(campaign);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.')
+        });
+      }
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Get user's individual campaigns
+  app.get("/api/user/campaigns", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const campaigns = await storage.getCampaignsByUser(userId);
+      res.json(campaigns);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get user's campaign statistics
+  app.get("/api/user/campaigns/stats", ensureAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user._id?.toString() || req.user.id;
+      const stats = await storage.getUserCampaignStats(userId);
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Get single campaign
   app.get("/api/campaigns/:id", ensureAuthenticated, async (req: any, res) => {
     try {

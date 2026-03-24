@@ -250,18 +250,16 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
               Discover campaigns
             </button>
             <button
-              onClick={() => {
-                const bId = businesses?.[0]?._id;
-                if (bId) {
-                  setLocation(`/business/${bId}/campaigns/new`);
-                } else {
-                  createBusinessMutation.mutate();
-                }
-              }}
-              disabled={createBusinessMutation.isPending}
+              onClick={() => setLocation("/my-applications")}
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+            >
+              My Applications
+            </button>
+            <button
+              onClick={() => setLocation('/campaigns/new')}
               className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -774,18 +772,16 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
               Discover campaigns
             </button>
             <button
-              onClick={() => {
-                const bId = businesses?.[0]?._id;
-                if (bId) {
-                  setLocation(`/business/${bId}/campaigns/new`);
-                } else {
-                  createBusinessMutation.mutate();
-                }
-              }}
-              disabled={createBusinessMutation.isPending}
+              onClick={() => setLocation("/my-applications")}
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+            >
+              My Applications
+            </button>
+            <button
+              onClick={() => setLocation('/campaigns/new')}
               className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -1388,18 +1384,10 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
               Discover campaigns
             </button>
             <button
-              onClick={() => {
-                const bId = businesses?.[0]?._id;
-                if (bId) {
-                  setLocation(`/business/${bId}/campaigns/new`);
-                } else {
-                  createBusinessMutation.mutate();
-                }
-              }}
-              disabled={createBusinessMutation.isPending}
+              onClick={() => setLocation('/campaigns/new')}
               className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_200px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -1810,18 +1798,10 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
               Discover campaigns
             </button>
             <button
-              onClick={() => {
-                const bId = businesses?.[0]?._id;
-                if (bId) {
-                  setLocation(`/business/${bId}/campaigns/new`);
-                } else {
-                  createBusinessMutation.mutate();
-                }
-              }}
-              disabled={createBusinessMutation.isPending}
+              onClick={() => setLocation('/campaigns/new')}
               className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
+              Launch campaign
             </button>
             <button onClick={signOut} className="text-white/50 hover:text-white/80 text-sm flex items-center gap-2 transition-colors">
               <LogOut className="w-4 h-4" />

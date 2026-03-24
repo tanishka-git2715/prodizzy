@@ -38,6 +38,8 @@ function Router() {
       <Route path="/business/:id">{() => <ProtectedRoute component={BusinessDashboard} />}</Route>
       <Route path="/business/:businessId/campaigns/new">{() => <ProtectedRoute component={TemplateSelection} />}</Route>
       <Route path="/business/:businessId/campaigns/create">{() => <ProtectedRoute component={CampaignCreate} />}</Route>
+      <Route path="/campaigns/new">{() => <ProtectedRoute component={TemplateSelection} />}</Route>
+      <Route path="/campaigns/create">{() => <ProtectedRoute component={CampaignCreate} />}</Route>
       <Route path="/c/:id" component={PublicCampaignView} />
       <Route path="/my-applications">{() => <ProtectedRoute component={MyApplications} />}</Route>
       <Route component={NotFound} />
