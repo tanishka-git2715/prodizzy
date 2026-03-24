@@ -31,7 +31,7 @@ export default function MyApplications() {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => setLocation("/")}
+            onClick={() => setLocation("/dashboard")}
             className="mb-4 text-white/60 hover:text-white -ml-2"
             size="sm"
           >
@@ -80,7 +80,7 @@ export default function MyApplications() {
               You haven't applied to any campaigns yet. Browse opportunities to get started!
             </p>
             <Button
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/dashboard")}
               className="bg-[#E63946] hover:bg-[#E63946]/90"
             >
               Browse Campaigns
