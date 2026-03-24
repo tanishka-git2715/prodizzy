@@ -4,7 +4,6 @@ import {
   Video,
   Users,
   TestTube,
-  GraduationCap,
   Lightbulb,
   TrendingUp,
   Building2,
@@ -38,144 +37,28 @@ export interface CampaignTemplate {
 
 export const campaignTemplates: CampaignTemplate[] = [
   {
-    id: "hiring-talent",
-    title: "Hiring Talent",
-    description: "Find full-time or contract talent for your team",
-    icon: Briefcase,
-    category: "Hiring",
-    defaultTitle: "Hiring {role} for {project}",
-    defaultFields: {
-      engagementType: "Full-time",
-      experience: "Intermediate"
-    },
-    requiredFields: ["title", "description", "skills", "engagementType"],
-    optionalFields: ["budget", "location", "deadline"],
+    id: "general",
+    title: "General",
+    description: "Post a flexible opportunity according to your current requirements",
+    icon: FileText,
+    category: "General",
+    defaultTitle: "Flexible Opportunity",
+    defaultFields: {},
+    requiredFields: ["title", "description"],
+    optionalFields: ["budget", "deadline", "location", "skills"],
     customFields: [
       {
-        name: "role",
-        label: "Role Title",
+        name: "type",
+        label: "Opportunity Type",
         type: "text",
-        placeholder: "e.g., Senior Software Engineer"
-      },
-      {
-        name: "experience",
-        label: "Experience Level",
-        type: "select",
-        options: ["Entry-level", "Intermediate", "Senior", "Lead"]
-      }
-    ]
-  },
-  {
-    id: "freelance-project",
-    title: "Freelance Project",
-    description: "Hire freelancers for short-term projects",
-    icon: Code,
-    category: "Freelance",
-    defaultTitle: "Need {skill} for {project}",
-    defaultFields: {
-      engagementType: "Project-based",
-      workType: "Remote"
-    },
-    requiredFields: ["title", "description", "skills", "budget"],
-    optionalFields: ["deadline", "location"],
-    customFields: [
-      {
-        name: "skill",
-        label: "Primary Skill",
-        type: "text",
-        placeholder: "e.g., UI/UX Designer"
-      },
-      {
-        name: "project",
-        label: "Project Name",
-        type: "text",
-        placeholder: "e.g., Mobile App Redesign"
-      },
-      {
-        name: "duration",
-        label: "Project Duration",
-        type: "select",
-        options: ["1-2 weeks", "2-4 weeks", "1-2 months", "2-3 months", "3+ months"]
-      }
-    ]
-  },
-  {
-    id: "creator-campaign",
-    title: "Creator Campaign",
-    description: "Collaborate with content creators and influencers",
-    icon: Video,
-    category: "Creator",
-    defaultTitle: "Looking for {number} creators for {campaign}",
-    defaultFields: {
-      engagementType: "Project-based"
-    },
-    requiredFields: ["title", "description", "targetProfiles", "budget"],
-    optionalFields: ["deadline", "location"],
-    customFields: [
-      {
-        name: "platform",
-        label: "Platform",
-        type: "select",
-        options: ["Instagram", "YouTube", "TikTok", "Twitter", "LinkedIn", "Multiple"]
-      },
-      {
-        name: "niche",
-        label: "Creator Niche",
-        type: "text",
-        placeholder: "e.g., Tech, Lifestyle, Fashion"
-      },
-      {
-        name: "followerRange",
-        label: "Follower Range",
-        type: "select",
-        options: ["1K-10K", "10K-50K", "50K-100K", "100K-500K", "500K+"]
-      },
-      {
-        name: "deliverables",
-        label: "Deliverables",
-        type: "text",
-        placeholder: "e.g., 3 Instagram posts + 2 stories"
-      }
-    ]
-  },
-  {
-    id: "cofounder-search",
-    title: "Co-founder Search",
-    description: "Find the perfect co-founder for your startup",
-    icon: Users,
-    category: "Startup",
-    defaultTitle: "Looking for Co-founder (Equity Based)",
-    defaultFields: {
-      engagementType: "Equity",
-      compensation: "Equity"
-    },
-    requiredFields: ["title", "description", "skills"],
-    optionalFields: ["location", "targetProfiles"],
-    customFields: [
-      {
-        name: "expertise",
-        label: "Required Expertise",
-        type: "text",
-        placeholder: "e.g., Technical Co-founder with ML background"
-      },
-      {
-        name: "equity",
-        label: "Equity Offered",
-        type: "text",
-        placeholder: "e.g., 20-30%"
-      },
-      {
-        name: "commitment",
-        label: "Time Commitment",
-        type: "select",
-        options: ["Part-time", "Full-time", "Flexible"]
+        placeholder: "e.g., Research, Translation, Event Support"
       }
     ]
   },
   {
     id: "beta-testing",
     title: "Beta Testing",
-    description: "Get early users to test your product",
+    description: "Get early users to try your product and share valuable feedback",
     icon: TestTube,
     category: "Testing",
     defaultTitle: "Need testers for {product}",
@@ -213,42 +96,181 @@ export const campaignTemplates: CampaignTemplate[] = [
     ]
   },
   {
-    id: "campus-ambassadors",
-    title: "Campus Ambassadors",
-    description: "Build a student ambassador program",
-    icon: GraduationCap,
-    category: "Students",
-    defaultTitle: "Hiring campus ambassadors",
+    id: "cofounder-search",
+    title: "Co-founder Search",
+    description: "Find the right partner to build, launch, and grow your startup",
+    icon: Users,
+    category: "Startup",
+    defaultTitle: "Looking for Co-founder (Equity Based)",
     defaultFields: {
-      engagementType: "Part-time"
+      engagementType: "Equity",
+      compensation: "Equity"
     },
-    requiredFields: ["title", "description", "targetProfiles"],
-    optionalFields: ["budget", "deadline", "location"],
+    requiredFields: ["title", "description", "skills"],
+    optionalFields: ["location", "targetProfiles"],
     customFields: [
       {
-        name: "responsibilities",
-        label: "Key Responsibilities",
-        type: "textarea",
-        placeholder: "e.g., Organize events, promote on social media, recruit users"
+        name: "expertise",
+        label: "Required Expertise",
+        type: "text",
+        placeholder: "e.g., Technical Co-founder with ML background"
       },
       {
-        name: "perks",
-        label: "Perks & Benefits",
+        name: "equity",
+        label: "Equity Offered",
         type: "text",
-        placeholder: "e.g., Stipend, swag, networking opportunities"
+        placeholder: "e.g., 20-30%"
+      },
+      {
+        name: "commitment",
+        label: "Time Commitment",
+        type: "select",
+        options: ["Part-time", "Full-time", "Flexible"]
+      }
+    ]
+  },
+  {
+    id: "hiring-talent",
+    title: "Hiring Talent",
+    description: "Recruit interns, part-time, or full-time team members for your startup",
+    icon: Briefcase,
+    category: "Hiring",
+    defaultTitle: "Hiring {role} for {project}",
+    defaultFields: {
+      engagementType: "Full-time",
+      experience: "Intermediate"
+    },
+    requiredFields: ["title", "description", "skills", "engagementType"],
+    optionalFields: ["budget", "location", "deadline"],
+    customFields: [
+      {
+        name: "role",
+        label: "Role Title",
+        type: "text",
+        placeholder: "e.g., Senior Software Engineer"
+      },
+      {
+        name: "experience",
+        label: "Experience Level",
+        type: "select",
+        options: ["Entry-level", "Intermediate", "Senior", "Lead"]
+      }
+    ]
+  },
+  {
+    id: "freelance-project",
+    title: "Freelance Project",
+    description: "Hire freelancers for short-term tasks and accelerate execution",
+    icon: Code,
+    category: "Freelance",
+    defaultTitle: "Need {skill} for {project}",
+    defaultFields: {
+      engagementType: "Project-based",
+      workType: "Remote"
+    },
+    requiredFields: ["title", "description", "skills", "budget"],
+    optionalFields: ["deadline", "location"],
+    customFields: [
+      {
+        name: "skill",
+        label: "Primary Skill",
+        type: "text",
+        placeholder: "e.g., UI/UX Designer"
+      },
+      {
+        name: "project",
+        label: "Project Name",
+        type: "text",
+        placeholder: "e.g., Mobile App Redesign"
       },
       {
         name: "duration",
-        label: "Program Duration",
+        label: "Project Duration",
         type: "select",
-        options: ["1 semester", "1 year", "Ongoing"]
+        options: ["1-2 weeks", "2-4 weeks", "1-2 months", "2-3 months", "3+ months"]
+      }
+    ]
+  },
+  {
+    id: "distribution-promotion",
+    title: "Distribution / Promotion Campaign",
+    description: "Collaborate with creators and communities to drive reach and user growth",
+    icon: Video,
+    category: "Growth",
+    defaultTitle: "Distribution campaign for {product}",
+    defaultFields: {
+      engagementType: "Project-based"
+    },
+    requiredFields: ["title", "description", "targetProfiles", "budget"],
+    optionalFields: ["deadline", "location"],
+    customFields: [
+      {
+        name: "platform",
+        label: "Platform Focus",
+        type: "select",
+        options: ["Instagram", "YouTube", "TikTok", "Twitter", "LinkedIn", "Multiple"]
+      },
+      {
+        name: "niche",
+        label: "Target Niche",
+        type: "text",
+        placeholder: "e.g., Tech, Lifestyle, Fashion"
+      },
+      {
+        name: "followerRange",
+        label: "Partner Audience Size",
+        type: "select",
+        options: ["1K-10K", "10K-50K", "50K-100K", "100K-500K", "500K+"]
+      },
+      {
+        name: "deliverables",
+        label: "Expected Deliverables",
+        type: "text",
+        placeholder: "e.g., 3 Instagram posts + 1 community shoutout"
+      }
+    ]
+  },
+  {
+    id: "agency-collaboration",
+    title: "Agency Collaboration",
+    description: "Work with specialised agencies for marketing, tech, design, or branding needs",
+    icon: Building2,
+    category: "Agency",
+    defaultTitle: "Looking for agency for {function}",
+    defaultFields: {},
+    requiredFields: ["title", "description", "budget"],
+    optionalFields: ["deadline", "skills"],
+    customFields: [
+      {
+        name: "function",
+        label: "Service Type",
+        type: "select",
+        options: ["Marketing", "Design", "Development", "Content", "PR", "SEO", "Social Media"]
+      },
+      {
+        name: "scope",
+        label: "Project Scope",
+        type: "textarea",
+        placeholder: "Describe what you need help with"
+      },
+      {
+        name: "deliverables",
+        label: "Expected Deliverables",
+        type: "textarea",
+        placeholder: "List key deliverables"
+      },
+      {
+        name: "timeline",
+        label: "Project Timeline",
+        type: "select",
+        options: ["1 month", "2-3 months", "3-6 months", "6+ months", "Ongoing"]
       }
     ]
   },
   {
     id: "advisor-mentor",
-    title: "Advisor / Mentor",
-    description: "Find experienced advisors for your business",
+    title: "Find Advisor / Mentor",
+    description: "Connect with experienced mentors for strategic guidance and support",
     icon: Lightbulb,
     category: "Advisory",
     defaultTitle: "Looking for advisor in {domain}",
@@ -281,7 +303,7 @@ export const campaignTemplates: CampaignTemplate[] = [
   {
     id: "fundraising",
     title: "Fundraising",
-    description: "Raise capital for your startup",
+    description: "Showcase your startup and connect with potential investors to raise capital",
     icon: TrendingUp,
     category: "Fundraising",
     defaultTitle: "Raising {stage} round",
@@ -312,70 +334,6 @@ export const campaignTemplates: CampaignTemplate[] = [
         label: "Pitch Deck Link",
         type: "text",
         placeholder: "https://..."
-      }
-    ]
-  },
-  {
-    id: "community-partnership",
-    title: "Community Partnership",
-    description: "Partner with communities and organizations",
-    icon: Users,
-    category: "Agency",
-    defaultTitle: "Looking for community partnership",
-    defaultFields: {
-      engagementType: "Long-term"
-    },
-    requiredFields: ["title", "description"],
-    optionalFields: ["targetProfiles", "deadline", "budget"],
-    customFields: [
-      {
-        name: "partnershipType",
-        label: "Partnership Type",
-        type: "select",
-        options: ["Event Collaboration", "Content Partnership", "Co-marketing", "Distribution"]
-      },
-      {
-        name: "audienceSize",
-        label: "Expected Audience Reach",
-        type: "text",
-        placeholder: "e.g., 10K+ members"
-      }
-    ]
-  },
-  {
-    id: "agency-collaboration",
-    title: "Agency Collaboration",
-    description: "Work with agencies for specialized services",
-    icon: Building2,
-    category: "Agency",
-    defaultTitle: "Looking for agency for {function}",
-    defaultFields: {},
-    requiredFields: ["title", "description", "budget"],
-    optionalFields: ["deadline", "skills"],
-    customFields: [
-      {
-        name: "function",
-        label: "Service Type",
-        type: "select",
-        options: ["Marketing", "Design", "Development", "Content", "PR", "SEO", "Social Media"]
-      },
-      {
-        name: "scope",
-        label: "Project Scope",
-        type: "textarea",
-        placeholder: "Describe what you need help with"
-      },
-      {
-        name: "deliverables",
-        label: "Expected Deliverables",
-        type: "textarea",
-        placeholder: "List key deliverables"
-      },
-      {
-        name: "timeline",
-        label: "Project Timeline",
-        type: "select",
-        options: ["1 month", "2-3 months", "3-6 months", "6+ months", "Ongoing"]
       }
     ]
   }

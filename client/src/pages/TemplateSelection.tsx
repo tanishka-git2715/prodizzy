@@ -1,7 +1,7 @@
 import { useLocation, useRoute } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { campaignTemplates } from "@/lib/campaignTemplates";
 import { useMemo } from "react";
 
@@ -52,11 +52,10 @@ export default function TemplateSelection() {
           </Button>
 
           <div className="flex items-start gap-3 mb-2">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#E63946]/10 border border-[#E63946]/20 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#E63946]" />
-            </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Launch an Opportunity</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold uppercase tracking-tight flex items-center gap-2">
+                <span>⭐</span> PRODIZZY CAMPAIGN TEMPLATES
+              </h1>
               <p className="text-sm sm:text-base text-white/60">Choose a template to get started</p>
             </div>
           </div>
