@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Eye, Calendar, Users, ExternalLink, ChevronDown, ChevronUp, Mail, Phone, FileText, Briefcase } from "lucide-react";
+import { Check, X, Eye, Calendar, Users, ExternalLink, ChevronDown, ChevronUp, Mail, Phone, FileText, Briefcase, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ProfileDetailView } from "@/components/ProfileDetailView";
 
 interface Campaign {
   _id: string;
@@ -149,26 +150,42 @@ function ApplicationRow({ application, onStatusUpdate }: { application: any; onS
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden mb-3"
           >
-            <div className="border-t border-white/6 pt-3 space-y-3">
-              {application.message && (
+            <div className="border-t border-white/6 pt-3 space-y-6">
+              {/* Profile Preview */}
+              {application.profile && (
                 <div>
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Message</p>
-                  <p className="text-sm text-white/70 whitespace-pre-wrap">{application.message}</p>
-                </div>
-              )}
-              {application.answers && Object.keys(application.answers).length > 0 && (
-                <div>
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Additional Answers</p>
-                  <div className="space-y-2">
-                    {Object.entries(application.answers).map(([key, value]) => (
-                      <div key={key}>
-                        <span className="text-xs text-white/50 capitalize">{key.replace(/_/g, " ")}:</span>
-                        <p className="text-sm text-white/70">{String(value)}</p>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="w-4 h-4 text-[#E63946]" />
+                    <h5 className="text-sm font-bold uppercase tracking-wider text-white/40">Applicant Profile</h5>
+                  </div>
+                  <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                    <ProfileDetailView profile={application.profile} isAdmin={true} />
                   </div>
                 </div>
               )}
+
+              {/* Application Details */}
+              <div className="space-y-3">
+                {application.message && (
+                  <div>
+                    <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Application Message</p>
+                    <p className="text-sm text-white/70 bg-white/5 p-3 rounded-lg border border-white/5 whitespace-pre-wrap">{application.message}</p>
+                  </div>
+                )}
+                {application.answers && Object.keys(application.answers).length > 0 && (
+                  <div>
+                    <p className="text-xs text-white/40 uppercase tracking-wider mb-2">Additional Answers</p>
+                    <div className="space-y-2">
+                      {Object.entries(application.answers).map(([key, value]) => (
+                        <div key={key} className="bg-white/5 p-3 rounded-lg border border-white/5">
+                          <span className="text-xs text-white/50 capitalize block mb-1">{key.replace(/_/g, " ")}</span>
+                          <p className="text-sm text-white/70">{String(value)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
