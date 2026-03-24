@@ -394,9 +394,8 @@ export default function Onboard() {
     const savedProfile = await res.json();
     console.log("Profile saved successfully:", savedProfile);
 
-    // Seed the profile cache so Dashboard sees the profile immediately (avoids race/404)
-    qc.setQueryData(["profile"], savedProfile);
-    localStorage.removeItem(STORAGE_KEY);
+    await qc.invalidateQueries({ queryKey: ["dashboard-init"] });
+    await qc.invalidateQueries({ queryKey: ["profile"] });
     setLocation("/dashboard");
   }
 

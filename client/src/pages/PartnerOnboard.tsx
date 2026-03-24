@@ -374,9 +374,8 @@ export default function PartnerOnboard() {
     }
 
     const savedProfile = await res.json();
-    // Seed the profile cache so Dashboard sees the profile immediately
-    qc.setQueryData(["profile"], savedProfile);
-    localStorage.removeItem(STORAGE_KEY);
+    await qc.invalidateQueries({ queryKey: ["dashboard-init"] });
+    await qc.invalidateQueries({ queryKey: ["profile"] });
     setLocation("/dashboard");
   }
 

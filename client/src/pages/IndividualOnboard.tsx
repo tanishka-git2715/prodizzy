@@ -619,7 +619,8 @@ export default function IndividualOnboard() {
     }
 
     const savedProfile = await res.json();
-    qc.setQueryData(["profile"], savedProfile);
+    await qc.invalidateQueries({ queryKey: ["dashboard-init"] });
+    await qc.invalidateQueries({ queryKey: ["profile"] });
     setLocation("/dashboard");
   }
 
