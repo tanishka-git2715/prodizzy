@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Eye, Calendar, Users, ExternalLink, ChevronDown, ChevronUp, Mail, Phone, FileText, Briefcase, User } from "lucide-react";
+import { Check, X, Eye, Calendar, Users, ExternalLink, ChevronDown, ChevronUp, Mail, Phone, FileText, Briefcase, User as UserIcon, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProfileDetailView } from "@/components/ProfileDetailView";
+import { BusinessDetailView } from "@/components/campaigns/BusinessDetailView";
 
 interface Campaign {
   _id: string;
@@ -20,7 +21,21 @@ interface Campaign {
   business?: {
     business_name: string;
     logo_url?: string;
+    location?: string;
+    industry?: string[];
+    business_type?: string;
+    team_size?: string;
+    website?: string;
+    linkedin_url?: string;
+    founded_year?: number;
+    description?: string;
   };
+  creator?: {
+    displayName?: string;
+    email?: string;
+    avatarUrl?: string;
+  };
+  individual_profile?: any;
 }
 
 function ApplicationRow({ application, onStatusUpdate }: { application: any; onStatusUpdate: () => void }) {
@@ -155,7 +170,7 @@ function ApplicationRow({ application, onStatusUpdate }: { application: any; onS
               {application.profile && (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
-                    <User className="w-4 h-4 text-[#E63946]" />
+                    <UserIcon className="w-4 h-4 text-[#E63946]" />
                     <h5 className="text-sm font-bold uppercase tracking-wider text-white/40">Applicant Profile</h5>
                   </div>
                   <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
@@ -300,7 +315,7 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
             )}
           </div>
           <p className="text-white/40 text-xs">
-            {campaign.business?.business_name || "Unknown Business"} •{" "}
+            {campaign.business?.business_name || campaign.creator?.displayName || "Unknown Creator"} •{" "}
             {new Date(campaign.createdAt).toLocaleDateString()} • {campaign.views} views •{" "}
             {campaign.applications} applications
           </p>
@@ -378,6 +393,23 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
                 <p className="text-white/70 text-sm whitespace-pre-wrap">
                   {campaign.description}
                 </p>
+              </div>
+
+              {/* Creator/Business Profile Section */}
+              <div className="mb-6 pt-4 border-t border-white/6">
+                <p className="text-[10px] font-bold text-white/20 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                  {campaign.business ? <Building2 className="w-3 h-3" /> : <UserIcon className="w-3 h-3" />}
+                  {campaign.business ? "Business Information" : "Creator Profile"}
+                </p>
+                <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 sm:p-6">
+                  {campaign.business ? (
+                    <BusinessDetailView business={campaign.business as any} />
+                  ) : campaign.individual_profile ? (
+                    <ProfileDetailView profile={campaign.individual_profile} />
+                  ) : (
+                    <p className="text-sm text-white/40 italic">No additional profile data available.</p>
+                  )}
+                </div>
               </div>
 
               {showApplications && applications && applications.length > 0 && (

@@ -312,7 +312,7 @@ export const TeamMember = mongoose.model("TeamMember", TeamMemberSchema);
 // Campaign Model - Opportunity campaigns created by businesses
 const CampaignSchema = new Schema({
     business_id: { type: Schema.Types.ObjectId, ref: 'Business' },
-    created_by: { type: String, required: true }, // user_id of creator
+    created_by: { type: String, ref: 'User', required: true }, // user_id of creator
     title: { type: String, required: true },
     description: { type: String, required: true },
     category: {

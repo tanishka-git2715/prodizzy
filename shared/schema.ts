@@ -526,11 +526,21 @@ export type Campaign = {
   business?: {
     business_name: string;
     logo_url?: string;
+    location?: string;
+    industry?: string[];
+    business_type?: string;
+    team_size?: string;
+    website?: string;
+    linkedin_url?: string;
+    founded_year?: number;
+    description?: string;
   };
   creator?: {
     displayName?: string;
     email?: string;
+    avatarUrl?: string;
   };
+  individual_profile?: IndividualProfile;
 };
 
 // =============================================

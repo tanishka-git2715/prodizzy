@@ -512,7 +512,7 @@ export default function CampaignCreate() {
 
                 <div>
                   <Label htmlFor="attachments" className="text-sm">Upload File (Optional)</Label>
-                  <Input
+                  <input
                     id="attachments"
                     type="file"
                     onChange={(e) => {
@@ -528,10 +528,10 @@ export default function CampaignCreate() {
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="bg-white/5 border-white/10 text-sm h-10 py-0 file:mr-4 file:h-full file:px-4 file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
                   />
                   {formData.attachments.length > 0 && (
-                    <p className="text-[10px] text-green-400/70 mt-1">File ready to upload</p>
+                    <p className="text-xs text-green-400/70 ml-1">File selected and ready to save</p>
                   )}
                 </div>
               </div>

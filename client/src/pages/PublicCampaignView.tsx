@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { ApplicationFormModal } from "@/components/applications/ApplicationFormModal";
 import { ApplicationSuccessDialog } from "@/components/applications/ApplicationSuccessDialog";
+import { ProfileDetailView } from "@/components/ProfileDetailView";
+import { BusinessDetailView } from "@/components/campaigns/BusinessDetailView";
 import {
   Building2,
   MapPin,
@@ -187,26 +189,38 @@ export default function PublicCampaignView() {
 
       {/* Campaign Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12">
-        {/* Business Header */}
-        {campaign.business && (
-          <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/10">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {campaign.business.logo_url ? (
-                <img
-                  src={campaign.business.logo_url}
-                  alt={campaign.business.business_name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-white/40" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base sm:text-lg truncate">{campaign.business.business_name}</h3>
-              <p className="text-xs sm:text-sm text-white/60">Posted an opportunity</p>
-            </div>
+        {/* Profile Header (Business or Individual) */}
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/10">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+            {campaign.business?.logo_url ? (
+              <img
+                src={campaign.business.logo_url}
+                alt={campaign.business.business_name}
+                className="w-full h-full object-cover"
+              />
+            ) : campaign.creator?.avatarUrl ? (
+              <img
+                src={campaign.creator.avatarUrl}
+                alt={campaign.creator.displayName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-blue-500/10 text-blue-400 font-bold text-xl">
+                {(campaign.business?.business_name || campaign.creator?.displayName || "?")[0].toUpperCase()}
+              </div>
+            )}
           </div>
-        )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base sm:text-lg truncate">
+              {campaign.business?.business_name || campaign.creator?.displayName || "Unknown Creator"}
+            </h3>
+            <p className="text-xs sm:text-sm text-white/60">
+              {campaign.business ? "Business opportunity" : "Individual opportunity"}
+            </p>
+          </div>
+        </div>
+
+
 
         {/* Campaign Details */}
         <div className="mb-6 sm:mb-8">
@@ -314,6 +328,28 @@ export default function PublicCampaignView() {
             )}
           </CardContent>
         </Card>
+
+        {/* Detailed Profile Information */}
+        <div className="mt-8 mb-12">
+          <div className="flex items-center gap-2 mb-8">
+            <h2 className="text-xl font-bold text-white">
+              {campaign.business ? "Business Information" : "About the Creator"}
+            </h2>
+            <div className="h-[1px] flex-1 bg-white/10 ml-4" />
+          </div>
+          
+          <div className="p-1 sm:p-2">
+            {campaign.business ? (
+              <BusinessDetailView business={campaign.business as any} />
+            ) : campaign.individual_profile ? (
+              <ProfileDetailView profile={campaign.individual_profile} />
+            ) : (
+              <div className="p-8 text-center bg-white/[0.02] border border-white/5 rounded-2xl">
+                <p className="text-white/40 italic">No additional profile information available.</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-[#E63946]/10 to-blue-500/10 border border-white/10 rounded-xl p-6 sm:p-8 text-center">

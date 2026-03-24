@@ -1219,7 +1219,8 @@ export class DatabaseStorage implements IStorage {
 
     // Populate business and creator info
     const populated = await Campaign.findById(campaign._id)
-      .populate('business_id', 'business_name logo_url')
+      .populate('business_id', 'business_name logo_url location industry business_type team_size website linkedin_url founded_year description')
+      .populate('created_by', 'displayName avatarUrl email')
       .lean();
 
     return populated;
@@ -1227,10 +1228,31 @@ export class DatabaseStorage implements IStorage {
 
   async getCampaignById(campaignId: string): Promise<any | undefined> {
     const campaign = await Campaign.findById(campaignId)
-      .populate('business_id', 'business_name logo_url')
+      .populate('business_id', 'business_name logo_url location industry business_type team_size website linkedin_url founded_year description')
+      .populate('created_by', 'displayName avatarUrl email')
       .lean();
 
+    return this.enhanceCampaign(campaign);
+  }
+
+  private async enhanceCampaign(campaign: any): Promise<any> {
+    if (!campaign) return campaign;
+
+    // If no business, fetch individual profile
+    if (!campaign.business_id) {
+      const profile = await IndividualProfile.findOne({
+        user_id: campaign.created_by
+      }).lean();
+      if (profile) {
+        campaign.individual_profile = profile;
+      }
+    }
     return campaign;
+  }
+
+  private async enhanceCampaigns(campaigns: any[]): Promise<any[]> {
+    if (!campaigns) return [];
+    return Promise.all(campaigns.map(c => this.enhanceCampaign(c)));
   }
 
   async getCampaignsByBusiness(businessId: string): Promise<any[]> {
@@ -1253,11 +1275,12 @@ export class DatabaseStorage implements IStorage {
     }
 
     const campaigns = await Campaign.find(query)
-      .populate('business_id', 'business_name logo_url location')
+      .populate('business_id', 'business_name logo_url location industry business_type team_size website linkedin_url founded_year description')
+      .populate('created_by', 'displayName avatarUrl email')
       .sort({ createdAt: -1 })
       .lean();
 
-    return campaigns;
+    return this.enhanceCampaigns(campaigns);
   }
 
   async getPublicCampaigns(filters?: { category?: string; engagementType?: string; location?: string; skills?: string[] }): Promise<any[]> {
@@ -1283,11 +1306,12 @@ export class DatabaseStorage implements IStorage {
     }
 
     const campaigns = await Campaign.find(query)
-      .populate('business_id', 'business_name logo_url location')
+      .populate('business_id', 'business_name logo_url location industry business_type team_size website linkedin_url founded_year description')
+      .populate('created_by', 'displayName avatarUrl email')
       .sort({ createdAt: -1 })
       .lean();
 
-    return campaigns;
+    return this.enhanceCampaigns(campaigns);
   }
 
   async updateCampaign(campaignId: string, updates: any): Promise<any> {
@@ -1296,11 +1320,12 @@ export class DatabaseStorage implements IStorage {
       { ...updates, updatedAt: new Date() },
       { new: true }
     )
-      .populate('business_id', 'business_name logo_url')
+      .populate('business_id', 'business_name logo_url location industry business_type team_size website linkedin_url founded_year description')
+      .populate('created_by', 'displayName avatarUrl email')
       .lean();
 
     if (!campaign) throw new Error("Campaign not found");
-    return campaign;
+    return this.enhanceCampaign(campaign);
   }
 
   async deleteCampaign(campaignId: string): Promise<void> {
@@ -1343,8 +1368,10 @@ export class DatabaseStorage implements IStorage {
 
     await campaign.save();
 
-    // Return the campaign without business population
-    const created = await Campaign.findById(campaign._id).lean();
+    // Return the campaign with creator population
+    const created = await Campaign.findById(campaign._id)
+      .populate('created_by', 'displayName avatarUrl email')
+      .lean();
     return created;
   }
 
@@ -1384,19 +1411,23 @@ export class DatabaseStorage implements IStorage {
       campaignId,
       { approved },
       { new: true }
-    ).lean();
+    )
+      .populate('business_id', 'business_name logo_url location industry business_type team_size website linkedin_url founded_year description')
+      .populate('created_by', 'displayName avatarUrl email')
+      .lean();
 
     if (!campaign) throw new Error("Campaign not found");
-    return campaign;
+    return this.enhanceCampaign(campaign);
   }
 
   async getAllCampaignsForAdmin(): Promise<any[]> {
     const campaigns = await Campaign.find()
-      .populate('business_id', 'business_name logo_url')
+      .populate('business_id', 'business_name logo_url location industry business_type team_size website linkedin_url founded_year description')
+      .populate('created_by', 'displayName avatarUrl email')
       .sort({ createdAt: -1 })
       .lean();
 
-    return campaigns;
+    return this.enhanceCampaigns(campaigns);
   }
 
   // =============================================

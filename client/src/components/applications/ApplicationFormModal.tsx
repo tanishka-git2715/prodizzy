@@ -30,6 +30,7 @@ export function ApplicationFormModal({
   const [formData, setFormData] = useState({
     message: "",
     contact_details: "",
+    resume_url: "",
     answers: {} as Record<string, any>,
   });
 
@@ -41,7 +42,7 @@ export function ApplicationFormModal({
       await createApplication.mutateAsync(formData);
       onSuccess();
       // Reset form
-      setFormData({ message: "", contact_details: "", answers: {} });
+      setFormData({ message: "", contact_details: "", resume_url: "", answers: {} });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -89,6 +90,30 @@ export function ApplicationFormModal({
               className="bg-white/5 border-white/10 text-white"
               required
             />
+          </div>
+          
+          {/* Resume Upload */}
+          <div className="space-y-2">
+            <Label htmlFor="resume" className="text-sm">Upload File (Optional)</Label>
+            <input 
+              type="file" 
+              id="resume"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setFormData((prev) => ({ ...prev, resume_url: reader.result as string }));
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
+            />
+            {formData.resume_url && formData.resume_url.length >= 500 && (
+              <p className="text-xs text-green-400/70 ml-1">File selected and ready to save</p>
+            )}
           </div>
 
           {/* Action Buttons */}
