@@ -127,17 +127,17 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
   return (
     <Card className="bg-white/5 border-white/10">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
-            <Rocket className="w-5 h-5" />
+            <Rocket className="w-5 h-5 text-[#E63946]" />
             Campaigns
           </CardTitle>
           <Button
             onClick={() => setLocation(businessId ? `/business/${businessId}/campaigns/new` : `/campaigns/new`)}
-            className="bg-[#E63946] hover:bg-[#E63946]/90"
+            className="bg-[#E63946] hover:bg-[#E63946]/90 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Launch Opportunity
+            Launch
           </Button>
         </div>
       </CardHeader>

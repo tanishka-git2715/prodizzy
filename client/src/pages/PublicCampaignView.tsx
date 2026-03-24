@@ -230,12 +230,7 @@ export default function PublicCampaignView() {
                   {campaign.creator?.displayName || "Unknown Creator"}
                 </h4>
               )}
-              <span className="text-white/20 text-xs">•</span>
-              <span className="text-xs text-white/40">{campaign.category}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60 leading-tight">
-              {campaign.title}
-            </h1>
           </div>
         </div>
 
