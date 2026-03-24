@@ -7,6 +7,7 @@ import { Rocket, Plus, TrendingUp, Eye, Users, Calendar, Share2 } from "lucide-r
 import { ApplicationsList } from "@/components/applications/ApplicationsList";
 import { useState } from "react";
 import { useCampaignApplications } from "@/hooks/use-applications";
+import { ShareCampaignDialog } from "@/components/campaigns/ShareCampaignDialog";
 
 // Fetches accepted applications count for a single campaign
 function AcceptedCount({ campaignId }: { campaignId: string }) {
@@ -64,6 +65,8 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedCampaignForApps, setSelectedCampaignForApps] = useState<string | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [sharingCampaign, setSharingCampaign] = useState<{ id: string; title: string } | null>(null);
 
   const { data: campaigns, isLoading: loadingCampaigns } = useQuery<any[]>({
     queryKey: businessId ? ["campaigns", businessId] : ["user-campaigns"],
@@ -102,26 +105,8 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
 
   const handleShareCampaign = (campaignId: string, campaignTitle: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/c/${campaignId}`;
-
-    if (navigator.share) {
-      navigator.share({
-        title: campaignTitle,
-        url: shareUrl,
-      }).catch(() => {
-        navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Link Copied!",
-          description: "Campaign link copied to clipboard",
-        });
-      });
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link Copied!",
-        description: "Campaign link copied to clipboard",
-      });
-    }
+    setSharingCampaign({ id: campaignId, title: campaignTitle });
+    setShareDialogOpen(true);
   };
 
   return (
@@ -243,6 +228,14 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
         ) : (
           <p className="text-center py-8 text-white/30 text-sm italic">No campaigns launched yet</p>
         )}
+
+        {/* Share Dialog */}
+        <ShareCampaignDialog
+          campaignId={sharingCampaign?.id || null}
+          campaignTitle={sharingCampaign?.title || null}
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+        />
       </CardContent>
     </Card>
   );
