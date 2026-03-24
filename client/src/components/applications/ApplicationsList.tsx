@@ -1,11 +1,8 @@
 import { useState } from "react";
-import { useCampaignApplications, useUpdateApplicationStatus } from "@/hooks/use-applications";
+import { useCampaignApplications } from "@/hooks/use-applications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, X, ExternalLink, FileText, Briefcase, Calendar, Loader2, User } from "lucide-react";
-import type { CampaignApplication } from "@shared/schema";
+import { ExternalLink, FileText, Briefcase, Calendar, Loader2, User } from "lucide-react";
 import { ProfileDetailView } from "@/components/ProfileDetailView";
 
 interface ApplicationsListProps {
@@ -15,26 +12,7 @@ interface ApplicationsListProps {
 
 export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsListProps) {
   const { data: applications, isLoading } = useCampaignApplications(campaignId);
-  const updateStatus = useUpdateApplicationStatus(campaignId);
-  const { toast } = useToast();
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "accepted" | "rejected">("all");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
-  const handleStatusUpdate = async (applicationId: string, status: "accepted" | "rejected") => {
-    try {
-      await updateStatus.mutateAsync({ applicationId, status });
-      toast({
-        title: "Status Updated",
-        description: `Application ${status === "accepted" ? "accepted" : "rejected"} successfully`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update application status",
-        variant: "destructive",
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -44,46 +22,21 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
     );
   }
 
-  if (!applications || applications.length === 0) {
+  const acceptedApplications = (applications ?? []).filter((app) => app.status === "accepted");
+
+  if (acceptedApplications.length === 0) {
     return (
       <div className="text-center py-8 text-white/60">
-        <p>No applications yet for this campaign.</p>
+        <p>No approved applications yet for this campaign.</p>
       </div>
     );
   }
 
-  const filteredApplications = applications.filter((app) => {
-    if (statusFilter === "all") return true;
-    return app.status === statusFilter;
-  });
-
-  const statusCounts = {
-    all: applications.length,
-    pending: applications.filter((a) => a.status === "pending").length,
-    accepted: applications.filter((a) => a.status === "accepted").length,
-    rejected: applications.filter((a) => a.status === "rejected").length,
-  };
-
   return (
     <div className="space-y-4 mt-4">
-      {/* Filter Buttons */}
-      <div className="flex gap-2 flex-wrap">
-        {(["all", "pending", "accepted", "rejected"] as const).map((status) => (
-          <Button
-            key={status}
-            variant={statusFilter === status ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatusFilter(status)}
-            className={statusFilter === status ? "bg-[#E63946]" : "bg-white/5 border-white/10"}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)} ({statusCounts[status]})
-          </Button>
-        ))}
-      </div>
-
       {/* Applications List */}
       <div className="space-y-3">
-        {filteredApplications.map((application) => {
+        {acceptedApplications.map((application) => {
           const isExpanded = expandedIds.has(application._id);
 
           return (
@@ -235,30 +188,6 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                {application.status === "pending" && (
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
-                    <Button
-                      size="sm"
-                      onClick={() => handleStatusUpdate(application._id, "accepted")}
-                      disabled={updateStatus.isPending}
-                      className="bg-green-500 hover:bg-green-600 text-white"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Accept
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleStatusUpdate(application._id, "rejected")}
-                      disabled={updateStatus.isPending}
-                      className="bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Reject
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           );
