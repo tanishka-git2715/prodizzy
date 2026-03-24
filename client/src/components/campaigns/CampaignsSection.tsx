@@ -146,8 +146,7 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
             {campaigns.slice(0, 5).map((campaign) => (
               <div
                 key={campaign._id}
-                className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group"
-                onClick={() => setLocation(`/campaigns/${campaign._id}`)}
+                className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
