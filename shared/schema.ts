@@ -557,7 +557,7 @@ export type CampaignApplication = {
   resume_url?: string;
   portfolio_url?: string;
   answers?: Record<string, any>;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "accepted" | "rejected" | "approved";
   createdAt: string;
   updatedAt: string;
   // Populated fields

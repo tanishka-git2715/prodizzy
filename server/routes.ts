@@ -1104,7 +1104,7 @@ export async function registerRoutes(
       const campaignId = req.params.id;
       const { approved } = req.body;
 
-      const campaign = await storage.approveCampaign(campaignId, approved);
+      const campaign = await storage.approveCampaign(campaignId as string, approved);
       res.json(campaign);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1115,7 +1115,7 @@ export async function registerRoutes(
   app.get("/api/admin/campaigns/:id/applications", ensureAdmin, async (req, res) => {
     try {
       const campaignId = req.params.id;
-      const applications = await storage.getAllCampaignApplicationsForAdmin(campaignId);
+      const applications = await storage.getAllCampaignApplicationsForAdmin(campaignId as string);
       res.json(applications);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -1128,11 +1128,11 @@ export async function registerRoutes(
       const applicationId = req.params.id;
       const { status } = req.body;
 
-      if (!["approved", "rejected", "pending"].includes(status)) {
+      if (!["accepted", "approved", "rejected", "pending"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
 
-      const application = await storage.updateApplicationStatus(applicationId, status);
+      const application = await storage.updateApplicationStatus(applicationId as string, status);
       res.json(application);
     } catch (error: any) {
       res.status(500).json({ message: error.message });

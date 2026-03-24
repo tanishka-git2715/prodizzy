@@ -27,7 +27,7 @@ function ApplicationRow({ application, onStatusUpdate }: { application: any; onS
   const [expanded, setExpanded] = useState(false);
 
   const updateStatusMutation = useMutation({
-    mutationFn: (status: "approved" | "rejected" | "pending") =>
+    mutationFn: (status: "accepted" | "rejected" | "pending") =>
       fetch(`/api/admin/applications/${application._id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -80,14 +80,14 @@ function ApplicationRow({ application, onStatusUpdate }: { application: any; onS
         <Badge
           variant="outline"
           className={`text-xs ${
-            application.status === "approved"
+            (application.status === "accepted" || application.status === "approved")
               ? "bg-green-500/20 text-green-400 border-green-500/30"
               : application.status === "rejected"
               ? "bg-red-500/20 text-red-400 border-red-500/30"
               : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
           }`}
         >
-          {application.status}
+          {application.status === "accepted" || application.status === "approved" ? "approved" : application.status}
         </Badge>
       </div>
 
@@ -193,10 +193,10 @@ function ApplicationRow({ application, onStatusUpdate }: { application: any; onS
 
       {/* Action Buttons */}
       <div className="flex gap-2 pt-3 border-t border-white/6">
-        {application.status !== "approved" && (
+        {application.status !== "accepted" && application.status !== "approved" && (
           <Button
             size="sm"
-            onClick={() => updateStatusMutation.mutate("approved")}
+            onClick={() => updateStatusMutation.mutate("accepted")}
             disabled={updateStatusMutation.isPending}
             className="bg-green-500/15 text-green-400 border border-green-500/20 hover:bg-green-500/25"
           >
@@ -216,7 +216,7 @@ function ApplicationRow({ application, onStatusUpdate }: { application: any; onS
             Reject
           </Button>
         )}
-        {(application.status === "approved" || application.status === "rejected") && (
+        {(application.status === "accepted" || application.status === "approved" || application.status === "rejected") && (
           <Button
             size="sm"
             onClick={() => updateStatusMutation.mutate("pending")}

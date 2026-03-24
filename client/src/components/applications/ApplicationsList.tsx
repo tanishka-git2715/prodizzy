@@ -22,7 +22,9 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
     );
   }
 
-  const acceptedApplications = (applications ?? []).filter((app) => app.status === "accepted");
+  const acceptedApplications = (applications ?? []).filter((app) => 
+    app.status === "accepted" || app.status === "approved"
+  );
 
   if (acceptedApplications.length === 0) {
     return (

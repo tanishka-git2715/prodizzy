@@ -11,14 +11,14 @@ import { useCampaignApplications } from "@/hooks/use-applications";
 // Fetches accepted applications count for a single campaign
 function AcceptedCount({ campaignId }: { campaignId: string }) {
   const { data: apps } = useCampaignApplications(campaignId);
-  const count = (apps ?? []).filter((a) => a.status === "accepted").length;
+  const count = (apps ?? []).filter((a) => a.status === "accepted" || a.status === "approved").length;
   return <>{count}</>;
 }
 
 // Returns accepted count as a number (for conditional rendering)
 function useAcceptedCount(campaignId: string) {
   const { data: apps } = useCampaignApplications(campaignId);
-  return (apps ?? []).filter((a) => a.status === "accepted").length;
+  return (apps ?? []).filter((a) => a.status === "accepted" || a.status === "approved").length;
 }
 
 // Button component that uses the hook (hooks can't be called conditionally)
