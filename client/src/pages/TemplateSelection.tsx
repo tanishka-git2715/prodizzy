@@ -1,17 +1,38 @@
-import { useLocation } from "wouter";
-import { useRoute } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { campaignTemplates } from "@/lib/campaignTemplates";
+import { useMemo } from "react";
 
 export default function TemplateSelection() {
-  const [, params] = useRoute("/business/:businessId/campaigns/new");
-  const [, setLocation] = useLocation();
-  const businessId = params?.businessId;
+  const [location, setLocation] = useLocation();
+  const [, businessParams] = useRoute("/business/:businessId/campaigns/new");
+
+  // Determine if this is a business or individual campaign
+  const { isBusinessCampaign, businessId } = useMemo(() => {
+    const isBusiness = location.includes('/business/');
+    const bId = businessParams?.businessId;
+    return {
+      isBusinessCampaign: isBusiness && bId,
+      businessId: bId
+    };
+  }, [location, businessParams]);
 
   const handleTemplateSelect = (templateId: string) => {
-    setLocation(`/business/${businessId}/campaigns/create?template=${templateId}`);
+    if (isBusinessCampaign) {
+      setLocation(`/business/${businessId}/campaigns/create?template=${templateId}`);
+    } else {
+      setLocation(`/campaigns/create?template=${templateId}`);
+    }
+  };
+
+  const handleBackClick = () => {
+    if (isBusinessCampaign) {
+      setLocation(`/business/${businessId}`);
+    } else {
+      setLocation('/dashboard');
+    }
   };
 
   return (
@@ -21,7 +42,7 @@ export default function TemplateSelection() {
         <div className="mb-6 sm:mb-8">
           <Button
             variant="ghost"
-            onClick={() => setLocation(`/business/${businessId}`)}
+            onClick={handleBackClick}
             className="mb-4 text-white/60 hover:text-white -ml-2 sm:ml-0"
             size="sm"
           >

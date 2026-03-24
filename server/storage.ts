@@ -1333,6 +1333,52 @@ export class DatabaseStorage implements IStorage {
     return stats;
   }
 
+  // Individual campaign methods (for users without a business)
+  async createIndividualCampaign(userId: string, campaignData: any): Promise<any> {
+    const campaign = new Campaign({
+      created_by: userId,
+      business_id: undefined, // No business associated
+      ...campaignData
+    });
+
+    await campaign.save();
+
+    // Return the campaign without business population
+    const created = await Campaign.findById(campaign._id).lean();
+    return created;
+  }
+
+  async getCampaignsByUser(userId: string): Promise<any[]> {
+    const campaigns = await Campaign.find({
+      created_by: userId,
+      business_id: { $exists: false } // Only individual campaigns (no business)
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return campaigns;
+  }
+
+  async getUserCampaignStats(userId: string): Promise<any> {
+    const campaigns = await Campaign.find({
+      created_by: userId,
+      business_id: { $exists: false }
+    }).lean() as any[];
+
+    const stats = {
+      total: campaigns.length,
+      active: campaigns.filter(c => c.status === "active").length,
+      draft: campaigns.filter(c => c.status === "draft").length,
+      closed: campaigns.filter(c => c.status === "closed").length,
+      approved: campaigns.filter(c => c.approved).length,
+      pendingApproval: campaigns.filter(c => c.status === "active" && !c.approved).length,
+      totalViews: campaigns.reduce((sum, c) => sum + (Number(c.views) || 0), 0),
+      totalApplications: campaigns.reduce((sum, c) => sum + (Number(c.applications) || 0), 0)
+    };
+
+    return stats;
+  }
+
   async approveCampaign(campaignId: string, approved: boolean): Promise<any> {
     const campaign = await Campaign.findByIdAndUpdate(
       campaignId,

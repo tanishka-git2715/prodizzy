@@ -496,7 +496,7 @@ export type UpdateCampaign = z.infer<typeof updateCampaignSchema>;
 
 export type Campaign = {
   _id: string;
-  business_id: string;
+  business_id?: string; // Optional - for business campaigns only
   created_by: string; // user_id of creator
   title: string;
   description: string;

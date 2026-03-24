@@ -43,12 +43,21 @@ interface CampaignFormData {
 }
 
 export default function CampaignCreate() {
-  const [, params] = useRoute("/business/:businessId/campaigns/create");
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const [, businessParams] = useRoute("/business/:businessId/campaigns/create");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const businessId = params?.businessId;
+  // Determine if this is a business or individual campaign
+  const { isBusinessCampaign, businessId } = useMemo(() => {
+    const isBusiness = location.includes('/business/');
+    const bId = businessParams?.businessId;
+    return {
+      isBusinessCampaign: isBusiness && bId,
+      businessId: bId
+    };
+  }, [location, businessParams]);
+
   const urlParams = new URLSearchParams(window.location.search);
   const templateId = urlParams.get("template");
 
@@ -109,7 +118,11 @@ export default function CampaignCreate() {
   // Create campaign mutation
   const createCampaignMutation = useMutation({
     mutationFn: async (data: CampaignFormData) => {
-      const response = await fetch(`/api/business/${businessId}/campaigns`, {
+      const endpoint = isBusinessCampaign
+        ? `/api/business/${businessId}/campaigns`
+        : `/api/campaigns`;
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -124,7 +137,11 @@ export default function CampaignCreate() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["campaigns", businessId] });
+      if (isBusinessCampaign) {
+        queryClient.invalidateQueries({ queryKey: ["campaigns", businessId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["user-campaigns"] });
+      }
       setCreatedCampaign(data);
 
       if (formData.status === "active") {
@@ -135,7 +152,8 @@ export default function CampaignCreate() {
           title: "Draft Saved!",
           description: "Your campaign has been saved as a draft.",
         });
-        setLocation(`/business/${businessId}`);
+        const redirectPath = isBusinessCampaign ? `/business/${businessId}` : `/dashboard`;
+        setLocation(redirectPath);
       }
     },
     onError: (error: Error) => {
@@ -204,9 +222,6 @@ export default function CampaignCreate() {
     window.open(urls[platform], "_blank", "width=600,height=400");
   };
 
-  if (!businessId) {
-    return <div>Error: Business ID not found</div>;
-  }
 
   return (
     <div className="min-h-screen bg-black text-white p-4 sm:p-6">
@@ -215,7 +230,7 @@ export default function CampaignCreate() {
         <div className="mb-6 sm:mb-8">
           <Button
             variant="ghost"
-            onClick={() => setLocation(`/business/${businessId}`)}
+            onClick={() => setLocation(isBusinessCampaign ? `/business/${businessId}` : `/dashboard`)}
             className="mb-4 text-white/60 hover:text-white -ml-2 sm:ml-0"
             size="sm"
           >
@@ -637,7 +652,7 @@ export default function CampaignCreate() {
                   variant="outline"
                   onClick={() => {
                     setShowSuccessDialog(false);
-                    setLocation(`/business/${businessId}`);
+                    setLocation(isBusinessCampaign ? `/business/${businessId}` : `/dashboard`);
                   }}
                   className="bg-white/5 border-white/10"
                 >

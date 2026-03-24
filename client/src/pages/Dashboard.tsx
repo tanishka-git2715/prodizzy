@@ -253,17 +253,16 @@ function StartupDashboard({ profile, session, signOut, patchMutation, connection
               Discover campaigns
             </button>
             <button
-              onClick={() => {
-                if (mainBusinessId) {
-                  setLocation(`/business/${mainBusinessId}/campaigns/new`);
-                } else {
-                  createBusinessMutation.mutate();
-                }
-              }}
-              disabled={createBusinessMutation.isPending}
+              onClick={() => setLocation("/my-applications")}
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+            >
+              My Applications
+            </button>
+            <button
+              onClick={() => setLocation(mainBusinessId ? `/business/${mainBusinessId}/campaigns/new` : '/campaigns/new')}
               className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -619,42 +618,8 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
     }
   });
 
-  const personalBusiness = businesses?.find((b: any) => b.is_personal);
-  const personalBusinessId = personalBusiness?._id;
-
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
-  const createBusinessMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/business", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          business_name: "My Personal Profile",
-          business_type: "Individual",
-          description: "Personal business for launching individual campaigns",
-          is_personal: true
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create business profile");
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["businesses"] });
-      setLocation(`/business/${data._id}/campaigns/new`);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
 
   // Form state
   const [fullName, setFullName] = useState(profile.full_name || "");
@@ -780,17 +745,16 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
               Discover campaigns
             </button>
             <button
-              onClick={() => {
-                if (personalBusinessId) {
-                  setLocation(`/business/${personalBusinessId}/campaigns/new`);
-                } else {
-                  createBusinessMutation.mutate();
-                }
-              }}
-              disabled={createBusinessMutation.isPending}
+              onClick={() => setLocation("/my-applications")}
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+            >
+              My Applications
+            </button>
+            <button
+              onClick={() => setLocation('/campaigns/new')}
               className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -1189,7 +1153,7 @@ function IndividualDashboard({ profile, session, signOut, patchMutation, connect
             </AnimatePresence>
           </div>
 
-          <CampaignsSection businessId={personalBusinessId} />
+          <CampaignsSection />
 
           {/* ── Your Businesses ────────────────────────────────────────────── */}
           <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 space-y-5">
@@ -1396,17 +1360,16 @@ function PartnerDashboard({ profile, session, signOut, patchMutation, connection
               Discover campaigns
             </button>
             <button
-              onClick={() => {
-                if (mainBusinessId) {
-                  setLocation(`/business/${mainBusinessId}/campaigns/new`);
-                } else {
-                  createBusinessMutation.mutate();
-                }
-              }}
-              disabled={createBusinessMutation.isPending}
+              onClick={() => setLocation("/my-applications")}
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+            >
+              My Applications
+            </button>
+            <button
+              onClick={() => setLocation(mainBusinessId ? `/business/${mainBusinessId}/campaigns/new` : '/campaigns/new')}
               className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_200px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
+              Launch campaign
             </button>
             <button onClick={signOut} className="flex items-center gap-1.5 text-white/35 hover:text-white/70 transition-colors text-sm">
               <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -1820,17 +1783,16 @@ function InvestorDashboard({ profile, session, signOut, connections, matches, gr
               Discover campaigns
             </button>
             <button
-              onClick={() => {
-                if (mainBusinessId) {
-                  setLocation(`/business/${mainBusinessId}/campaigns/new`);
-                } else {
-                  createBusinessMutation.mutate();
-                }
-              }}
-              disabled={createBusinessMutation.isPending}
+              onClick={() => setLocation("/my-applications")}
+              className="px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/5 transition-colors"
+            >
+              My Applications
+            </button>
+            <button
+              onClick={() => setLocation(mainBusinessId ? `/business/${mainBusinessId}/campaigns/new` : '/campaigns/new')}
               className="px-4 py-2 bg-[#E63946] text-white text-sm font-medium rounded-lg hover:bg-[#E63946]/90 transition-colors shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] disabled:opacity-50"
             >
-              {createBusinessMutation.isPending ? "Starting..." : "Launch campaign"}
+              Launch campaign
             </button>
             <button onClick={signOut} className="text-white/50 hover:text-white/80 text-sm flex items-center gap-2 transition-colors">
               <LogOut className="w-4 h-4" />

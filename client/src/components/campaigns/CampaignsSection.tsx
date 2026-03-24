@@ -17,84 +17,31 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
   const { toast } = useToast();
   const [selectedCampaignForApps, setSelectedCampaignForApps] = useState<string | null>(null);
 
-  const createBusinessMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/business", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          business_name: "My Business",
-          business_type: "Startup",
-          description: "Personal business for launching campaigns",
-          is_personal: true
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create business profile");
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["businesses"] });
-      setLocation(`/business/${data._id}/campaigns/new`);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  if (!businessId) {
-    return (
-      <Card className="bg-white/5 border-white/10 overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#E63946]/5 to-transparent pointer-events-none" />
-        <CardHeader>
-          <div className="flex items-center justify-between relative z-10">
-            <CardTitle className="flex items-center gap-2">
-              <Rocket className="w-5 h-5 text-[#E63946]" />
-              Campaigns
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="text-center py-12 border-2 border-dashed border-white/10 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all cursor-pointer group/box"
-               onClick={() => createBusinessMutation.mutate()}>
-            <h4 className="text-xl font-bold text-white mb-6">Launch your first campaign</h4>
-            <Button
-              className="bg-[#E63946] hover:bg-[#E63946]/90 shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
-              disabled={createBusinessMutation.isPending}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {createBusinessMutation.isPending ? "Starting..." : "Launch Opportunity"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   const { data: campaigns, isLoading: loadingCampaigns } = useQuery<any[]>({
-    queryKey: ["campaigns", businessId],
+    queryKey: businessId ? ["campaigns", businessId] : ["user-campaigns"],
     queryFn: async () => {
-      const response = await fetch(`/api/business/${businessId}/campaigns`, {
+      const endpoint = businessId
+        ? `/api/business/${businessId}/campaigns`
+        : `/api/user/campaigns`;
+
+      const response = await fetch(endpoint, {
         credentials: "include"
       });
       if (!response.ok) {
         throw new Error("Failed to load campaigns");
       }
       return response.json();
-    },
-    enabled: !!businessId
+    }
   });
 
   const { data: campaignStats } = useQuery<any>({
-    queryKey: ["campaign-stats", businessId],
+    queryKey: businessId ? ["campaign-stats", businessId] : ["user-campaign-stats"],
     queryFn: async () => {
-      const response = await fetch(`/api/business/${businessId}/campaigns/stats`, {
+      const endpoint = businessId
+        ? `/api/business/${businessId}/campaigns/stats`
+        : `/api/user/campaigns/stats`;
+
+      const response = await fetch(endpoint, {
         credentials: "include"
       });
       if (!response.ok) {
@@ -102,7 +49,7 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
       }
       return response.json();
     },
-    enabled: !!businessId
+    enabled: true // Always enable to see personal stats if no businessId
   });
 
   const handleShareCampaign = (campaignId: string, campaignTitle: string, e: React.MouseEvent) => {
@@ -138,7 +85,7 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
             Campaigns
           </CardTitle>
           <Button
-            onClick={() => setLocation(`/business/${businessId}/campaigns/new`)}
+            onClick={() => setLocation(businessId ? `/business/${businessId}/campaigns/new` : `/campaigns/new`)}
             className="bg-[#E63946] hover:bg-[#E63946]/90"
           >
             <Plus className="w-4 h-4 mr-2" />
