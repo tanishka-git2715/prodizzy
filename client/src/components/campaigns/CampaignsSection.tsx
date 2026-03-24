@@ -6,6 +6,54 @@ import { useToast } from "@/hooks/use-toast";
 import { Rocket, Plus, TrendingUp, Eye, Users, Calendar, Share2 } from "lucide-react";
 import { ApplicationsList } from "@/components/applications/ApplicationsList";
 import { useState } from "react";
+import { useCampaignApplications } from "@/hooks/use-applications";
+
+// Fetches accepted applications count for a single campaign
+function AcceptedCount({ campaignId }: { campaignId: string }) {
+  const { data: apps } = useCampaignApplications(campaignId);
+  const count = (apps ?? []).filter((a) => a.status === "accepted").length;
+  return <>{count}</>;
+}
+
+// Returns accepted count as a number (for conditional rendering)
+function useAcceptedCount(campaignId: string) {
+  const { data: apps } = useCampaignApplications(campaignId);
+  return (apps ?? []).filter((a) => a.status === "accepted").length;
+}
+
+// Button component that uses the hook (hooks can't be called conditionally)
+function ViewApplicationsButton({ campaign, selectedCampaignForApps, setSelectedCampaignForApps }: {
+  campaign: any;
+  selectedCampaignForApps: string | null;
+  setSelectedCampaignForApps: (id: string | null) => void;
+}) {
+  const acceptedCount = useAcceptedCount(campaign._id);
+  if (acceptedCount === 0) return null;
+  return (
+    <div className="mt-4 border-t border-white/10 pt-4">
+      <Button
+        variant="ghost"
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedCampaignForApps(
+            selectedCampaignForApps === campaign._id ? null : campaign._id
+          );
+        }}
+        className="w-full text-blue-400 hover:text-blue-300"
+      >
+        {selectedCampaignForApps === campaign._id
+          ? "Hide Applications"
+          : `View ${acceptedCount} Application${acceptedCount !== 1 ? "s" : ""}`}
+      </Button>
+      {selectedCampaignForApps === campaign._id && (
+        <ApplicationsList
+          campaignId={campaign._id}
+          campaignTitle={campaign.title}
+        />
+      )}
+    </div>
+  );
+}
 
 interface CampaignsSectionProps {
   businessId?: string;
@@ -183,7 +231,7 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="w-3 h-3" />
-                    {campaign.applications || 0}
+                    <AcceptedCount campaignId={campaign._id} />
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
@@ -191,31 +239,8 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
                   </span>
                 </div>
 
-                {campaign.applications > 0 && (
-                  <div className="mt-4 border-t border-white/10 pt-4">
-                    <Button
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCampaignForApps(
-                          selectedCampaignForApps === campaign._id ? null : campaign._id
-                        );
-                      }}
-                      className="w-full text-blue-400 hover:text-blue-300"
-                    >
-                      {selectedCampaignForApps === campaign._id
-                        ? "Hide Applications"
-                        : `View ${campaign.applications} Application${campaign.applications !== 1 ? "s" : ""}`}
-                    </Button>
-
-                    {selectedCampaignForApps === campaign._id && (
-                      <ApplicationsList
-                        campaignId={campaign._id}
-                        campaignTitle={campaign.title}
-                      />
-                    )}
-                  </div>
-                )}
+                {/* View Applications section */}
+                <ViewApplicationsButton campaign={campaign} selectedCampaignForApps={selectedCampaignForApps} setSelectedCampaignForApps={setSelectedCampaignForApps} />
               </div>
             ))}
           </div>
