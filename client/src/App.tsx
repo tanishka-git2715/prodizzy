@@ -22,9 +22,13 @@ import PublicBusinessProfile from "@/pages/PublicBusinessProfile";
 import MyApplications from "@/pages/MyApplications";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
+import ScrollToTop from "@/components/ScrollToTop";
+
 function Router() {
   return (
-    <Switch>
+    <>
+      <ScrollToTop />
+      <Switch>
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/join-startup" component={Onboard} />
@@ -46,6 +50,7 @@ function Router() {
       <Route path="/my-applications">{() => <ProtectedRoute component={MyApplications} />}</Route>
       <Route component={NotFound} />
     </Switch>
+    </>
   );
 }
 
