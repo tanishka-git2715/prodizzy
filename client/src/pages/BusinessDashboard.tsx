@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy, BadgeCheck, Edit2, Building2 } from "lucide-react";
+import { Users, Settings, ArrowLeft, Mail, Shield, UserCheck, UserX, Crown, Rocket, Plus, TrendingUp, Eye, Calendar, Share2, Copy, BadgeCheck, Edit2, Building2, Camera } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +51,7 @@ export default function BusinessDashboard() {
 
   const [showEditBusiness, setShowEditBusiness] = useState(false);
   const [submittingEdit, setSubmittingEdit] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [editFormData, setEditFormData] = useState({
     business_name: "",
     business_type: "",
@@ -64,6 +65,34 @@ export default function BusinessDashboard() {
     business_type_other: "",
     industry_other: ""
   });
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Please upload an image file", variant: "destructive" });
+      return;
+    }
+    setUploadingLogo(true);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string;
+      try {
+        const res = await fetch(`/api/business/${businessId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ logo_url: base64 })
+        });
+        if (!res.ok) throw new Error("Failed to update logo");
+        toast({ title: "Logo updated successfully!" });
+        refetchBusiness();
+      } catch {
+        toast({ title: "Failed to upload logo", variant: "destructive" });
+      } finally {
+        setUploadingLogo(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (business && showEditBusiness) {
@@ -350,15 +379,37 @@ export default function BusinessDashboard() {
             </Button>
 
             <div className="flex items-center gap-4">
-              {business.logo_url ? (
-                <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 overflow-hidden shrink-0">
+              <label
+                htmlFor="logo-upload"
+                className="relative w-16 h-16 rounded-xl bg-white/5 border border-white/10 overflow-hidden shrink-0 cursor-pointer group"
+                title="Click to upload logo"
+              >
+                {business.logo_url ? (
                   <img src={business.logo_url} alt={business.business_name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Building2 className="w-8 h-8 text-white/20" />
+                  </div>
+                )}
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {uploadingLogo ? (
+                    <div className="w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Camera className="w-5 h-5 text-white" />
+                  )}
                 </div>
-              ) : (
-                <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                  <Building2 className="w-8 h-8 text-white/20" />
-                </div>
-              )}
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleLogoUpload(file);
+                  }}
+                />
+              </label>
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h1 className="text-3xl font-bold">{business.business_name}</h1>

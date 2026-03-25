@@ -1053,7 +1053,9 @@ export async function registerRoutes(
       }
 
       // Check access: campaign creator OR business owner/member
-      const isCreator = campaign.created_by?.toString() === userId;
+      // NOTE: getCampaignById populates created_by as an object { _id, displayName, ... }
+      const creatorId = campaign.created_by?._id?.toString() || campaign.created_by?.toString();
+      const isCreator = creatorId === userId;
 
       let isAuthorized = isCreator;
 

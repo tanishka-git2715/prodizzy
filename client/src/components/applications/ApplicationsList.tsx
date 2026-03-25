@@ -135,7 +135,7 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
                     }}
                     className="text-blue-400 text-xs mb-3"
                   >
-                    {isExpanded ? "Show Less" : "Show More"}
+                    {isExpanded ? "Hide Profile" : "Show Profile"}
                   </Button>
                 )}
 
