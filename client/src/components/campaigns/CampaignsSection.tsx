@@ -3,11 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Rocket, Plus, TrendingUp, Eye, Users, Calendar, Share2, ExternalLink } from "lucide-react";
+import { Rocket, Plus, TrendingUp, Eye, Users, Calendar, Share2, ExternalLink, Edit2 } from "lucide-react";
 import { ApplicationsList } from "@/components/applications/ApplicationsList";
 import { useState } from "react";
 import { useCampaignApplications } from "@/hooks/use-applications";
 import { ShareCampaignDialog } from "@/components/campaigns/ShareCampaignDialog";
+import { EditCampaignModal } from "@/components/campaigns/EditCampaignModal";
 
 // Fetches total applications count for a single campaign
 function ApplicationCount({ campaignId }: { campaignId: string }) {
@@ -74,6 +75,8 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [sharingCampaign, setSharingCampaign] = useState<{ id: string; title: string; description: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending'>('all');
+  const [editingCampaign, setEditingCampaign] = useState<any | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const { data: campaigns, isLoading: loadingCampaigns } = useQuery<any[]>({
     queryKey: businessId ? ["campaigns", businessId] : ["user-campaigns"],
@@ -210,31 +213,46 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
                     <p className="text-sm text-white/60 line-clamp-3">{campaign.description}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {campaign.status === 'active' && (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          title="Share Campaign"
-                          onClick={(e) => handleShareCampaign(campaign._id, campaign.title, campaign.description, e)}
-                          className="text-white/60 hover:text-white"
-                        >
-                          <Share2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          title="View Campaign"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(`/c/${campaign._id}`, '_blank');
-                          }}
-                          className="text-white/60 hover:text-white"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="Edit Campaign"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingCampaign(campaign);
+                          setEditModalOpen(true);
+                        }}
+                        className="text-white/60 hover:text-white"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      {campaign.status === 'active' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Share Campaign"
+                            onClick={(e) => handleShareCampaign(campaign._id, campaign.title, campaign.description, e)}
+                            className="text-white/60 hover:text-white"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="View Campaign"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(`/c/${campaign._id}`, '_blank');
+                            }}
+                            className="text-white/60 hover:text-white"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                     {campaign.status === 'active' && !campaign.approved && (
                       <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
                         Pending
@@ -278,6 +296,17 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
           campaignDescription={sharingCampaign?.description || null}
           open={shareDialogOpen}
           onOpenChange={setShareDialogOpen}
+        />
+
+        {/* Edit Campaign Modal */}
+        <EditCampaignModal
+          campaign={editingCampaign}
+          open={editModalOpen}
+          onOpenChange={(open) => {
+            setEditModalOpen(open);
+            if (!open) setEditingCampaign(null);
+          }}
+          businessId={businessId}
         />
       </CardContent>
     </Card>
