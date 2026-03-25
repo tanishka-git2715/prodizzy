@@ -373,11 +373,11 @@ export default function BusinessDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-black text-white p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
-          <div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8">
+          <div className="w-full sm:w-auto">
             <Button
               variant="ghost"
               onClick={() => setLocation("/dashboard")}
@@ -454,7 +454,7 @@ export default function BusinessDashboard() {
 
           <Button
             onClick={() => setLocation(`/business/${businessId}/campaigns/new`)}
-            className="bg-[#E63946] hover:bg-[#E63946]/90 shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)]"
+            className="bg-[#E63946] hover:bg-[#E63946]/90 shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Launch campaign
@@ -622,8 +622,8 @@ export default function BusinessDashboard() {
                   </DialogContent>
                 </Dialog>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-8">
+              <CardContent className="space-y-6 px-4 sm:px-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                   <div>
                     <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Company Name</h3>
                     <p className="text-white font-medium">{business.business_name}</p>

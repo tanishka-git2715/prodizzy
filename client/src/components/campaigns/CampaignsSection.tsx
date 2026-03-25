@@ -202,12 +202,12 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
             {filteredCampaigns.map((campaign) => (
               <div
                 key={campaign._id}
-                className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
+                className="p-3 sm:p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h4 className="font-medium mb-1">{campaign.title}</h4>
-                    <p className="text-sm text-white/60 line-clamp-2">{campaign.description}</p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium mb-1 truncate">{campaign.title}</h4>
+                    <p className="text-sm text-white/60 line-clamp-3">{campaign.description}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {campaign.status === 'active' && (

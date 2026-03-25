@@ -43,7 +43,7 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
 
           return (
             <Card key={application._id} className="bg-white/5 border-white/10">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -81,7 +81,7 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
                 {/* Message Preview */}
                 {application.message && (
                   <div className="mb-3">
-                    <p className="text-sm text-white/80 line-clamp-2">
+                    <p className="text-sm text-white/80 whitespace-pre-wrap break-words">
                       {application.message}
                     </p>
                   </div>
