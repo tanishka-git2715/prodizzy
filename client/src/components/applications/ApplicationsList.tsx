@@ -171,6 +171,15 @@ export function ApplicationsList({ campaignId, campaignTitle }: ApplicationsList
                         </div>
                       )}
 
+                      {application.reference_link && (
+                        <div>
+                          <h5 className="text-xs font-bold text-white/25 uppercase tracking-wider mb-1">Reference Link</h5>
+                          <a href={application.reference_link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:text-blue-300 break-all">
+                            {application.reference_link}
+                          </a>
+                        </div>
+                      )}
+
                       {application.answers && Object.keys(application.answers).length > 0 && (
                         <div>
                           <h5 className="text-xs font-bold text-white/25 uppercase tracking-wider mb-2">Additional Answers</h5>

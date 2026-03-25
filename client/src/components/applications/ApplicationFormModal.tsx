@@ -30,6 +30,7 @@ export function ApplicationFormModal({
   const [formData, setFormData] = useState({
     message: "",
     contact_details: "",
+    reference_link: "",
     resume_url: "",
     answers: {} as Record<string, any>,
   });
@@ -42,7 +43,7 @@ export function ApplicationFormModal({
       await createApplication.mutateAsync(formData);
       onSuccess();
       // Reset form
-      setFormData({ message: "", contact_details: "", resume_url: "", answers: {} });
+      setFormData({ message: "", contact_details: "", reference_link: "", resume_url: "", answers: {} });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -87,8 +88,21 @@ export function ApplicationFormModal({
               placeholder="Phone number or preferred contact method"
               value={formData.contact_details}
               onChange={(e) => setFormData({ ...formData, contact_details: e.target.value })}
-              className="bg-white/5 border-white/10 text-white"
+              className="bg-white/5 border-white/10 text-white mt-1"
               required
+            />
+          </div>
+
+          {/* Reference Link */}
+          <div>
+            <Label htmlFor="reference_link">Reference Link (Optional)</Label>
+            <Input
+              id="reference_link"
+              type="url"
+              placeholder="e.g. LinkedIn, Portfolio, GitHub"
+              value={formData.reference_link}
+              onChange={(e) => setFormData({ ...formData, reference_link: e.target.value })}
+              className="bg-white/5 border-white/10 text-white mt-1"
             />
           </div>
           

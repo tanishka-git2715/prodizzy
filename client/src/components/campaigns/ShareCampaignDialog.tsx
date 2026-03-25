@@ -41,12 +41,12 @@ export function ShareCampaignDialog({
   const fullShareText = `${baseShareText}\n\n${shareUrl}`;
 
   const copyShareLink = () => {
-    if (fullShareText) {
-      navigator.clipboard.writeText(fullShareText);
+    if (shareUrl) {
+      navigator.clipboard.writeText(shareUrl);
       setLinkCopied(true);
       toast({
-        title: "Message Copied!",
-        description: "Campaign details copied to clipboard",
+        title: "Link Copied!",
+        description: "Campaign link copied to clipboard",
       });
       setTimeout(() => setLinkCopied(false), 2000);
     }

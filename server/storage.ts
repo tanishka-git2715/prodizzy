@@ -1365,9 +1365,8 @@ export class DatabaseStorage implements IStorage {
     const campaigns = await Campaign.find({ business_id: businessId }).lean() as any[];
 
     const campaignIds = campaigns.map(c => c._id);
-    const acceptedCount = await CampaignApplication.countDocuments({
-      campaign_id: { $in: campaignIds },
-      status: { $in: ["accepted", "approved"] }
+    const totalAppCount = await CampaignApplication.countDocuments({
+      campaign_id: { $in: campaignIds }
     });
 
     const stats = {
@@ -1378,7 +1377,7 @@ export class DatabaseStorage implements IStorage {
       approved: campaigns.filter(c => c.approved).length,
       pendingApproval: campaigns.filter(c => c.status === "active" && !c.approved).length,
       totalViews: campaigns.reduce((sum, c) => sum + (Number(c.views) || 0), 0),
-      totalApplications: acceptedCount
+      totalApplications: totalAppCount
     };
 
     return stats;
@@ -1422,9 +1421,8 @@ export class DatabaseStorage implements IStorage {
     }).lean() as any[];
 
     const campaignIds = campaigns.map(c => c._id);
-    const acceptedCount = await CampaignApplication.countDocuments({
-      campaign_id: { $in: campaignIds },
-      status: { $in: ["accepted", "approved"] }
+    const totalAppCount = await CampaignApplication.countDocuments({
+      campaign_id: { $in: campaignIds }
     });
 
     const stats = {
@@ -1435,7 +1433,7 @@ export class DatabaseStorage implements IStorage {
       approved: campaigns.filter(c => c.approved).length,
       pendingApproval: campaigns.filter(c => c.status === "active" && !c.approved).length,
       totalViews: campaigns.reduce((sum, c) => sum + (Number(c.views) || 0), 0),
-      totalApplications: acceptedCount
+      totalApplications: totalAppCount
     };
 
     return stats;

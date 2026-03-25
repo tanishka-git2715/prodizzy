@@ -364,6 +364,7 @@ const CampaignApplicationSchema = new Schema({
     user_id: { type: String, required: true },
     message: String,
     contact_details: String, // Phone number or other contact method
+    reference_link: String,
     resume_url: String,
     portfolio_url: String,
     answers: Schema.Types.Mixed, // Custom question answers

@@ -9,27 +9,26 @@ import { useState } from "react";
 import { useCampaignApplications } from "@/hooks/use-applications";
 import { ShareCampaignDialog } from "@/components/campaigns/ShareCampaignDialog";
 
-// Fetches accepted applications count for a single campaign
-function AcceptedCount({ campaignId }: { campaignId: string }) {
+// Fetches total applications count for a single campaign
+function ApplicationCount({ campaignId }: { campaignId: string }) {
   const { data: apps } = useCampaignApplications(campaignId);
-  const count = (apps ?? []).filter((a) => a.status === "accepted" || a.status === "approved").length;
+  const count = (apps ?? []).length;
   return <>{count}</>;
 }
 
-// Returns accepted count as a number (for conditional rendering)
-function useAcceptedCount(campaignId: string) {
+// Returns total applications count as a number (for conditional rendering)
+function useApplicationCount(campaignId: string) {
   const { data: apps } = useCampaignApplications(campaignId);
-  return (apps ?? []).filter((a) => a.status === "accepted" || a.status === "approved").length;
+  return (apps ?? []).length;
 }
 
-// Button component that uses the hook (hooks can't be called conditionally)
 function ViewApplicationsButton({ campaign, selectedCampaignForApps, setSelectedCampaignForApps }: {
   campaign: any;
   selectedCampaignForApps: string | null;
   setSelectedCampaignForApps: (id: string | null) => void;
 }) {
-  const acceptedCount = useAcceptedCount(campaign._id);
-  if (acceptedCount === 0) return null;
+  const appCount = useApplicationCount(campaign._id);
+  if (appCount === 0) return null;
   return (
     <div className="mt-4 border-t border-white/10 pt-4">
       <Button
@@ -44,7 +43,7 @@ function ViewApplicationsButton({ campaign, selectedCampaignForApps, setSelected
       >
         {selectedCampaignForApps === campaign._id
           ? "Hide Applications"
-          : `View ${acceptedCount} Application${acceptedCount !== 1 ? "s" : ""}`}
+          : `View ${appCount} Application${appCount !== 1 ? "s" : ""}`}
       </Button>
       {selectedCampaignForApps === campaign._id && (
         <ApplicationsList
@@ -248,7 +247,7 @@ export function CampaignsSection({ businessId }: CampaignsSectionProps) {
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="w-3 h-3" />
-                    <AcceptedCount campaignId={campaign._id} />
+                    <ApplicationCount campaignId={campaign._id} />
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
