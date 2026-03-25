@@ -40,6 +40,10 @@ interface Campaign {
     profileId?: string;
   };
   individual_profile?: any;
+  skills?: string[];
+  customFields?: Record<string, any>;
+  referenceLink?: string;
+  attachments?: string[];
 }
 
 function ApplicationRow({ application, onStatusUpdate }: { application: any; onStatusUpdate: () => void }) {
@@ -412,6 +416,78 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
                   {campaign.description}
                 </p>
               </div>
+
+              {/* Added Custom Fields, Skills, Links */}
+              {campaign.skills && campaign.skills.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Required Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {campaign.skills.map((skill: string) => (
+                      <Badge key={skill} variant="outline" className="bg-blue-500/10 border-blue-500/30 text-blue-300 text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {campaign.customFields && Object.keys(campaign.customFields).length > 0 && (
+                <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="col-span-1 sm:col-span-2">
+                    <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Additional Details</p>
+                  </div>
+                  {Object.entries(campaign.customFields).map(([key, value]: [string, any]) => {
+                    if (value) {
+                      const displayValue = Array.isArray(value) ? value.join(", ") : value;
+                      const isLink = typeof displayValue === 'string' && displayValue.startsWith('http');
+                      return (
+                        <div key={key}>
+                          <span className="text-xs text-white/40 capitalize block mb-1">
+                            {key.replace(/([A-Z])/g, ' $1').replace(/_/g, " ").trim()}:
+                          </span>
+                          {isLink ? (
+                            <a href={displayValue} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:text-blue-300 break-all w-fit">
+                              {displayValue}
+                            </a>
+                          ) : (
+                            <p className="text-sm text-white/80">{displayValue}</p>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              )}
+
+              {/* Reference Link & Attachments */}
+              {(campaign.referenceLink || (campaign.attachments && campaign.attachments.length > 0)) && (
+                <div className="mb-6 space-y-3">
+                  <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Resources</p>
+                  {campaign.referenceLink && (
+                    <div>
+                      <span className="text-xs text-white/40 block mb-1">Reference Link:</span>
+                      <a href={campaign.referenceLink} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 w-fit">
+                        <ExternalLink className="w-3 h-3" />
+                        {campaign.referenceLink}
+                      </a>
+                    </div>
+                  )}
+                  {campaign.attachments && campaign.attachments.length > 0 && (
+                    <div>
+                      <span className="text-xs text-white/40 block mb-1">Attached Files:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {campaign.attachments.map((url: string, index: number) => (
+                          <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-white/5 px-2 py-1 rounded border border-white/10 w-fit">
+                            <FileText className="w-3 h-3" />
+                            Attachment {index + 1}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Creator/Business Profile Section */}
               <div className="mb-6 pt-4 border-t border-white/6">

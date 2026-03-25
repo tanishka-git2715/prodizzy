@@ -19,7 +19,8 @@ import {
   ExternalLink,
   Share2,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CampaignCard } from "@/components/campaigns/CampaignCard";
@@ -262,17 +263,56 @@ export default function PublicCampaignView() {
                 <div className="space-y-3">
                   {Object.entries(campaign.customFields).map(([key, value]: [string, any]) => {
                     if (value) {
+                      const displayValue = Array.isArray(value) ? value.join(", ") : value;
+                      const isLink = typeof displayValue === 'string' && displayValue.startsWith('http');
                       return (
                         <div key={key}>
                           <span className="text-sm text-white/60 capitalize">
-                            {key.replace(/_/g, " ")}:
+                            {key.replace(/([A-Z])/g, ' $1').replace(/_/g, " ").trim()}:
                           </span>
-                          <p className="font-medium">{value}</p>
+                          {isLink ? (
+                            <a href={displayValue} target="_blank" rel="noopener noreferrer" className="block font-medium text-blue-400 hover:text-blue-300 break-all">
+                              {displayValue}
+                            </a>
+                          ) : (
+                            <p className="font-medium">{displayValue}</p>
+                          )}
                         </div>
                       );
                     }
                     return null;
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Reference Link & Attachments */}
+            {(campaign.referenceLink || (campaign.attachments && campaign.attachments.length > 0)) && (
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <h3 className="text-lg font-semibold mb-4">Resources</h3>
+                <div className="space-y-4">
+                  {campaign.referenceLink && (
+                    <div>
+                      <span className="text-sm text-white/60 block mb-1">Reference Link:</span>
+                      <a href={campaign.referenceLink} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-400 hover:text-blue-300 break-all flex items-center gap-2">
+                        <ExternalLink className="w-4 h-4" />
+                        {campaign.referenceLink}
+                      </a>
+                    </div>
+                  )}
+                  {campaign.attachments && campaign.attachments.length > 0 && (
+                    <div>
+                      <span className="text-sm text-white/60 block mb-2">Attached Files:</span>
+                      <div className="flex flex-col gap-2">
+                        {campaign.attachments.map((url: string, index: number) => (
+                          <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-400 hover:text-blue-300 flex items-center gap-2 bg-white/5 p-3 rounded-lg border border-white/10 w-fit">
+                            <FileText className="w-4 h-4" />
+                            Attachment {index + 1}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

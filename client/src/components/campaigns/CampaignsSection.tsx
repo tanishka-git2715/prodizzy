@@ -28,24 +28,27 @@ function ViewApplicationsButton({ campaign, selectedCampaignForApps, setSelected
   setSelectedCampaignForApps: (id: string | null) => void;
 }) {
   const appCount = useApplicationCount(campaign._id);
-  if (appCount === 0) return null;
   return (
     <div className="mt-4 border-t border-white/10 pt-4">
       <Button
         variant="ghost"
         onClick={(e) => {
+          if (appCount === 0) return;
           e.stopPropagation();
           setSelectedCampaignForApps(
             selectedCampaignForApps === campaign._id ? null : campaign._id
           );
         }}
-        className="w-full text-blue-400 hover:text-blue-300"
+        disabled={appCount === 0}
+        className="w-full text-blue-400 hover:text-blue-300 disabled:opacity-50"
       >
-        {selectedCampaignForApps === campaign._id
-          ? "Hide Applications"
-          : `View ${appCount} Application${appCount !== 1 ? "s" : ""}`}
+        {appCount === 0 
+          ? "No Applications Yet" 
+          : selectedCampaignForApps === campaign._id
+            ? "Hide Applications"
+            : `View ${appCount} Application${appCount !== 1 ? "s" : ""}`}
       </Button>
-      {selectedCampaignForApps === campaign._id && (
+      {selectedCampaignForApps === campaign._id && appCount > 0 && (
         <ApplicationsList
           campaignId={campaign._id}
           campaignTitle={campaign.title}

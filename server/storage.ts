@@ -1364,9 +1364,9 @@ export class DatabaseStorage implements IStorage {
   async getCampaignStats(businessId: string): Promise<any> {
     const campaigns = await Campaign.find({ business_id: businessId }).lean() as any[];
 
-    const campaignIds = campaigns.map(c => c._id);
+    const approvedCampaignIds = campaigns.filter(c => c.approved).map(c => c._id);
     const totalAppCount = await CampaignApplication.countDocuments({
-      campaign_id: { $in: campaignIds }
+      campaign_id: { $in: approvedCampaignIds }
     });
 
     const stats = {
@@ -1420,9 +1420,9 @@ export class DatabaseStorage implements IStorage {
       business_id: { $exists: false }
     }).lean() as any[];
 
-    const campaignIds = campaigns.map(c => c._id);
+    const approvedCampaignIds = campaigns.filter(c => c.approved).map(c => c._id);
     const totalAppCount = await CampaignApplication.countDocuments({
-      campaign_id: { $in: campaignIds }
+      campaign_id: { $in: approvedCampaignIds }
     });
 
     const stats = {
