@@ -1052,17 +1052,29 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Campaign not found" });
       }
 
-      // Check if user owns the campaign's business
-      const business = await storage.getBusinessById(campaign.business_id);
-      const isOwner = business.owner_user_id === userId;
+      // Check access: campaign creator OR business owner/member
+      const isCreator = campaign.created_by?.toString() === userId;
 
-      if (!isOwner) {
-        const members = await storage.getTeamMembers(campaign.business_id);
-        const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+      let isAuthorized = isCreator;
 
-        if (!member) {
-          return res.status(403).json({ message: "Access denied" });
+      if (!isAuthorized && campaign.business_id) {
+        // Check if user owns the campaign's business or is a member
+        try {
+          const business = await storage.getBusinessById(campaign.business_id);
+          if (business.owner_user_id === userId) {
+            isAuthorized = true;
+          } else {
+            const members = await storage.getTeamMembers(campaign.business_id);
+            const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+            if (member) isAuthorized = true;
+          }
+        } catch (_) {
+          // business not found, skip
         }
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Access denied" });
       }
 
       // Get applications (filtered by approval status)

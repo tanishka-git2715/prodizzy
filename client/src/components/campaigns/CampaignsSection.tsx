@@ -12,14 +12,17 @@ import { ShareCampaignDialog } from "@/components/campaigns/ShareCampaignDialog"
 // Fetches total applications count for a single campaign
 function ApplicationCount({ campaignId }: { campaignId: string }) {
   const { data: apps } = useCampaignApplications(campaignId);
-  const count = (apps ?? []).length;
-  return <>{count}</>;
+  const acceptedCount = (apps ?? []).filter(a => ['accepted', 'approved'].includes(a.status)).length;
+  return <>{acceptedCount}</>;
 }
 
-// Returns total applications count as a number (for conditional rendering)
+// Returns both total and accepted applications count
 function useApplicationCount(campaignId: string) {
   const { data: apps } = useCampaignApplications(campaignId);
-  return (apps ?? []).length;
+  return {
+    total: (apps ?? []).length,
+    accepted: (apps ?? []).filter(a => ['accepted', 'approved'].includes(a.status)).length
+  };
 }
 
 function ViewApplicationsButton({ campaign, selectedCampaignForApps, setSelectedCampaignForApps }: {
@@ -27,28 +30,29 @@ function ViewApplicationsButton({ campaign, selectedCampaignForApps, setSelected
   selectedCampaignForApps: string | null;
   setSelectedCampaignForApps: (id: string | null) => void;
 }) {
-  const appCount = useApplicationCount(campaign._id);
+  const { total, accepted } = useApplicationCount(campaign._id);
+  
   return (
     <div className="mt-4 border-t border-white/10 pt-4">
       <Button
         variant="ghost"
         onClick={(e) => {
-          if (appCount === 0) return;
+          if (total === 0) return;
           e.stopPropagation();
           setSelectedCampaignForApps(
             selectedCampaignForApps === campaign._id ? null : campaign._id
           );
         }}
-        disabled={appCount === 0}
+        disabled={total === 0}
         className="w-full text-blue-400 hover:text-blue-300 disabled:opacity-50"
       >
-        {appCount === 0 
+        {total === 0 
           ? "No Applications Yet" 
           : selectedCampaignForApps === campaign._id
             ? "Hide Applications"
-            : `View ${appCount} Application${appCount !== 1 ? "s" : ""}`}
+            : `View Applications (${accepted} Approved)`}
       </Button>
-      {selectedCampaignForApps === campaign._id && appCount > 0 && (
+      {selectedCampaignForApps === campaign._id && total > 0 && (
         <ApplicationsList
           campaignId={campaign._id}
           campaignTitle={campaign.title}

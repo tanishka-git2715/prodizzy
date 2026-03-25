@@ -1366,7 +1366,8 @@ export class DatabaseStorage implements IStorage {
 
     const approvedCampaignIds = campaigns.filter(c => c.approved).map(c => c._id);
     const totalAppCount = await CampaignApplication.countDocuments({
-      campaign_id: { $in: approvedCampaignIds }
+      campaign_id: { $in: approvedCampaignIds },
+      status: { $in: ["accepted", "approved"] }
     });
 
     const stats = {
@@ -1422,7 +1423,8 @@ export class DatabaseStorage implements IStorage {
 
     const approvedCampaignIds = campaigns.filter(c => c.approved).map(c => c._id);
     const totalAppCount = await CampaignApplication.countDocuments({
-      campaign_id: { $in: approvedCampaignIds }
+      campaign_id: { $in: approvedCampaignIds },
+      status: { $in: ["accepted", "approved"] }
     });
 
     const stats = {

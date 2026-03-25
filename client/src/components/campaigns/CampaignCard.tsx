@@ -66,54 +66,7 @@ export function CampaignCard({ campaign, onApply }: CampaignCardProps) {
   return (
     <Card className="bg-white/[0.03] border-white/8 hover:border-white/15 transition-all duration-200 cursor-pointer group" onClick={handleViewCampaign}>
       <CardContent className="p-5 space-y-4">
-        {/* Entity Header (Business or Individual) */}
-        {(campaign.business || campaign.creator) && (
-          <div className="flex items-center gap-3 pb-3 border-b border-white/5">
-            <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {campaign.business?.logo_url ? (
-                <img
-                  src={campaign.business.logo_url}
-                  alt={campaign.business.business_name}
-                  className="w-full h-full object-cover"
-                />
-              ) : campaign.creator?.avatarUrl ? (
-                <img
-                  src={campaign.creator.avatarUrl}
-                  alt={campaign.creator.displayName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-white/5 text-white/40 font-bold text-lg">
-                  {(campaign.business?.business_name || campaign.creator?.displayName || "?")[0].toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              {campaign.business ? (
-                <Link href={`/business/${campaign.business._id}/view`}>
-                  <h4 className="text-sm font-medium text-white/80 truncate hover:text-[#E63946] transition-colors cursor-pointer" onClick={(e) => e.stopPropagation()}>
-                    {campaign.business.business_name}
-                  </h4>
-                </Link>
-              ) : campaign.creator?.profileId ? (
-                <Link href={`/profile/${campaign.creator.profileId}`}>
-                  <h4 className="text-sm font-medium text-white/80 truncate hover:text-[#E63946] transition-colors cursor-pointer" onClick={(e) => e.stopPropagation()}>
-                    {campaign.creator.displayName || "Unknown Creator"}
-                  </h4>
-                </Link>
-              ) : (
-                <h4 className="text-sm font-medium text-white/80 truncate">
-                  {campaign.creator?.displayName || "Unknown Creator"}
-                </h4>
-              )}
-              <p className="text-xs text-white/40 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
-                {campaign.business ? " • Business" : " • Individual"}
-              </p>
-            </div>
-          </div>
-        )}
+
 
         {/* Campaign Title */}
         <div>
