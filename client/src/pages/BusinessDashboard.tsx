@@ -457,7 +457,7 @@ export default function BusinessDashboard() {
             className="bg-[#E63946] hover:bg-[#E63946]/90 shadow-[0_0_20px_-5px_rgba(230,57,70,0.4)] w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Launch campaign
+            Launch
           </Button>
         </div>
 
