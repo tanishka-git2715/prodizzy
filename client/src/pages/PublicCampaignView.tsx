@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { CampaignCard } from "@/components/campaigns/CampaignCard";
 import type { Campaign } from "@shared/schema";
+import { ShareCampaignDialog } from "@/components/campaigns/ShareCampaignDialog";
 
 export default function PublicCampaignView() {
   const [, params] = useRoute("/c/:id");
@@ -33,6 +34,7 @@ export default function PublicCampaignView() {
   const campaignId = params?.id;
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const { data: campaign, isLoading, error } = useQuery<any>({
     queryKey: ["public-campaign", campaignId],
@@ -117,27 +119,8 @@ export default function PublicCampaignView() {
     setShowSuccessDialog(true);
   };
 
-  const handleShare = async () => {
-    const shareUrl = window.location.href;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: campaign?.title,
-          text: campaign?.description.slice(0, 100),
-          url: shareUrl,
-        });
-      } catch (err) {
-        // User cancelled or share failed
-      }
-    } else {
-      // Fallback: Copy to clipboard
-      navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link Copied!",
-        description: "Campaign link copied to clipboard",
-      });
-    }
+  const handleShare = () => {
+    setShowShareDialog(true);
   };
 
   if (isLoading) {
@@ -430,6 +413,14 @@ export default function PublicCampaignView() {
         open={showSuccessDialog}
         onOpenChange={setShowSuccessDialog}
         campaignTitle={campaign.title}
+      />
+
+      <ShareCampaignDialog
+        campaignId={campaignId!}
+        campaignTitle={campaign.title}
+        campaignDescription={campaign.description}
+        open={showShareDialog}
+        onOpenChange={setShowShareDialog}
       />
     </div>
   );

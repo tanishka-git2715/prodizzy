@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 interface ShareCampaignDialogProps {
   campaignId: string | null;
   campaignTitle: string | null;
+  campaignDescription?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -22,6 +23,7 @@ interface ShareCampaignDialogProps {
 export function ShareCampaignDialog({
   campaignId,
   campaignTitle,
+  campaignDescription,
   open,
   onOpenChange,
 }: ShareCampaignDialogProps) {
@@ -29,7 +31,7 @@ export function ShareCampaignDialog({
   const [linkCopied, setLinkCopied] = useState(false);
 
   const shareUrl = campaignId ? `${window.location.origin}/c/${campaignId}` : "";
-  const shareText = `Check out this opportunity: ${campaignTitle || "Campaign"}`;
+  const shareText = `Check out this opportunity: ${campaignTitle || "Campaign"}${campaignDescription ? `\n\n${campaignDescription}` : ""}`;
 
   const copyShareLink = () => {
     if (shareUrl) {

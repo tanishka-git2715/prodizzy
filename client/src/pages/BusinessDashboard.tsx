@@ -242,30 +242,6 @@ export default function BusinessDashboard() {
   const [inviting, setInviting] = useState(false);
   const [selectedCampaignForApps, setSelectedCampaignForApps] = useState<string | null>(null);
 
-  const handleShareCampaign = (campaignId: string, campaignTitle: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const shareUrl = `${window.location.origin}/c/${campaignId}`;
-
-    if (navigator.share) {
-      navigator.share({
-        title: campaignTitle,
-        url: shareUrl,
-      }).catch(() => {
-        // Fallback to clipboard
-        navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Link Copied!",
-          description: "Campaign link copied to clipboard",
-        });
-      });
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link Copied!",
-        description: "Campaign link copied to clipboard",
-      });
-    }
-  };
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) {
