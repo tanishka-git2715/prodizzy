@@ -115,12 +115,13 @@ export function setupAuth(app: Express) {
 
     passport.deserializeUser(async (id: any, done) => {
         try {
-            const user = await User.findOne({
-                $or: [
-                    { _id: mongoose.isValidObjectId(id) ? id : new mongoose.Types.ObjectId() },
-                    { googleId: id }
-                ]
-            }).lean();
+            // Optimization: Most lookups are by MongoDB _id (serialized from user.id)
+            if (mongoose.isValidObjectId(id)) {
+                const user = await User.findById(id).lean();
+                if (user) return done(null, user);
+            }
+            // Fallback for googleId or other cases
+            const user = await User.findOne({ googleId: id }).lean();
             done(null, user);
         } catch (error) {
             done(error);
@@ -132,7 +133,7 @@ export function setupAuth(app: Express) {
         "/api/auth/google",
         passport.authenticate("google", {
             scope: ["profile", "email"],
-            prompt: "select_account",   // always show account chooser
+            // removed prompt: "select_account" to allow seamless login for returning users
         })
     );
 
@@ -142,7 +143,21 @@ export function setupAuth(app: Express) {
         async (req, res) => {
             try {
                 if (req.user) {
-                    const userId = (req.user as any)._id?.toString() || (req.user as any).id;
+                    const user = req.user as any;
+                    const userId = user._id?.toString() || user.id;
+
+                    // Optimization: Check profileType from user object first (populated by deserializeUser)
+                    if (user.profileType === "admin") {
+                        return res.redirect("/admin");
+                    }
+                    
+                    // If we already know they completed onboarding, redirect to dashboard
+                    if (user.profileType && user.profileType !== "none") {
+                         // Double check if business profile needs special handling or if profileType is enough
+                         return res.redirect("/dashboard");
+                    }
+
+                    // Fallback to full profile lookup if profileType is missing
                     const profile = await storage.getProfileByUserId(userId);
 
                     console.log(`[Auth Google Callback] userId: ${userId}, profileFound: ${!!profile}, onboardingCompleted: ${profile?.onboarding_completed}`);
@@ -151,7 +166,7 @@ export function setupAuth(app: Express) {
                         return res.redirect("/dashboard");
                     }
 
-                    if ((req.user as any).role === "admin") {
+                    if (user.role === "admin") {
                         return res.redirect("/admin");
                     }
                 }
@@ -161,6 +176,7 @@ export function setupAuth(app: Express) {
             res.redirect("/individual-onboard");
         }
     );
+
 
     app.post("/api/auth/send-otp", async (req, res, next) => {
         try {

@@ -54,12 +54,24 @@ app.use((req, res, next) => {
         const duration = Date.now() - start;
         if (path.startsWith("/api")) {
             let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-            if (capturedJsonResponse) {
+            
+            // Optimization: Skip body logging for GET requests or large responses to save CPU
+            if (req.method !== "GET" && capturedJsonResponse && res.statusCode < 400) {
+                const bodyStr = JSON.stringify(capturedJsonResponse);
+                if (bodyStr.length < 1000) {
+                    logLine += ` :: ${bodyStr}`;
+                } else {
+                    logLine += ` :: [Large Body: ${bodyStr.length} bytes]`;
+                }
+            } else if (res.statusCode >= 400 && capturedJsonResponse) {
+                // Always log errors
                 logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
             }
+            
             log(logLine);
         }
     });
+
 
     next();
 });

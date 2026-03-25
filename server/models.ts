@@ -208,7 +208,7 @@ const UserSchema = new Schema({
     displayName: String,
     avatarUrl: String,
     role: { type: String, default: "user", enum: ["user", "admin"] },
-    profileType: { type: String, enum: ["startup", "investor", "partner", "individual"] },
+    profileType: { type: String, enum: ["startup", "investor", "partner", "individual", "business"], index: true },
     availableProfiles: { type: [String], default: [] },
     otp: { type: String },
     otpExpiresAt: { type: Date },

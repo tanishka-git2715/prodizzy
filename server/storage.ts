@@ -118,19 +118,36 @@ export class DatabaseStorage implements IStorage {
     if (!user) return undefined;
     const actualId = user._id.toString();
 
-    // 2. Try lookup by profileType if user knows it
+    // 2. Try lookup by profileType if available (Fast Path)
     if (user.profileType) {
-      const Model = this.getModelByType(user.profileType);
-      const doc = await (Model as any).findOne({
-        $or: [{ user_id: actualId }, { user_id: user.googleId }]
-      }).lean();
+      if (user.profileType === "business") {
+          // Check ownership or membership
+          const ownedBusiness = await Business.findOne({
+            $or: [{ owner_user_id: actualId }, { owner_user_id: user.googleId }]
+          }).lean();
+          if (ownedBusiness) return { ...ownedBusiness, type: "business", onboarding_completed: true };
 
-      if (doc) {
-        return { ...doc, type: user.profileType };
+          const membership = await TeamMember.findOne({
+             $or: [{ user_id: actualId }, { user_id: user.googleId }],
+             invite_status: "accepted"
+          }).lean();
+          if (membership) {
+             const memberBusiness = await Business.findById(membership.business_id).lean();
+             if (memberBusiness) return { ...memberBusiness, type: "business", onboarding_completed: true, user_role: membership.role };
+          }
+      } else {
+          const Model = this.getModelByType(user.profileType);
+          const doc = await (Model as any).findOne({
+            $or: [{ user_id: actualId }, { user_id: user.googleId }]
+          }).lean();
+
+          if (doc) {
+            return { ...doc, type: user.profileType };
+          }
       }
     }
 
-    // 3. Robust fallback: search all potential profile models
+    // 3. Robust fallback: search all potential profile models (Slow Path)
     const models = [
       { model: IndividualProfile, type: "individual" },
       { model: InvestorProfile, type: "investor" },
@@ -193,23 +210,36 @@ export class DatabaseStorage implements IStorage {
     if (!user) return { hasProfile: false, hasCompletedProfile: false, needsOnboarding: true };
     const actualId = user._id.toString();
 
-    // Check by profileType if available
+    // Check by profileType if available (Fast Path)
     if (user.profileType) {
-      const Model = this.getModelByType(user.profileType);
-      const doc = await (Model as any).findOne({
-        $or: [{ user_id: actualId }, { user_id: user.googleId }]
-      }).lean();
+      if (user.profileType === "business") {
+          const ownedBusiness = await Business.findOne({
+            $or: [{ owner_user_id: actualId }, { owner_user_id: user.googleId }]
+          }).lean();
+          if (ownedBusiness) return { hasProfile: true, hasCompletedProfile: true, needsOnboarding: false };
 
-      if (doc) {
-        return {
-          hasProfile: true,
-          hasCompletedProfile: !!(doc as any).onboarding_completed,
-          needsOnboarding: !(doc as any).onboarding_completed
-        };
+          const membership = await TeamMember.findOne({
+            $or: [{ user_id: actualId }, { user_id: user.googleId }],
+            invite_status: "accepted"
+          }).lean();
+          if (membership) return { hasProfile: true, hasCompletedProfile: true, needsOnboarding: false };
+      } else {
+          const Model = this.getModelByType(user.profileType);
+          const doc = await (Model as any).findOne({
+            $or: [{ user_id: actualId }, { user_id: user.googleId }]
+          }).lean();
+
+          if (doc) {
+            return {
+              hasProfile: true,
+              hasCompletedProfile: !!(doc as any).onboarding_completed,
+              needsOnboarding: !(doc as any).onboarding_completed
+            };
+          }
       }
     }
 
-    // Fallback search
+    // Fallback search (Slow Path)
     const models = [
       { model: StartupProfile, type: "startup" },
       { model: PartnerProfile, type: "partner" },

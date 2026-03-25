@@ -265,7 +265,8 @@ export default function Discover() {
       return r.json();
     },
     enabled: !!session,
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
   const { data: profiles, isLoading, error } = useQuery<PublicStartupProfile[]>({
@@ -278,6 +279,8 @@ export default function Discover() {
     },
     enabled: !!session,
     retry: false,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching new (smoother filtering)
   });
 
   const interestedStartupIds = useMemo(() => {
