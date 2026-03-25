@@ -423,6 +423,7 @@ export default function PublicCampaignView() {
       <ApplicationFormModal
         campaignId={campaignId!}
         campaignTitle={campaign.title}
+        campaignCategory={campaign.category}
         open={showApplicationModal}
         onOpenChange={setShowApplicationModal}
         onSuccess={handleApplicationSuccess}

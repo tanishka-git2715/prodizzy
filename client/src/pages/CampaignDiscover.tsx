@@ -325,6 +325,7 @@ export default function CampaignDiscover() {
           <ApplicationFormModal
             campaignId={selectedCampaign._id}
             campaignTitle={selectedCampaign.title}
+            campaignCategory={selectedCampaign.category}
             open={showApplicationModal}
             onOpenChange={setShowApplicationModal}
             onSuccess={handleApplicationSuccess}

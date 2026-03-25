@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 interface ApplicationFormModalProps {
   campaignId: string;
   campaignTitle: string;
+  campaignCategory?: string;
   customFields?: Array<{ name: string; label: string; type: string; required?: boolean }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -20,6 +21,7 @@ interface ApplicationFormModalProps {
 export function ApplicationFormModal({
   campaignId,
   campaignTitle,
+  campaignCategory,
   open,
   onOpenChange,
   onSuccess,
@@ -66,10 +68,16 @@ export function ApplicationFormModal({
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Message */}
           <div>
-            <Label htmlFor="message">Give your feedback</Label>
+            <Label htmlFor="message">
+              {campaignCategory === "Testing" ? "Give your feedback" : "Message / Cover Letter"}
+            </Label>
             <Textarea
               id="message"
-              placeholder="What are your thoughts or suggestions?"
+              placeholder={
+                campaignCategory === "Testing" 
+                  ? "What are your thoughts or suggestions?" 
+                  : "Tell the campaign creator why you're a good fit..."
+              }
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               className="bg-white/5 border-white/10 text-white min-h-32 resize-none"
