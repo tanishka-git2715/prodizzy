@@ -17,7 +17,10 @@ export function setupAuth(app: Express) {
     const sessionSecret = process.env.SESSION_SECRET || "prodizzy_default_secret";
 
     // We reuse the existing mongoose connection from db.ts for the session store
-    const clientPromise = mongoose.connection.asPromise().then((conn) => conn.getClient());
+    // Ensure we handle the connection promise safely for different Mongoose versions
+    const clientPromise = mongoose.connection.readyState === 1
+        ? Promise.resolve(mongoose.connection.getClient())
+        : mongoose.connection.asPromise().then((conn) => conn.getClient());
 
     app.use(
         session({
@@ -26,7 +29,7 @@ export function setupAuth(app: Express) {
             saveUninitialized: false,
             store: MongoStore.create({
                 clientPromise: clientPromise,
-                dbName: "test", // Or specify the DB name if different from URI
+                dbName: "prodizzy", // Specify the DB name
                 ttl: 14 * 24 * 60 * 60, // 14 days
             }),
             cookie: {
@@ -40,18 +43,23 @@ export function setupAuth(app: Express) {
     app.use(passport.initialize());
     app.use(passport.session());
 
-    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    const hasGoogleAuth = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+
+    if (hasGoogleAuth) {
         // Use absolute callback URL when running on Vercel (or any hosted env)
-        // Set APP_URL in Vercel env vars to e.g. https://prodizzy-seven.vercel.app
-        const callbackURL = process.env.APP_URL
-            ? `${process.env.APP_URL}/api/auth/google/callback`
-            : "/api/auth/google/callback";
+        // Priority: APP_URL > VERCEL_URL > Fallback relative
+        let callbackURL = "/api/auth/google/callback";
+        if (process.env.APP_URL) {
+            callbackURL = `${process.env.APP_URL}/api/auth/google/callback`;
+        } else if (process.env.VERCEL_URL) {
+            callbackURL = `https://${process.env.VERCEL_URL}/api/auth/google/callback`;
+        }
 
         passport.use(
             new GoogleStrategy(
                 {
-                    clientID: process.env.GOOGLE_CLIENT_ID,
-                    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                    clientID: process.env.GOOGLE_CLIENT_ID!,
+                    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
                     callbackURL,
                 },
                 async (_accessToken, _refreshToken, profile, done) => {
@@ -129,53 +137,63 @@ export function setupAuth(app: Express) {
     });
 
     // Auth Routes
-    app.get(
-        "/api/auth/google",
-        passport.authenticate("google", {
-            scope: ["profile", "email"],
-            // removed prompt: "select_account" to allow seamless login for returning users
-        })
-    );
+    if (hasGoogleAuth) {
+        app.get(
+            "/api/auth/google",
+            passport.authenticate("google", {
+                scope: ["profile", "email"],
+                // removed prompt: "select_account" to allow seamless login for returning users
+            })
+        );
 
-    app.get(
-        "/api/auth/google/callback",
-        passport.authenticate("google", { failureRedirect: "/login?error=google" }),
-        async (req, res) => {
-            try {
-                if (req.user) {
-                    const user = req.user as any;
-                    const userId = user._id?.toString() || user.id;
+        app.get(
+            "/api/auth/google/callback",
+            passport.authenticate("google", { failureRedirect: "/login?error=google" }),
+            async (req, res) => {
+                try {
+                    if (req.user) {
+                        const user = req.user as any;
+                        const userId = user._id?.toString() || user.id;
 
-                    // Optimization: Check profileType from user object first (populated by deserializeUser)
-                    if (user.profileType === "admin") {
-                        return res.redirect("/admin");
+                        // Optimization: Check profileType from user object first (populated by deserializeUser)
+                        if (user.profileType === "admin") {
+                            return res.redirect("/admin");
+                        }
+                        
+                        // If we already know they completed onboarding, redirect to dashboard
+                        if (user.profileType && user.profileType !== "none") {
+                             // Double check if business profile needs special handling or if profileType is enough
+                             return res.redirect("/dashboard");
+                        }
+
+                        // Fallback to full profile lookup if profileType is missing
+                        const profile = await storage.getProfileByUserId(userId);
+
+                        console.log(`[Auth Google Callback] userId: ${userId}, profileFound: ${!!profile}, onboardingCompleted: ${profile?.onboarding_completed}`);
+
+                        if (profile && profile.onboarding_completed) {
+                            return res.redirect("/dashboard");
+                        }
+
+                        if (user.role === "admin") {
+                            return res.redirect("/admin");
+                        }
                     }
-                    
-                    // If we already know they completed onboarding, redirect to dashboard
-                    if (user.profileType && user.profileType !== "none") {
-                         // Double check if business profile needs special handling or if profileType is enough
-                         return res.redirect("/dashboard");
-                    }
-
-                    // Fallback to full profile lookup if profileType is missing
-                    const profile = await storage.getProfileByUserId(userId);
-
-                    console.log(`[Auth Google Callback] userId: ${userId}, profileFound: ${!!profile}, onboardingCompleted: ${profile?.onboarding_completed}`);
-
-                    if (profile && profile.onboarding_completed) {
-                        return res.redirect("/dashboard");
-                    }
-
-                    if (user.role === "admin") {
-                        return res.redirect("/admin");
-                    }
+                } catch (error) {
+                    console.error("Error in Google Auth callback redirect logic:", error);
                 }
-            } catch (error) {
-                console.error("Error in Google Auth callback redirect logic:", error);
+                res.redirect("/individual-onboard");
             }
-            res.redirect("/individual-onboard");
-        }
-    );
+        );
+    } else {
+        // Fallback for when Google Auth is not configured
+        app.get("/api/auth/google", (_req, res) => {
+            res.status(501).json({ 
+                message: "Google Authentication is not configured on this server.",
+                details: "Please verify that GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set in environment variables."
+            });
+        });
+    }
 
 
     app.post("/api/auth/send-otp", async (req, res, next) => {
