@@ -1364,15 +1364,21 @@ export class DatabaseStorage implements IStorage {
   async getCampaignStats(businessId: string): Promise<any> {
     const campaigns = await Campaign.find({ business_id: businessId }).lean() as any[];
 
+    const campaignIds = campaigns.map(c => c._id);
+    const acceptedCount = await CampaignApplication.countDocuments({
+      campaign_id: { $in: campaignIds },
+      status: { $in: ["accepted", "approved"] }
+    });
+
     const stats = {
       total: campaigns.length,
-      active: campaigns.filter(c => c.status === "active").length,
+      active: campaigns.filter(c => c.status === "active" && c.approved).length,
       draft: campaigns.filter(c => c.status === "draft").length,
       closed: campaigns.filter(c => c.status === "closed").length,
       approved: campaigns.filter(c => c.approved).length,
       pendingApproval: campaigns.filter(c => c.status === "active" && !c.approved).length,
       totalViews: campaigns.reduce((sum, c) => sum + (Number(c.views) || 0), 0),
-      totalApplications: campaigns.reduce((sum, c) => sum + (Number(c.applications) || 0), 0)
+      totalApplications: acceptedCount
     };
 
     return stats;
@@ -1415,15 +1421,21 @@ export class DatabaseStorage implements IStorage {
       business_id: { $exists: false }
     }).lean() as any[];
 
+    const campaignIds = campaigns.map(c => c._id);
+    const acceptedCount = await CampaignApplication.countDocuments({
+      campaign_id: { $in: campaignIds },
+      status: { $in: ["accepted", "approved"] }
+    });
+
     const stats = {
       total: campaigns.length,
-      active: campaigns.filter(c => c.status === "active").length,
+      active: campaigns.filter(c => c.status === "active" && c.approved).length,
       draft: campaigns.filter(c => c.status === "draft").length,
       closed: campaigns.filter(c => c.status === "closed").length,
       approved: campaigns.filter(c => c.approved).length,
       pendingApproval: campaigns.filter(c => c.status === "active" && !c.approved).length,
       totalViews: campaigns.reduce((sum, c) => sum + (Number(c.views) || 0), 0),
-      totalApplications: campaigns.reduce((sum, c) => sum + (Number(c.applications) || 0), 0)
+      totalApplications: acceptedCount
     };
 
     return stats;

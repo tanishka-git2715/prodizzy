@@ -172,53 +172,6 @@ export default function PublicCampaignView() {
 
       {/* Campaign Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12">
-        {/* Profile Header (Business or Individual) */}
-        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/10">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-            {campaign.business?.logo_url ? (
-              <img
-                src={campaign.business.logo_url}
-                alt={campaign.business.business_name}
-                className="w-full h-full object-cover"
-              />
-            ) : campaign.creator?.avatarUrl ? (
-              <img
-                src={campaign.creator.avatarUrl}
-                alt={campaign.creator.displayName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-blue-500/10 text-blue-400 font-bold text-xl">
-                {(campaign.business?.business_name || campaign.creator?.displayName || "?")[0].toUpperCase()}
-              </div>
-            )}
-          </div>
-          {/* Business Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              {campaign.business ? (
-                <Link href={`/business/${campaign.business._id}/view`}>
-                  <h4 className="text-sm font-semibold text-white hover:text-[#E63946] transition-colors cursor-pointer">
-                    {campaign.business.business_name}
-                  </h4>
-                </Link>
-              ) : campaign.creator?.profileId ? (
-                <Link href={`/profile/${campaign.creator.profileId}`}>
-                  <h4 className="text-sm font-semibold text-white hover:text-[#E63946] transition-colors cursor-pointer">
-                    {campaign.creator.displayName || "Unknown Creator"}
-                  </h4>
-                </Link>
-              ) : (
-                <h4 className="text-sm font-semibold text-white">
-                  {campaign.creator?.displayName || "Unknown Creator"}
-                </h4>
-              )}
-            </div>
-          </div>
-        </div>
-
-
-
         {/* Campaign Details */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-start justify-between mb-4">

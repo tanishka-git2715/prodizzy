@@ -31,15 +31,22 @@ export function ShareCampaignDialog({
   const [linkCopied, setLinkCopied] = useState(false);
 
   const shareUrl = campaignId ? `${window.location.origin}/c/${campaignId}` : "";
-  const shareText = `Check out this opportunity: ${campaignTitle || "Campaign"}${campaignDescription ? `\n\n${campaignDescription}` : ""}`;
+  
+  const baseShareText = [
+    "Check out this opportunity:",
+    campaignTitle || "Campaign",
+    campaignDescription || "",
+  ].filter(Boolean).join("\n\n");
+
+  const fullShareText = `${baseShareText}\n\n${shareUrl}`;
 
   const copyShareLink = () => {
-    if (shareUrl) {
-      navigator.clipboard.writeText(shareUrl);
+    if (fullShareText) {
+      navigator.clipboard.writeText(fullShareText);
       setLinkCopied(true);
       toast({
-        title: "Link Copied!",
-        description: "Campaign link copied to clipboard",
+        title: "Message Copied!",
+        description: "Campaign details copied to clipboard",
       });
       setTimeout(() => setLinkCopied(false), 2000);
     }
@@ -49,13 +56,15 @@ export function ShareCampaignDialog({
     if (!shareUrl) return;
 
     const urls: Record<string, string> = {
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText + "\n" + shareUrl)}`,
-      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(fullShareText)}`,
+      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(baseShareText)}&url=${encodeURIComponent(shareUrl)}`,
+      linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(fullShareText)}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(baseShareText)}`
     };
 
-    window.open(urls[platform], "_blank", "width=600,height=400");
+    if (urls[platform]) {
+      window.open(urls[platform], "_blank", "width=600,height=400");
+    }
   };
 
   return (
@@ -99,37 +108,37 @@ export function ShareCampaignDialog({
           {/* Quick Share Buttons */}
           <div>
             <Label className="text-sm text-white/60 mb-3 block">Share on Social Media</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button
                 onClick={() => shareOnPlatform("whatsapp")}
                 variant="outline"
-                className="bg-green-500/10 border-green-500/30 hover:bg-green-500/20 text-xs sm:text-sm"
+                className="bg-green-500/10 border-green-500/30 hover:bg-green-500/20 text-xs sm:text-sm flex-1 min-w-[120px]"
               >
                 WhatsApp
               </Button>
 
               <Button
+                onClick={() => shareOnPlatform("telegram")}
+                variant="outline"
+                className="bg-blue-400/10 border-blue-400/30 hover:bg-blue-400/20 text-xs sm:text-sm flex-1 min-w-[120px]"
+              >
+                Telegram
+              </Button>
+
+              <Button
                 onClick={() => shareOnPlatform("twitter")}
                 variant="outline"
-                className="bg-blue-400/10 border-blue-400/30 hover:bg-blue-400/20 text-xs sm:text-sm"
+                className="bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-xs sm:text-sm flex-1 min-w-[120px]"
               >
-                Twitter
+                X (Twitter)
               </Button>
 
               <Button
                 onClick={() => shareOnPlatform("linkedin")}
                 variant="outline"
-                className="bg-blue-600/10 border-blue-600/30 hover:bg-blue-600/20 text-xs sm:text-sm"
+                className="bg-blue-600/10 border-blue-600/30 hover:bg-blue-600/20 text-xs sm:text-sm flex-1 min-w-[120px]"
               >
                 LinkedIn
-              </Button>
-
-              <Button
-                onClick={() => shareOnPlatform("facebook")}
-                variant="outline"
-                className="bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20 text-xs sm:text-sm"
-              >
-                Facebook
               </Button>
             </div>
           </div>
