@@ -58,7 +58,7 @@ export function ShareCampaignDialog({
     const urls: Record<string, string> = {
       whatsapp: `https://wa.me/?text=${encodeURIComponent(fullShareText)}`,
       twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(baseShareText)}&url=${encodeURIComponent(shareUrl)}`,
-      linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(fullShareText)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
       telegram: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(baseShareText)}`
     };
 
