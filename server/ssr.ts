@@ -62,6 +62,7 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
     }
 
     // Remove ALL existing OG and Twitter meta tags and title to avoid duplicates
+    // Using more comprehensive regex to catch various attribute orders and quoting styles
     html = html.replace(/<title>[^<]*<\/title>/gi, '');
     html = html.replace(/<meta[^>]*name=["']description["'][^>]*>/gi, '');
     html = html.replace(/<meta[^>]*property=["']og:[^"']*["'][^>]*>/gi, '');
@@ -71,10 +72,11 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
 
     // Inject NEW meta tags
     const metaTags = `
+    <!-- Campaign SSR Metadata -->
     <title>${escapeHtml(title)} | ${escapeHtml(businessName)}</title>
     <meta name="description" content="${escapeHtml(detailedDescription)}">
 
-    <!-- Open Graph / Facebook / WhatsApp -->
+    <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="${url}">
     <meta property="og:title" content="${escapeHtml(title)}">
@@ -92,6 +94,11 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
     <meta name="twitter:image" content="${image}">
     `;
 
+    // Add OG prefix to html tag if not present (LinkedIn likes this)
+    if (!html.includes('prefix="og: http://ogp.me/ns#"')) {
+      html = html.replace(/<html([^>]*)>/i, '<html$1 prefix="og: http://ogp.me/ns#">');
+    }
+
     // Inject immediately after <head> tag using regex to be more robust
     // Handles <head>, <HEAD>, and <head with="attributes">
     html = html.replace(/<head\b[^>]*>/i, `$& \n${metaTags}`);
@@ -100,8 +107,10 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
 
     // Send the modified HTML
     res.status(200).set({ 
-      "Content-Type": "text/html",
-      "Cache-Control": "public, max-age=3600" // Cache for 1 hour
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
     }).send(html);
   } catch (error) {
     console.error("SSR Error:", error);

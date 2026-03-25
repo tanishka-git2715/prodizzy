@@ -351,8 +351,9 @@ const CampaignSchema = new Schema({
 // Indexes for Campaign
 CampaignSchema.index({ business_id: 1 }); // Fast business campaign lookups
 CampaignSchema.index({ created_by: 1 }); // Find campaigns by creator
-CampaignSchema.index({ status: 1 }); // Filter by status
+CampaignSchema.index({ status: 1, approved: 1, createdAt: -1 }); // Fast discovery filtering & sorting
 CampaignSchema.index({ category: 1 }); // Filter by category
+CampaignSchema.index({ engagementType: 1 }); // Filter by engagement type
 CampaignSchema.index({ createdAt: -1 }); // Sort by recency
 CampaignSchema.index({ title: 'text', description: 'text' }); // Text search
 

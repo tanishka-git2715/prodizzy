@@ -1297,8 +1297,50 @@ export class DatabaseStorage implements IStorage {
   }
 
   private async enhanceCampaigns(campaigns: any[]): Promise<any[]> {
-    if (!campaigns) return [];
-    return Promise.all(campaigns.map(c => this.enhanceCampaign(c)));
+    if (!campaigns || campaigns.length === 0) return [];
+
+    // 1. Initial mapping for all campaigns (creator and business population)
+    campaigns.forEach(campaign => {
+      if (campaign.created_by && typeof campaign.created_by === 'object') {
+        campaign.creator = campaign.created_by;
+      }
+      if (campaign.business_id && typeof campaign.business_id === 'object') {
+        campaign.business = campaign.business_id;
+      }
+    });
+
+    // 2. Identify campaigns that need an IndividualProfile (those without a business)
+    const campaignsToPopulate = campaigns.filter(c => !c.business_id);
+    if (campaignsToPopulate.length > 0) {
+      const creatorIds = [...new Set(campaignsToPopulate.map(c => 
+        c.created_by?._id?.toString() || c.created_by?.toString()
+      ).filter(Boolean))];
+
+      if (creatorIds.length > 0) {
+        // 3. Batch fetch all relevant profiles in ONE query
+        const profiles = await IndividualProfile.find({
+          user_id: { $in: creatorIds }
+        }).lean();
+
+        // 4. Create a map for fast lookup
+        const profileMap = new Map(profiles.map(p => [p.user_id, p]));
+
+        // 5. Assign profiles back to the campaigns
+        campaignsToPopulate.forEach(campaign => {
+          const creatorId = campaign.created_by?._id?.toString() || 
+                            campaign.created_by?.toString();
+          if (creatorId && profileMap.has(creatorId)) {
+            const profile = profileMap.get(creatorId);
+            campaign.individual_profile = profile;
+            if (campaign.creator && typeof campaign.creator === 'object') {
+              campaign.creator.profileId = profile._id.toString();
+            }
+          }
+        });
+      }
+    }
+
+    return campaigns;
   }
 
 

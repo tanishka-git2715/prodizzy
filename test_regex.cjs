@@ -1,0 +1,55 @@
+
+const fs = require('fs');
+const path = require('path');
+
+const indexHtml = `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Prodizzy</title>
+    <meta name="description" content="The networking OS that turns scattered connections into warm intros, meaningful deals, and real outcomes—on autopilot." />
+
+    <!-- Open Graph / Facebook / WhatsApp (will be replaced by SSR for campaigns) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Prodizzy" />
+    <meta property="og:title" content="Prodizzy - Opportunity Marketplace" />
+    <meta property="og:description" content="The networking OS that turns scattered connections into warm intros, meaningful deals, and real outcomes—on autopilot." />
+    <meta property="og:image" content="https://prodizzy.com/logo.png" />
+
+    <!-- Twitter Card (will be replaced by SSR for campaigns) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Prodizzy - Opportunity Marketplace" />
+    <meta name="twitter:description" content="The networking OS that turns scattered connections into warm intros, meaningful deals, and real outcomes—on autopilot." />
+    <meta name="twitter:image" content="https://prodizzy.com/logo.png" />
+
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+`;
+
+let html = indexHtml;
+html = html.replace(/<title>.*?<\/title>/gi, "");
+html = html.replace(/<meta property="og:.*?\/>/gi, "");
+html = html.replace(/<meta name="twitter:.*?\/>/gi, "");
+html = html.replace(/<meta name="description".*?\/>/gi, "");
+
+console.log("--- PROCESSED HTML ---");
+console.log(html);
+console.log("--- END ---");
+
+const stillHasOg = /og:/.test(html);
+const stillHasTwitter = /twitter:/.test(html);
+const stillHasTitle = /<title>/.test(html);
+
+console.log(`Still has OG: ${stillHasOg}`);
+console.log(`Still has Twitter: ${stillHasTwitter}`);
+console.log(`Still has Title: ${stillHasTitle}`);

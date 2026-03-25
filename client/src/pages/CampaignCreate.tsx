@@ -144,6 +144,7 @@ export default function CampaignCreate() {
       } else {
         queryClient.invalidateQueries({ queryKey: ["user-campaigns"] });
       }
+      queryClient.invalidateQueries({ queryKey: ["campaigns-discover"] });
       setCreatedCampaign(data);
 
       if (formData.status === "active") {

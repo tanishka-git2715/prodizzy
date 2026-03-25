@@ -282,6 +282,7 @@ function CampaignRow({ campaign }: { campaign: Campaign }) {
       }).then((r) => r.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns-discover"] });
     },
   });
 
