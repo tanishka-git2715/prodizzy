@@ -76,8 +76,11 @@ async function ensureBusinessAdmin(req: Request, res: Response, next: any) {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    if (member.role !== "admin" && member.role !== "owner") {
-      return res.status(403).json({ message: "Admin access required" });
+    const isAdmin = member.role === "admin" || member.role === "owner";
+    const hasPermission = member.permissions?.can_edit_business;
+
+    if (!isAdmin && !hasPermission) {
+      return res.status(403).json({ message: "Admin access or 'Edit Business' permission required" });
     }
 
     (req as any).business = business;

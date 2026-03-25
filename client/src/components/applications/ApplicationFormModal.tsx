@@ -66,10 +66,10 @@ export function ApplicationFormModal({
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Message */}
           <div>
-            <Label htmlFor="message">Tell us more about yourself</Label>
+            <Label htmlFor="message">Give your feedback</Label>
             <Textarea
               id="message"
-              placeholder="Why are you interested in this opportunity?"
+              placeholder="What are your thoughts or suggestions?"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               className="bg-white/5 border-white/10 text-white min-h-32 resize-none"

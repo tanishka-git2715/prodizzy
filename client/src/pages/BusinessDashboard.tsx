@@ -82,11 +82,20 @@ export default function BusinessDashboard() {
           credentials: "include",
           body: JSON.stringify({ logo_url: base64 })
         });
-        if (!res.ok) throw new Error("Failed to update logo");
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to update logo");
+        }
+        
         toast({ title: "Logo updated successfully!" });
         refetchBusiness();
-      } catch {
-        toast({ title: "Failed to upload logo", variant: "destructive" });
+      } catch (error: any) {
+        toast({ 
+          title: "Upload Failed", 
+          description: error.message || "Failed to upload logo",
+          variant: "destructive" 
+        });
       } finally {
         setUploadingLogo(false);
       }
@@ -381,24 +390,28 @@ export default function BusinessDashboard() {
             <div className="flex items-center gap-4">
               <label
                 htmlFor="logo-upload"
-                className="relative w-16 h-16 rounded-xl bg-white/5 border border-white/10 overflow-hidden shrink-0 cursor-pointer group"
+                className="relative w-16 h-16 rounded-xl bg-white/5 border border-white/10 shrink-0 cursor-pointer group"
                 title="Click to upload logo"
               >
-                {business.logo_url ? (
-                  <img src={business.logo_url} alt={business.business_name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Building2 className="w-8 h-8 text-white/20" />
-                  </div>
-                )}
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  {uploadingLogo ? (
-                    <div className="w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
+                <div className="w-full h-full rounded-xl overflow-hidden">
+                  {business.logo_url ? (
+                    <img src={business.logo_url} alt={business.business_name} className="w-full h-full object-cover" />
                   ) : (
-                    <Camera className="w-5 h-5 text-white" />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Building2 className="w-8 h-8 text-white/20" />
+                    </div>
                   )}
                 </div>
+                
+                {/* Bottom right short icon */}
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-[#E63946] border-2 border-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  {uploadingLogo ? (
+                    <div className="w-3 h-3 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Camera className="w-3.5 h-3.5 text-white" />
+                  )}
+                </div>
+
                 <input
                   id="logo-upload"
                   type="file"
