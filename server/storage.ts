@@ -1494,9 +1494,10 @@ export class DatabaseStorage implements IStorage {
     return application.toObject();
   }
 
-  async getCampaignApplications(campaignId: string, campaignApproved: boolean): Promise<any[]> {
-    // Only return applications if the campaign is approved
-    if (!campaignApproved) {
+  async getCampaignApplications(campaignId: string, campaignApproved: boolean, isOwner = false): Promise<any[]> {
+    // Only block public access when campaign is not approved.
+    // Campaign owners/creators can always see their own applications.
+    if (!campaignApproved && !isOwner) {
       return [];
     }
 

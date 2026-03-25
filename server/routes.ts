@@ -1077,8 +1077,8 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // Get applications (filtered by approval status)
-      const applications = await storage.getCampaignApplications(campaignId, campaign.approved);
+      // Get applications (owners always see all; public only sees if campaign is approved)
+      const applications = await storage.getCampaignApplications(campaignId, campaign.approved, isAuthorized);
 
       res.json(applications);
     } catch (error: any) {

@@ -304,12 +304,38 @@ export default function PublicCampaignView() {
                     <div>
                       <span className="text-sm text-white/60 block mb-2">Attached Files:</span>
                       <div className="flex flex-col gap-2">
-                        {campaign.attachments.map((url: string, index: number) => (
-                          <a key={index} href={url} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-400 hover:text-blue-300 flex items-center gap-2 bg-white/5 p-3 rounded-lg border border-white/10 w-fit">
-                            <FileText className="w-4 h-4" />
-                            Attachment {index + 1}
-                          </a>
-                        ))}
+                        {campaign.attachments.map((url: string, index: number) => {
+                          const isDataUrl = url.startsWith('data:');
+                          if (isDataUrl) {
+                            // Extract mime type to suggest a file extension
+                            const mimeMatch = url.match(/data:([^;]+);/);
+                            const mime = mimeMatch?.[1] || 'application/octet-stream';
+                            const ext = mime.split('/')[1] || 'file';
+                            return (
+                              <a
+                                key={index}
+                                href={url}
+                                download={`attachment-${index + 1}.${ext}`}
+                                className="font-medium text-blue-400 hover:text-blue-300 flex items-center gap-2 bg-white/5 p-3 rounded-lg border border-white/10 w-fit"
+                              >
+                                <FileText className="w-4 h-4" />
+                                Download Attachment {index + 1}
+                              </a>
+                            );
+                          }
+                          return (
+                            <a
+                              key={index}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-blue-400 hover:text-blue-300 flex items-center gap-2 bg-white/5 p-3 rounded-lg border border-white/10 w-fit"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Attachment {index + 1}
+                            </a>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
