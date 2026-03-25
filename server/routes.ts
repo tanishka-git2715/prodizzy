@@ -935,17 +935,28 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Campaign not found" });
       }
 
-      // Check if user is business owner or has edit permissions
-      const business = await storage.getBusinessById(campaign.business_id);
-      const isOwner = business.owner_user_id === userId;
+      // Determine campaign creator (may be populated object or plain id)
+      const creatorId = campaign.created_by?._id?.toString() || campaign.created_by?.toString();
+      const isCreator = creatorId === userId;
 
-      if (!isOwner) {
-        const members = await storage.getTeamMembers(campaign.business_id);
-        const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+      // For business campaigns, also check business ownership / team membership
+      let isAuthorized = isCreator;
 
-        if (!member || (!member.permissions.can_create_campaigns && member.role !== "admin")) {
-          return res.status(403).json({ message: "Permission denied" });
+      if (!isAuthorized && campaign.business_id) {
+        const business = await storage.getBusinessById(campaign.business_id);
+        if (business && business.owner_user_id === userId) {
+          isAuthorized = true;
+        } else if (business) {
+          const members = await storage.getTeamMembers(campaign.business_id);
+          const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+          if (member && (member.permissions.can_create_campaigns || member.role === "admin" || member.role === "owner")) {
+            isAuthorized = true;
+          }
         }
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "Permission denied" });
       }
 
       const updates = updateCampaignSchema.parse(req.body);
@@ -975,10 +986,16 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Campaign not found" });
       }
 
-      // Only business owner or campaign creator can delete
-      const business = await storage.getBusinessById(campaign.business_id);
-      const isOwner = business.owner_user_id === userId;
-      const isCreator = campaign.created_by === userId;
+      // Campaign creator is always allowed to delete
+      const creatorId = campaign.created_by?._id?.toString() || campaign.created_by?.toString();
+      const isCreator = creatorId === userId;
+
+      // For business campaigns, also allow business owner
+      let isOwner = false;
+      if (campaign.business_id) {
+        const business = await storage.getBusinessById(campaign.business_id);
+        if (business) isOwner = business.owner_user_id === userId;
+      }
 
       if (!isOwner && !isCreator) {
         return res.status(403).json({ message: "Permission denied" });
@@ -1140,16 +1157,26 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Campaign not found" });
       }
 
-      const business = await storage.getBusinessById(campaign.business_id);
-      const isOwner = business.owner_user_id === userId;
+      // Check campaign creator access
+      const creatorId = campaign.created_by?._id?.toString() || campaign.created_by?.toString();
+      const isCreator = creatorId === userId;
+      let isOwner = false;
+      let isMember = false;
 
-      if (!isOwner) {
-        const members = await storage.getTeamMembers(campaign.business_id);
-        const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
-
-        if (!member && req.user.role !== "admin") {
-          return res.status(403).json({ message: "Not authorized" });
+      if (campaign.business_id) {
+        const business = await storage.getBusinessById(campaign.business_id);
+        if (business) {
+          isOwner = business.owner_user_id === userId;
+          if (!isOwner) {
+            const members = await storage.getTeamMembers(campaign.business_id);
+            const member = members.find(m => m.user_id === userId && m.invite_status === "accepted");
+            if (member) isMember = true;
+          }
         }
+      }
+
+      if (!isCreator && !isOwner && !isMember && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Not authorized" });
       }
 
       const updated = await storage.updateApplicationStatus(applicationId, status);

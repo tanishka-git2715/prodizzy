@@ -16,19 +16,15 @@ import { storage } from "./storage";
 export function setupAuth(app: Express) {
     const sessionSecret = process.env.SESSION_SECRET || "prodizzy_default_secret";
 
-    // We reuse the existing mongoose connection from db.ts for the session store
-    // Ensure we handle the connection promise safely for different Mongoose versions
-    const clientPromise = mongoose.connection.readyState === 1
-        ? Promise.resolve(mongoose.connection.getClient())
-        : mongoose.connection.asPromise().then((conn) => conn.getClient());
-
+    // Vercel serverless functions handle MongoDB connections better when
+    // connect-mongo creates its own connection distinct from Mongoose's state.
     app.use(
         session({
             secret: sessionSecret,
             resave: false,
             saveUninitialized: false,
             store: MongoStore.create({
-                clientPromise: clientPromise,
+                mongoUrl: process.env.MONGODB_URI,
                 dbName: "prodizzy", // Specify the DB name
                 ttl: 14 * 24 * 60 * 60, // 14 days
             }),

@@ -371,7 +371,7 @@ const CampaignApplicationSchema = new Schema({
     answers: Schema.Types.Mixed, // Custom question answers
     status: {
         type: String,
-        enum: ["pending", "accepted", "rejected"],
+        enum: ["pending", "accepted", "rejected", "approved"],
         default: "pending"
     },
     createdAt: { type: Date, default: Date.now },
