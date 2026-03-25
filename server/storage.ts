@@ -31,6 +31,7 @@ export interface IStorage {
   getAllWaitlistEntries(): Promise<any[]>;
   getUserByGoogleId(googleId: string): Promise<any | undefined>;
   deleteProfile(type: string, id: string): Promise<void>;
+  approveAllProfiles(type: string): Promise<number>;
   purgeLegacyProfiles(): Promise<{ startups: number; partners: number; individuals: number }>;
 
   // Connection Methods
@@ -370,7 +371,13 @@ export class DatabaseStorage implements IStorage {
     const Model = this.getModelByType(type);
     await (Model as any).findByIdAndDelete(id);
   }
-
+ 
+  async approveAllProfiles(type: string): Promise<number> {
+    const Model = this.getModelByType(type);
+    const result = await (Model as any).updateMany({ approved: { $ne: true } }, { approved: true });
+    return result.modifiedCount || 0;
+  }
+ 
   async purgeLegacyProfiles(): Promise<{ startups: number; partners: number; individuals: number }> {
     const startupResult = await StartupProfile.deleteMany({});
     const partnerResult = await PartnerProfile.deleteMany({});

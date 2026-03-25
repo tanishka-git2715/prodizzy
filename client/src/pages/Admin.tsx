@@ -157,7 +157,7 @@ function BusinessProfileRow({ profile, profileType }: { profile: Business; profi
 
   const approveMutation = useMutation({
     mutationFn: (approved: boolean) =>
-      fetch(`/api/admin?id=${profile._id}&type=${profileType}`, {
+      fetch(`/api/admin?id=${(profile as any).id || profile._id}&type=${profileType}`, {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ approved }),
@@ -167,7 +167,7 @@ function BusinessProfileRow({ profile, profileType }: { profile: Business; profi
 
   const deleteMutation = useMutation({
     mutationFn: () =>
-      fetch(`/api/admin?id=${profile._id}&type=${profileType}`, {
+      fetch(`/api/admin?id=${(profile as any).id || profile._id}&type=${profileType}`, {
         method: "DELETE",
         headers: authHeaders(),
       }).then(r => r.json()),
@@ -207,7 +207,7 @@ function BusinessProfileRow({ profile, profileType }: { profile: Business; profi
               disabled={approveMutation.isPending}
               className="flex items-center gap-1 bg-green-500/15 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-green-500/25 transition-colors disabled:opacity-50"
             >
-              <Check className="w-3 h-3" /> Approve
+              <Check className="w-3" /> Approve
             </button>
           ) : (
             <button
@@ -215,7 +215,7 @@ function BusinessProfileRow({ profile, profileType }: { profile: Business; profi
               disabled={approveMutation.isPending}
               className="flex items-center gap-1 bg-red-500/15 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-red-500/25 transition-colors disabled:opacity-50"
             >
-              <X className="w-3 h-3" /> Revoke
+              <X className="w-3" /> Revoke
             </button>
           )}
           <button
@@ -223,10 +223,10 @@ function BusinessProfileRow({ profile, profileType }: { profile: Business; profi
             disabled={deleteMutation.isPending}
             className="flex items-center gap-1.5 bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
           >
-            <Trash2 className="w-3 h-3" /> Delete
+            <Trash2 className="w-3" /> Delete
           </button>
           <button onClick={() => setExpanded(e => !e)} className="text-white/30 hover:text-white/60 transition-colors p-1">
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {expanded ? <ChevronUp className="w-4" /> : <ChevronDown className="w-4" />}
           </button>
         </div>
       </div>
@@ -577,6 +577,7 @@ function IndividualProfileRow({ profile, profileType }: { profile: IndividualPro
 export default function Admin() {
   const { session, logout } = useAuth();
   const [, setLocation] = useLocation();
+  const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [profileTab, setProfileTab] = useState<ProfileType | "users">("individual");
   const [selectedRole, setSelectedRole] = useState<string>("All");
@@ -614,6 +615,21 @@ export default function Admin() {
     },
     enabled: !!session && activeTab === "profiles" && profileTab === "users",
     retry: false,
+  });
+ 
+  const approveAllMutation = useMutation({
+    mutationFn: async (type: string) => {
+      const r = await fetch("/api/admin/approve-all", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ type }),
+      });
+      if (!r.ok) throw new Error("Bulk approval failed");
+      return r.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-profiles", profileTab] });
+    },
   });
 
   // Analytics queries
@@ -889,14 +905,30 @@ export default function Admin() {
 
               {/* Pending */}
               {profileTab !== "users" && pending.length > 0 && (
-                <div className="space-y-3">
-                  <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
-                  {pending.map(p => {
-                    const pt = profileTab as ProfileType;
-                    if (profileTab === "individual" || profileTab === "startup" || profileTab === "partner") 
-                      return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
-                    return <BusinessProfileRow key={p._id} profile={p as Business} profileType={pt} />;
-                  })}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">Pending approval ({pending.length})</h2>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to approve ALL ${pending.length} pending ${profileTab} profiles?`)) {
+                          approveAllMutation.mutate(profileTab);
+                        }
+                      }}
+                      disabled={approveAllMutation.isPending}
+                      className="flex items-center gap-1.5 bg-green-500/10 text-green-400 border border-green-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-500/20 transition-all disabled:opacity-50"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Approve All
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {pending.map(p => {
+                      const pt = profileTab as ProfileType;
+                      if (profileTab === "individual" || profileTab === "startup" || profileTab === "partner") 
+                        return <IndividualProfileRow key={p.id} profile={p as IndividualProfile} profileType={pt} />;
+                      return <BusinessProfileRow key={p._id} profile={p as Business} profileType={pt} />;
+                    })}
+                  </div>
                 </div>
               )}
 

@@ -311,10 +311,26 @@ export async function registerRoutes(
       const type = req.query.type as string;
       const { approved } = req.body;
 
-      if (!id || !type) return res.status(400).json({ message: "ID and Type are required" });
+      if (!id || !type) {
+        return res.status(400).json({ message: "ID and type are required" });
+      }
 
       const result = await storage.updateProfileApproval(type, id, approved);
       res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/admin/approve-all", ensureAdmin, async (req, res) => {
+    try {
+      const { type } = req.body;
+      if (!type) {
+        return res.status(400).json({ message: "Profile type is required" });
+      }
+
+      const count = await storage.approveAllProfiles(type);
+      res.json({ message: `Successfully approved ${count} profiles`, count });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

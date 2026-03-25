@@ -2,6 +2,10 @@ import { Request, Response } from "express";
 import { storage } from "./storage";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function handleCampaignSSR(req: Request, res: Response, next: any) {
   const campaignId = req.params.id as string;
