@@ -12,8 +12,8 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
     // Get campaign data
     const campaign = await storage.getCampaignById(campaignId);
 
-    if (!campaign || campaign.status !== "active") {
-      console.log(`[SSR] Campaign not found or not active: ${campaignId}`);
+    if (!campaign || campaign.status === "draft") {
+      console.log(`[SSR] Campaign not found or in draft status: ${campaignId}`);
       return next();
     }
 
@@ -21,13 +21,29 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
 
     // Determine index.html path based on environment
     const isDev = process.env.NODE_ENV !== "production";
-    const indexPath = isDev
-      ? path.join(process.cwd(), "client/index.html")
-      : path.join(process.cwd(), "dist/public/index.html");
+    const possiblePaths = isDev
+      ? [path.join(process.cwd(), "client/index.html")]
+      : [
+          path.join(process.cwd(), "dist/public/index.html"),
+          path.join(process.cwd(), "public/index.html"),
+          path.join(process.cwd(), "index.html"),
+          // Common Vercel/Serverless paths
+          path.join(__dirname, "../client/index.html"),
+          path.join(__dirname, "../../client/index.html"),
+          "/var/task/client/index.html",
+          "/var/task/dist/public/index.html"
+        ];
+    
+    let indexPath = "";
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        indexPath = p;
+        break;
+      }
+    }
 
-    // Check if file exists
-    if (!fs.existsSync(indexPath)) {
-      console.error("Index.html not found at:", indexPath);
+    if (!indexPath) {
+      console.error("[SSR] index.html not found in any of the possible paths:", possiblePaths);
       return next();
     }
 
@@ -35,7 +51,7 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
 
     // Prepare meta tags
     const title = campaign.title;
-    const businessName = campaign.business?.business_name || "Prodizzy";
+    const businessName = campaign.business?.business_name || campaign.individual_profile?.full_name || "Prodizzy";
     const host = req.get("host") || "prodizzy.com";
     
     // Safety check for protocol (header can be an array in some cases)
@@ -46,20 +62,20 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
     const url = `${baseUrl}/c/${campaignId}`;
     
     // Ensure absolute image URL
-    let image = campaign.business?.logo_url || `${baseUrl}/logo.png`;
+    let image = campaign.business?.logo_url || campaign.individual_profile?.profile_photo || `${baseUrl}/logo.png`;
     if (image && typeof image === 'string' && image.startsWith('/')) {
       image = `${baseUrl}${image}`;
     }
 
-    // Build comprehensive details for description
-    const descText = campaign.description || "";
-    let detailedDescription = descText.slice(0, 160);
-    if (campaign.engagementType) {
-      detailedDescription = `${campaign.engagementType} • ${detailedDescription}`;
-    }
-    if (campaign.budget) {
-      detailedDescription = `${campaign.budget} • ${detailedDescription}`;
-    }
+    // Build comprehensive details for description as requested by user
+    // Format: "Check out this opportunity:\n[Campaign Title]\n[Description]\nApply now : [Link]"
+    const cleanDesc = (campaign.description || "").replace(/<[^>]*>/g, '').slice(0, 300); // Strip HTML and limit
+    const detailedDescription = `Check out this opportunity:
+${campaign.title}
+
+${cleanDesc}
+
+Apply now : ${url}`;
 
     // Remove ALL existing OG and Twitter meta tags and title to avoid duplicates
     // Using more comprehensive regex to catch various attribute orders and quoting styles
