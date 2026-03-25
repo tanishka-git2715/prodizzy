@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 
 export async function handleCampaignSSR(req: Request, res: Response, next: any) {
-  const campaignId = req.params.id;
+  const campaignId = req.params.id as string;
 
   console.log(`[SSR] Handling campaign: ${campaignId}`);
 
@@ -35,13 +35,25 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
 
     // Prepare meta tags
     const title = campaign.title;
-    const description = campaign.description.slice(0, 200);
-    const url = `${req.protocol}://${req.get("host")}/c/${campaignId}`;
-    const image = campaign.business?.logo_url || `${req.protocol}://${req.get("host")}/logo.png`;
     const businessName = campaign.business?.business_name || "Prodizzy";
+    const host = req.get("host") || "prodizzy.com";
+    
+    // Safety check for protocol (header can be an array in some cases)
+    const protoHeader = req.headers["x-forwarded-proto"];
+    const protocol = (Array.isArray(protoHeader) ? protoHeader[0] : protoHeader) || req.protocol || "https";
+    const baseUrl = `${protocol}://${host}`;
+    
+    const url = `${baseUrl}/c/${campaignId}`;
+    
+    // Ensure absolute image URL
+    let image = campaign.business?.logo_url || `${baseUrl}/logo.png`;
+    if (image && typeof image === 'string' && image.startsWith('/')) {
+      image = `${baseUrl}${image}`;
+    }
 
     // Build comprehensive details for description
-    let detailedDescription = campaign.description.slice(0, 160);
+    const descText = campaign.description || "";
+    let detailedDescription = descText.slice(0, 160);
     if (campaign.engagementType) {
       detailedDescription = `${campaign.engagementType} • ${detailedDescription}`;
     }
@@ -49,11 +61,11 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
       detailedDescription = `${campaign.budget} • ${detailedDescription}`;
     }
 
-    // Remove ALL existing OG and Twitter meta tags
-    html = html.replace(/<meta[^>]*property="og:[^"]*"[^>]*>\s*/gi, '');
-    html = html.replace(/<meta[^>]*name="twitter:[^"]*"[^>]*>\s*/gi, '');
-    html = html.replace(/<meta[^>]*name="description"[^>]*>\s*/gi, '');
-    html = html.replace(/<title>[^<]*<\/title>\s*/gi, '');
+    // Remove ALL existing OG and Twitter meta tags and title to avoid duplicates
+    html = html.replace(/<title>[^<]*<\/title>/gi, '');
+    html = html.replace(/<meta[^>]*name=["']description["'][^>]*>/gi, '');
+    html = html.replace(/<meta[^>]*property=["']og:[^"']*["'][^>]*>/gi, '');
+    html = html.replace(/<meta[^>]*name=["']twitter:[^"']*["'][^>]*>/gi, '');
 
     console.log(`[SSR] Injecting meta tags for: ${title}`);
 
@@ -80,13 +92,17 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
     <meta name="twitter:image" content="${image}">
     `;
 
-    // Inject at the END of <head> to override any defaults
-    html = html.replace("</head>", `${metaTags}\n</head>`);
+    // Inject immediately after <head> tag using regex to be more robust
+    // Handles <head>, <HEAD>, and <head with="attributes">
+    html = html.replace(/<head\b[^>]*>/i, `$& \n${metaTags}`);
 
-    console.log(`[SSR] Successfully injected meta tags, sending HTML`);
+    console.log(`[SSR] Successfully injected meta tags for campaign ${campaignId}, sending HTML`);
 
     // Send the modified HTML
-    res.status(200).set({ "Content-Type": "text/html" }).send(html);
+    res.status(200).set({ 
+      "Content-Type": "text/html",
+      "Cache-Control": "public, max-age=3600" // Cache for 1 hour
+    }).send(html);
   } catch (error) {
     console.error("SSR Error:", error);
     next();
