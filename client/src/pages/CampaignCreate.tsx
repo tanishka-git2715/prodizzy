@@ -41,6 +41,7 @@ interface CampaignFormData {
   referenceLink?: string;
   attachments: string[];
   customFields?: Record<string, any>;
+  phoneNumber?: string;
   status: "draft" | "active";
 }
 
@@ -82,6 +83,7 @@ export default function CampaignCreate() {
     attachments: [],
     referenceLink: "",
     customFields: {},
+    phoneNumber: "",
     status: "active",
   });
 
@@ -169,6 +171,14 @@ export default function CampaignCreate() {
   });
 
   const handleSubmit = (status: "draft" | "active") => {
+    if (templateId === "fundraising" && !formData.phoneNumber?.trim()) {
+      toast({
+        title: "Phone number required",
+        description: "Please enter a contact phone number to publish this campaign.",
+        variant: "destructive",
+      });
+      return;
+    }
     setFormData((prev) => ({ ...prev, status }));
     createCampaignMutation.mutate({ ...formData, status });
   };
@@ -521,6 +531,32 @@ export default function CampaignCreate() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Contact Information - Fundraising only */}
+          {templateId === "fundraising" && (
+            <Card className="bg-white/5 border-white/10">
+              <CardHeader className="px-4 sm:px-6 py-4 sm:py-6">
+                <CardTitle className="text-base sm:text-lg">Contact Information</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                <div>
+                  <Label htmlFor="phoneNumber">Phone Number *</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="e.g., +1 (555) 000-0000"
+                    value={formData.phoneNumber}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                    }
+                    className="bg-white/5 border-white/10"
+                    required
+                  />
+                  <p className="text-xs text-white/40 mt-1">Investors may use this to reach you directly.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
