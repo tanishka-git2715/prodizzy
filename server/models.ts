@@ -336,6 +336,7 @@ const CampaignSchema = new Schema({
     attachments: { type: [String], default: [] },
     referenceLink: String,
     customFields: Schema.Types.Mixed, // Template-specific fields
+    phoneNumber: String, // Contact phone number (required for fundraising campaigns)
     status: {
         type: String,
         enum: ["draft", "active", "paused", "closed"],
