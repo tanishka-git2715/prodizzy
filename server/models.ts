@@ -8,7 +8,7 @@ const WaitlistSchema = new Schema({
     createdAt: { type: Date, default: Date.now },
 });
 
-export const Waitlist = mongoose.model("Waitlist", WaitlistSchema);
+export const Waitlist = mongoose.models.Waitlist || mongoose.model("Waitlist", WaitlistSchema);
 
 // Profile Schemas are more complex. Let's use a flexible approach for the shared data.
 
@@ -43,7 +43,7 @@ const StartupProfileSchema = new Schema({
     intent_fundraising: Object,
 }, { strict: false });
 
-export const StartupProfile = mongoose.model("StartupProfile", StartupProfileSchema);
+export const StartupProfile = mongoose.models.StartupProfile || mongoose.model("StartupProfile", StartupProfileSchema);
 
 const InvestorProfileSchema = new Schema({
     user_id: { type: String, required: true, unique: true },
@@ -61,7 +61,7 @@ const InvestorProfileSchema = new Schema({
     createdAt: { type: Date, default: Date.now },
 }, { strict: false });
 
-export const InvestorProfile = mongoose.model("InvestorProfile", InvestorProfileSchema);
+export const InvestorProfile = mongoose.models.InvestorProfile || mongoose.model("InvestorProfile", InvestorProfileSchema);
 
 const PartnerProfileSchema = new Schema({
     user_id: { type: String, required: true, unique: true },
@@ -92,7 +92,7 @@ const PartnerProfileSchema = new Schema({
     createdAt: { type: Date, default: Date.now },
 }, { strict: false });
 
-export const PartnerProfile = mongoose.model("PartnerProfile", PartnerProfileSchema);
+export const PartnerProfile = mongoose.models.PartnerProfile || mongoose.model("PartnerProfile", PartnerProfileSchema);
 
 const IndividualProfileSchema = new Schema({
     user_id: { type: String, required: true, unique: true },
@@ -198,7 +198,7 @@ const IndividualProfileSchema = new Schema({
     createdAt: { type: Date, default: Date.now },
 }, { strict: false });
 
-export const IndividualProfile = mongoose.model("IndividualProfile", IndividualProfileSchema);
+export const IndividualProfile = mongoose.models.IndividualProfile || mongoose.model("IndividualProfile", IndividualProfileSchema);
 
 // User Model for Authentication
 const UserSchema = new Schema({
@@ -215,7 +215,7 @@ const UserSchema = new Schema({
     createdAt: { type: Date, default: Date.now },
 });
 
-export const User = mongoose.model("User", UserSchema);
+export const User = mongoose.models.User || mongoose.model("User", UserSchema);
 
 // Connection Model for Investor-Startup Matching
 const ConnectionSchema = new Schema({
@@ -239,7 +239,7 @@ ConnectionSchema.index({ investor_id: 1, status: 1 }); // Fast investor connecti
 ConnectionSchema.index({ startup_id: 1, status: 1 }); // Fast startup connection lookups
 ConnectionSchema.index({ created_at: -1 }); // Sort by recency
 
-export const Connection = mongoose.model("Connection", ConnectionSchema);
+export const Connection = mongoose.models.Connection || mongoose.model("Connection", ConnectionSchema);
 
 // Business Model - Company profiles separate from individual profiles
 const BusinessSchema = new Schema({
@@ -270,7 +270,7 @@ BusinessSchema.index({ owner_user_id: 1 });
 BusinessSchema.index({ approved: 1 });
 BusinessSchema.index({ business_name: 'text' }); // Text search for business name
 
-export const Business = mongoose.model("Business", BusinessSchema);
+export const Business = mongoose.models.Business || mongoose.model("Business", BusinessSchema);
 
 // TeamMember Model - Manages team access to business profiles
 const TeamMemberSchema = new Schema({
@@ -307,7 +307,7 @@ TeamMemberSchema.index({ user_id: 1 }); // Find all businesses a user belongs to
 TeamMemberSchema.index({ invite_token: 1 }); // Fast invite token lookups
 TeamMemberSchema.index({ email: 1 }); // Search by email
 
-export const TeamMember = mongoose.model("TeamMember", TeamMemberSchema);
+export const TeamMember = mongoose.models.TeamMember || mongoose.model("TeamMember", TeamMemberSchema);
 
 // Campaign Model - Opportunity campaigns created by businesses
 const CampaignSchema = new Schema({
@@ -358,7 +358,7 @@ CampaignSchema.index({ engagementType: 1 }); // Filter by engagement type
 CampaignSchema.index({ createdAt: -1 }); // Sort by recency
 CampaignSchema.index({ title: 'text', description: 'text' }); // Text search
 
-export const Campaign = mongoose.model("Campaign", CampaignSchema);
+export const Campaign = mongoose.models.Campaign || mongoose.model("Campaign", CampaignSchema);
 
 // CampaignApplication Model - Applications/responses to campaigns
 const CampaignApplicationSchema = new Schema({
@@ -386,7 +386,7 @@ CampaignApplicationSchema.index({ campaign_id: 1, user_id: 1 }, { unique: true }
 CampaignApplicationSchema.index({ status: 1 }); // Filter by status
 CampaignApplicationSchema.index({ createdAt: -1 }); // Sort by recency
 
-export const CampaignApplication = mongoose.model("CampaignApplication", CampaignApplicationSchema);
+export const CampaignApplication = mongoose.models.CampaignApplication || mongoose.model("CampaignApplication", CampaignApplicationSchema);
 
 // Performance indexes for existing models
 StartupProfileSchema.index({ approved: 1 });

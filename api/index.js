@@ -48,7 +48,7 @@ var WaitlistSchema = new import_mongoose.Schema({
   role: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
-var Waitlist = import_mongoose.default.model("Waitlist", WaitlistSchema);
+var Waitlist = import_mongoose.default.models.Waitlist || import_mongoose.default.model("Waitlist", WaitlistSchema);
 var StartupProfileSchema = new import_mongoose.Schema({
   user_id: { type: String, required: true, unique: true },
   email: { type: String, required: true },
@@ -79,7 +79,7 @@ var StartupProfileSchema = new import_mongoose.Schema({
   intent_promotions: Object,
   intent_fundraising: Object
 }, { strict: false });
-var StartupProfile = import_mongoose.default.model("StartupProfile", StartupProfileSchema);
+var StartupProfile = import_mongoose.default.models.StartupProfile || import_mongoose.default.model("StartupProfile", StartupProfileSchema);
 var InvestorProfileSchema = new import_mongoose.Schema({
   user_id: { type: String, required: true, unique: true },
   email: { type: String, required: true },
@@ -95,7 +95,7 @@ var InvestorProfileSchema = new import_mongoose.Schema({
   approved: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 }, { strict: false });
-var InvestorProfile = import_mongoose.default.model("InvestorProfile", InvestorProfileSchema);
+var InvestorProfile = import_mongoose.default.models.InvestorProfile || import_mongoose.default.model("InvestorProfile", InvestorProfileSchema);
 var PartnerProfileSchema = new import_mongoose.Schema({
   user_id: { type: String, required: true, unique: true },
   email: { type: String, required: true },
@@ -124,7 +124,7 @@ var PartnerProfileSchema = new import_mongoose.Schema({
   approved: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 }, { strict: false });
-var PartnerProfile = import_mongoose.default.model("PartnerProfile", PartnerProfileSchema);
+var PartnerProfile = import_mongoose.default.models.PartnerProfile || import_mongoose.default.model("PartnerProfile", PartnerProfileSchema);
 var IndividualProfileSchema = new import_mongoose.Schema({
   user_id: { type: String, required: true, unique: true },
   email: { type: String, required: true },
@@ -228,7 +228,7 @@ var IndividualProfileSchema = new import_mongoose.Schema({
   approved: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 }, { strict: false });
-var IndividualProfile = import_mongoose.default.model("IndividualProfile", IndividualProfileSchema);
+var IndividualProfile = import_mongoose.default.models.IndividualProfile || import_mongoose.default.model("IndividualProfile", IndividualProfileSchema);
 var UserSchema = new import_mongoose.Schema({
   googleId: { type: String, unique: true, sparse: true },
   email: { type: String, required: true, unique: true },
@@ -242,7 +242,7 @@ var UserSchema = new import_mongoose.Schema({
   otpExpiresAt: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
-var User = import_mongoose.default.model("User", UserSchema);
+var User = import_mongoose.default.models.User || import_mongoose.default.model("User", UserSchema);
 var ConnectionSchema = new import_mongoose.Schema({
   startup_id: { type: import_mongoose.Schema.Types.ObjectId, ref: "StartupProfile", required: true },
   investor_id: { type: import_mongoose.Schema.Types.ObjectId, ref: "InvestorProfile", required: true },
@@ -261,7 +261,7 @@ ConnectionSchema.index({ startup_id: 1, investor_id: 1 }, { unique: true });
 ConnectionSchema.index({ investor_id: 1, status: 1 });
 ConnectionSchema.index({ startup_id: 1, status: 1 });
 ConnectionSchema.index({ created_at: -1 });
-var Connection = import_mongoose.default.model("Connection", ConnectionSchema);
+var Connection = import_mongoose.default.models.Connection || import_mongoose.default.model("Connection", ConnectionSchema);
 var BusinessSchema = new import_mongoose.Schema({
   owner_user_id: { type: String, required: true },
   business_name: { type: String, required: true },
@@ -287,7 +287,7 @@ var BusinessSchema = new import_mongoose.Schema({
 BusinessSchema.index({ owner_user_id: 1 });
 BusinessSchema.index({ approved: 1 });
 BusinessSchema.index({ business_name: "text" });
-var Business = import_mongoose.default.model("Business", BusinessSchema);
+var Business = import_mongoose.default.models.Business || import_mongoose.default.model("Business", BusinessSchema);
 var TeamMemberSchema = new import_mongoose.Schema({
   business_id: { type: import_mongoose.Schema.Types.ObjectId, ref: "Business", required: true },
   user_id: String,
@@ -319,7 +319,7 @@ TeamMemberSchema.index({ business_id: 1 });
 TeamMemberSchema.index({ user_id: 1 });
 TeamMemberSchema.index({ invite_token: 1 });
 TeamMemberSchema.index({ email: 1 });
-var TeamMember = import_mongoose.default.model("TeamMember", TeamMemberSchema);
+var TeamMember = import_mongoose.default.models.TeamMember || import_mongoose.default.model("TeamMember", TeamMemberSchema);
 var CampaignSchema = new import_mongoose.Schema({
   business_id: { type: import_mongoose.Schema.Types.ObjectId, ref: "Business" },
   created_by: { type: String, ref: "User", required: true },
@@ -370,7 +370,7 @@ CampaignSchema.index({ category: 1 });
 CampaignSchema.index({ engagementType: 1 });
 CampaignSchema.index({ createdAt: -1 });
 CampaignSchema.index({ title: "text", description: "text" });
-var Campaign = import_mongoose.default.model("Campaign", CampaignSchema);
+var Campaign = import_mongoose.default.models.Campaign || import_mongoose.default.model("Campaign", CampaignSchema);
 var CampaignApplicationSchema = new import_mongoose.Schema({
   campaign_id: { type: import_mongoose.Schema.Types.ObjectId, ref: "Campaign", required: true },
   user_id: { type: String, required: true },
@@ -395,7 +395,7 @@ CampaignApplicationSchema.index({ user_id: 1 });
 CampaignApplicationSchema.index({ campaign_id: 1, user_id: 1 }, { unique: true });
 CampaignApplicationSchema.index({ status: 1 });
 CampaignApplicationSchema.index({ createdAt: -1 });
-var CampaignApplication = import_mongoose.default.model("CampaignApplication", CampaignApplicationSchema);
+var CampaignApplication = import_mongoose.default.models.CampaignApplication || import_mongoose.default.model("CampaignApplication", CampaignApplicationSchema);
 StartupProfileSchema.index({ approved: 1 });
 StartupProfileSchema.index({ "intent_fundraising.capital_amount": 1 });
 StartupProfileSchema.index({ industry: 1 });
