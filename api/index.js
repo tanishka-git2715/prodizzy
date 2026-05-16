@@ -2083,47 +2083,73 @@ var _dirname = typeof __dirname !== "undefined" ? __dirname : (() => {
   const { fileURLToPath } = require("url");
   return import_path.default.dirname(fileURLToPath(import_meta.url));
 })();
-function findIndexHtml() {
+var cachedHtml = "";
+function findHtmlOnFs() {
   const isDev = process.env.NODE_ENV !== "production";
-  const possiblePaths = isDev ? [import_path.default.join(process.cwd(), "client/index.html")] : [
-    // Co-located with api/index.js — copied here by build:vercel cp step
+  const candidates = isDev ? [import_path.default.join(process.cwd(), "client/index.html")] : [
     import_path.default.join(_dirname, "index.html"),
+    // api/index.html — copied by build:vercel
     "/var/task/api/index.html",
     import_path.default.join(process.cwd(), "dist/public/index.html"),
     import_path.default.join(process.cwd(), "public/index.html"),
     import_path.default.join(process.cwd(), "index.html"),
-    import_path.default.join(_dirname, "../client/index.html"),
     "/var/task/dist/public/index.html"
   ];
-  for (const p of possiblePaths) {
-    if (import_fs.default.existsSync(p)) return p;
+  for (const p of candidates) {
+    if (import_fs.default.existsSync(p)) {
+      console.log(`[SSR] Found index.html at: ${p}`);
+      return p;
+    }
   }
   return "";
 }
-function serveSpa(indexPath, res) {
-  res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).send(import_fs.default.readFileSync(indexPath, "utf-8"));
+async function getHtml(req) {
+  if (cachedHtml) return cachedHtml;
+  const fsPath = findHtmlOnFs();
+  if (fsPath) {
+    cachedHtml = import_fs.default.readFileSync(fsPath, "utf-8");
+    return cachedHtml;
+  }
+  try {
+    const protoHeader = req.headers["x-forwarded-proto"];
+    const proto = (Array.isArray(protoHeader) ? protoHeader[0] : protoHeader) || "https";
+    const host = req.get("host") || "prodizzy.com";
+    const cdnUrl = `${proto}://${host}/`;
+    console.log(`[SSR] Fetching index.html from CDN: ${cdnUrl}`);
+    const resp = await fetch(cdnUrl);
+    if (resp.ok) {
+      cachedHtml = await resp.text();
+      console.log(`[SSR] Cached index.html from CDN (${cachedHtml.length} bytes)`);
+      return cachedHtml;
+    }
+    console.error(`[SSR] CDN returned ${resp.status}`);
+  } catch (e) {
+    console.error("[SSR] CDN fetch failed:", e);
+  }
+  return "";
 }
 async function handleCampaignSSR(req, res, next) {
   const campaignId = req.params.id;
   console.log(`[SSR] Handling campaign: ${campaignId}`);
   try {
-    const indexPath = findIndexHtml();
-    if (!indexPath) {
-      console.error("[SSR] index.html not found \u2014 falling back to redirect");
+    const [html, campaign] = await Promise.all([
+      getHtml(req),
+      storage.getCampaignById(campaignId)
+    ]);
+    if (!html) {
+      console.error("[SSR] Could not get index.html \u2014 redirecting to root");
       return res.redirect(302, "/");
     }
-    const campaign = await storage.getCampaignById(campaignId);
     if (!campaign || campaign.status === "draft") {
       console.log(`[SSR] Campaign not found or draft: ${campaignId} \u2014 serving SPA`);
-      return serveSpa(indexPath, res);
+      return res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).send(html);
     }
-    console.log(`[SSR] Campaign found: ${campaign.title}`);
-    let html = import_fs.default.readFileSync(indexPath, "utf-8");
+    console.log(`[SSR] Injecting meta tags for: ${campaign.title}`);
     const title = campaign.title;
     const businessName = campaign.business?.business_name || campaign.individual_profile?.full_name || "Prodizzy";
-    const host = req.get("host") || "prodizzy.com";
     const protoHeader = req.headers["x-forwarded-proto"];
     const protocol = (Array.isArray(protoHeader) ? protoHeader[0] : protoHeader) || req.protocol || "https";
+    const host = req.get("host") || "prodizzy.com";
     const baseUrl = `${protocol}://${host}`;
     const url = `${baseUrl}/c/${campaignId}`;
     let image = campaign.business?.logo_url || campaign.individual_profile?.profile_photo || `${baseUrl}/logo.png`;
@@ -2137,17 +2163,11 @@ ${campaign.title}
 ${cleanDesc}
 
 Apply now : ${url}`;
-    html = html.replace(/<title>[^<]*<\/title>/gi, "");
-    html = html.replace(/<meta[^>]*name=["']description["'][^>]*>/gi, "");
-    html = html.replace(/<meta[^>]*property=["']og:[^"']*["'][^>]*>/gi, "");
-    html = html.replace(/<meta[^>]*name=["']twitter:[^"']*["'][^>]*>/gi, "");
-    console.log(`[SSR] Injecting meta tags for: ${title}`);
+    let out = html.replace(/<title>[^<]*<\/title>/gi, "").replace(/<meta[^>]*name=["']description["'][^>]*>/gi, "").replace(/<meta[^>]*property=["']og:[^"']*["'][^>]*>/gi, "").replace(/<meta[^>]*name=["']twitter:[^"']*["'][^>]*>/gi, "");
     const metaTags = `
     <!-- Campaign SSR Metadata -->
     <title>${escapeHtml(title)} | ${escapeHtml(businessName)}</title>
     <meta name="description" content="${escapeHtml(detailedDescription)}">
-
-    <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="${url}">
     <meta property="og:title" content="${escapeHtml(title)}">
@@ -2156,26 +2176,23 @@ Apply now : ${url}`;
     <meta property="og:site_name" content="Prodizzy">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-
-    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="${url}">
     <meta name="twitter:title" content="${escapeHtml(title)}">
     <meta name="twitter:description" content="${escapeHtml(detailedDescription)}">
-    <meta name="twitter:image" content="${image}">
-    `;
-    if (!html.includes('prefix="og: http://ogp.me/ns#"')) {
-      html = html.replace(/<html([^>]*)>/i, '<html$1 prefix="og: http://ogp.me/ns#">');
+    <meta name="twitter:image" content="${image}">`;
+    if (!out.includes('prefix="og: http://ogp.me/ns#"')) {
+      out = out.replace(/<html([^>]*)>/i, '<html$1 prefix="og: http://ogp.me/ns#">');
     }
-    html = html.replace(/<head\b[^>]*>/i, `$& 
+    out = out.replace(/<head\b[^>]*>/i, `$&
 ${metaTags}`);
-    console.log(`[SSR] Successfully injected meta tags for campaign ${campaignId}, sending HTML`);
+    console.log(`[SSR] Sending SSR HTML for campaign ${campaignId}`);
     res.status(200).set({
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "Pragma": "no-cache",
       "Expires": "0"
-    }).send(html);
+    }).send(out);
   } catch (error) {
     console.error("SSR Error:", error);
     next();

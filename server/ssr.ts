@@ -8,100 +8,110 @@ const _dirname: string = typeof __dirname !== "undefined"
   ? __dirname
   : (() => { const { fileURLToPath } = require("url"); return path.dirname(fileURLToPath(import.meta.url)); })();
 
-function findIndexHtml(): string {
+// Cache the HTML so we only hit the filesystem/CDN once per Lambda instance
+let cachedHtml = "";
+
+function findHtmlOnFs(): string {
   const isDev = process.env.NODE_ENV !== "production";
-  const possiblePaths = isDev
+  const candidates = isDev
     ? [path.join(process.cwd(), "client/index.html")]
     : [
-        // Co-located with api/index.js — copied here by build:vercel cp step
-        path.join(_dirname, "index.html"),
+        path.join(_dirname, "index.html"),          // api/index.html — copied by build:vercel
         "/var/task/api/index.html",
         path.join(process.cwd(), "dist/public/index.html"),
         path.join(process.cwd(), "public/index.html"),
         path.join(process.cwd(), "index.html"),
-        path.join(_dirname, "../client/index.html"),
         "/var/task/dist/public/index.html"
       ];
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) return p;
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      console.log(`[SSR] Found index.html at: ${p}`);
+      return p;
+    }
   }
   return "";
 }
 
-function serveSpa(indexPath: string, res: Response) {
-  res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).send(fs.readFileSync(indexPath, "utf-8"));
+async function getHtml(req: Request): Promise<string> {
+  if (cachedHtml) return cachedHtml;
+
+  // 1. Try the local filesystem first (works in dev and some Vercel configs)
+  const fsPath = findHtmlOnFs();
+  if (fsPath) {
+    cachedHtml = fs.readFileSync(fsPath, "utf-8");
+    return cachedHtml;
+  }
+
+  // 2. Fetch from Vercel's CDN — static outputDirectory files are served by CDN,
+  //    not by the Lambda, so we pull the SPA shell from there and cache it.
+  try {
+    const protoHeader = req.headers["x-forwarded-proto"];
+    const proto = (Array.isArray(protoHeader) ? protoHeader[0] : protoHeader) || "https";
+    const host = req.get("host") || "prodizzy.com";
+    const cdnUrl = `${proto}://${host}/`;
+    console.log(`[SSR] Fetching index.html from CDN: ${cdnUrl}`);
+    const resp = await fetch(cdnUrl);
+    if (resp.ok) {
+      cachedHtml = await resp.text();
+      console.log(`[SSR] Cached index.html from CDN (${cachedHtml.length} bytes)`);
+      return cachedHtml;
+    }
+    console.error(`[SSR] CDN returned ${resp.status}`);
+  } catch (e) {
+    console.error("[SSR] CDN fetch failed:", e);
+  }
+
+  return "";
 }
 
 export async function handleCampaignSSR(req: Request, res: Response, next: any) {
   const campaignId = req.params.id as string;
-
   console.log(`[SSR] Handling campaign: ${campaignId}`);
 
   try {
-    // Resolve index.html before anything else so we can always fall back to SPA
-    const indexPath = findIndexHtml();
-    if (!indexPath) {
-      console.error("[SSR] index.html not found — falling back to redirect");
+    const [html, campaign] = await Promise.all([
+      getHtml(req),
+      storage.getCampaignById(campaignId),
+    ]);
+
+    if (!html) {
+      console.error("[SSR] Could not get index.html — redirecting to root");
       return res.redirect(302, "/");
     }
 
-    // Get campaign data
-    const campaign = await storage.getCampaignById(campaignId);
-
     if (!campaign || campaign.status === "draft") {
       console.log(`[SSR] Campaign not found or draft: ${campaignId} — serving SPA`);
-      // Serve the SPA so React Router renders the page client-side
-      return serveSpa(indexPath, res);
+      return res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).send(html);
     }
 
-    console.log(`[SSR] Campaign found: ${campaign.title}`);
+    console.log(`[SSR] Injecting meta tags for: ${campaign.title}`);
 
-    let html = fs.readFileSync(indexPath, "utf-8");
-
-    // Prepare meta tags
     const title = campaign.title;
     const businessName = campaign.business?.business_name || campaign.individual_profile?.full_name || "Prodizzy";
-    const host = req.get("host") || "prodizzy.com";
-    
-    // Safety check for protocol (header can be an array in some cases)
     const protoHeader = req.headers["x-forwarded-proto"];
     const protocol = (Array.isArray(protoHeader) ? protoHeader[0] : protoHeader) || req.protocol || "https";
+    const host = req.get("host") || "prodizzy.com";
     const baseUrl = `${protocol}://${host}`;
-    
     const url = `${baseUrl}/c/${campaignId}`;
-    
-    // Ensure absolute image URL
+
     let image = campaign.business?.logo_url || campaign.individual_profile?.profile_photo || `${baseUrl}/logo.png`;
-    if (image && typeof image === 'string' && image.startsWith('/')) {
+    if (image && typeof image === "string" && image.startsWith("/")) {
       image = `${baseUrl}${image}`;
     }
 
-    // Build comprehensive details for description as requested by user
-    // Format: "Check out this opportunity:\n[Campaign Title]\n[Description]\nApply now : [Link]"
-    const cleanDesc = (campaign.description || "").replace(/<[^>]*>/g, '').slice(0, 300); // Strip HTML and limit
-    const detailedDescription = `Check out this opportunity:
-${campaign.title}
+    const cleanDesc = (campaign.description || "").replace(/<[^>]*>/g, "").slice(0, 300);
+    const detailedDescription = `Check out this opportunity:\n${campaign.title}\n\n${cleanDesc}\n\nApply now : ${url}`;
 
-${cleanDesc}
+    let out = html
+      .replace(/<title>[^<]*<\/title>/gi, "")
+      .replace(/<meta[^>]*name=["']description["'][^>]*>/gi, "")
+      .replace(/<meta[^>]*property=["']og:[^"']*["'][^>]*>/gi, "")
+      .replace(/<meta[^>]*name=["']twitter:[^"']*["'][^>]*>/gi, "");
 
-Apply now : ${url}`;
-
-    // Remove ALL existing OG and Twitter meta tags and title to avoid duplicates
-    // Using more comprehensive regex to catch various attribute orders and quoting styles
-    html = html.replace(/<title>[^<]*<\/title>/gi, '');
-    html = html.replace(/<meta[^>]*name=["']description["'][^>]*>/gi, '');
-    html = html.replace(/<meta[^>]*property=["']og:[^"']*["'][^>]*>/gi, '');
-    html = html.replace(/<meta[^>]*name=["']twitter:[^"']*["'][^>]*>/gi, '');
-
-    console.log(`[SSR] Injecting meta tags for: ${title}`);
-
-    // Inject NEW meta tags
     const metaTags = `
     <!-- Campaign SSR Metadata -->
     <title>${escapeHtml(title)} | ${escapeHtml(businessName)}</title>
     <meta name="description" content="${escapeHtml(detailedDescription)}">
-
-    <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="${url}">
     <meta property="og:title" content="${escapeHtml(title)}">
@@ -110,33 +120,24 @@ Apply now : ${url}`;
     <meta property="og:site_name" content="Prodizzy">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-
-    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="${url}">
     <meta name="twitter:title" content="${escapeHtml(title)}">
     <meta name="twitter:description" content="${escapeHtml(detailedDescription)}">
-    <meta name="twitter:image" content="${image}">
-    `;
+    <meta name="twitter:image" content="${image}">`;
 
-    // Add OG prefix to html tag if not present (LinkedIn likes this)
-    if (!html.includes('prefix="og: http://ogp.me/ns#"')) {
-      html = html.replace(/<html([^>]*)>/i, '<html$1 prefix="og: http://ogp.me/ns#">');
+    if (!out.includes('prefix="og: http://ogp.me/ns#"')) {
+      out = out.replace(/<html([^>]*)>/i, '<html$1 prefix="og: http://ogp.me/ns#">');
     }
+    out = out.replace(/<head\b[^>]*>/i, `$&\n${metaTags}`);
 
-    // Inject immediately after <head> tag using regex to be more robust
-    // Handles <head>, <HEAD>, and <head with="attributes">
-    html = html.replace(/<head\b[^>]*>/i, `$& \n${metaTags}`);
-
-    console.log(`[SSR] Successfully injected meta tags for campaign ${campaignId}, sending HTML`);
-
-    // Send the modified HTML
-    res.status(200).set({ 
+    console.log(`[SSR] Sending SSR HTML for campaign ${campaignId}`);
+    res.status(200).set({
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "Pragma": "no-cache",
       "Expires": "0"
-    }).send(html);
+    }).send(out);
   } catch (error) {
     console.error("SSR Error:", error);
     next();
@@ -145,11 +146,7 @@ Apply now : ${url}`;
 
 function escapeHtml(text: string): string {
   const map: Record<string, string> = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;",
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
 }
