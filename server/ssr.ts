@@ -2,10 +2,11 @@ import { Request, Response } from "express";
 import { storage } from "./storage";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// In CJS bundles (Vercel), __dirname is already a global. In ESM, derive it from import.meta.url.
+const _dirname: string = typeof __dirname !== "undefined"
+  ? __dirname
+  : (() => { const { fileURLToPath } = require("url"); return path.dirname(fileURLToPath(import.meta.url)); })();
 
 export async function handleCampaignSSR(req: Request, res: Response, next: any) {
   const campaignId = req.params.id as string;
@@ -32,8 +33,8 @@ export async function handleCampaignSSR(req: Request, res: Response, next: any) 
           path.join(process.cwd(), "public/index.html"),
           path.join(process.cwd(), "index.html"),
           // Common Vercel/Serverless paths
-          path.join(__dirname, "../client/index.html"),
-          path.join(__dirname, "../../client/index.html"),
+          path.join(_dirname, "../client/index.html"),
+          path.join(_dirname, "../../client/index.html"),
           "/var/task/client/index.html",
           "/var/task/dist/public/index.html"
         ];

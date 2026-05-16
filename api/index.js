@@ -2078,10 +2078,11 @@ async function sendInviteEmail(recipientEmail, businessName, inviterName, invite
 // server/ssr.ts
 var import_fs = __toESM(require("fs"), 1);
 var import_path = __toESM(require("path"), 1);
-var import_url = require("url");
 var import_meta = {};
-var __filename = (0, import_url.fileURLToPath)(import_meta.url);
-var __dirname = import_path.default.dirname(__filename);
+var _dirname = typeof __dirname !== "undefined" ? __dirname : (() => {
+  const { fileURLToPath } = require("url");
+  return import_path.default.dirname(fileURLToPath(import_meta.url));
+})();
 async function handleCampaignSSR(req, res, next) {
   const campaignId = req.params.id;
   console.log(`[SSR] Handling campaign: ${campaignId}`);
@@ -2098,8 +2099,8 @@ async function handleCampaignSSR(req, res, next) {
       import_path.default.join(process.cwd(), "public/index.html"),
       import_path.default.join(process.cwd(), "index.html"),
       // Common Vercel/Serverless paths
-      import_path.default.join(__dirname, "../client/index.html"),
-      import_path.default.join(__dirname, "../../client/index.html"),
+      import_path.default.join(_dirname, "../client/index.html"),
+      import_path.default.join(_dirname, "../../client/index.html"),
       "/var/task/client/index.html",
       "/var/task/dist/public/index.html"
     ];
