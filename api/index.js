@@ -2083,38 +2083,41 @@ var _dirname = typeof __dirname !== "undefined" ? __dirname : (() => {
   const { fileURLToPath } = require("url");
   return import_path.default.dirname(fileURLToPath(import_meta.url));
 })();
+function findIndexHtml() {
+  const isDev = process.env.NODE_ENV !== "production";
+  const possiblePaths = isDev ? [import_path.default.join(process.cwd(), "client/index.html")] : [
+    // Co-located with api/index.js — copied here by build:vercel cp step
+    import_path.default.join(_dirname, "index.html"),
+    "/var/task/api/index.html",
+    import_path.default.join(process.cwd(), "dist/public/index.html"),
+    import_path.default.join(process.cwd(), "public/index.html"),
+    import_path.default.join(process.cwd(), "index.html"),
+    import_path.default.join(_dirname, "../client/index.html"),
+    "/var/task/dist/public/index.html"
+  ];
+  for (const p of possiblePaths) {
+    if (import_fs.default.existsSync(p)) return p;
+  }
+  return "";
+}
+function serveSpa(indexPath, res) {
+  res.status(200).set({ "Content-Type": "text/html; charset=utf-8" }).send(import_fs.default.readFileSync(indexPath, "utf-8"));
+}
 async function handleCampaignSSR(req, res, next) {
   const campaignId = req.params.id;
   console.log(`[SSR] Handling campaign: ${campaignId}`);
   try {
+    const indexPath = findIndexHtml();
+    if (!indexPath) {
+      console.error("[SSR] index.html not found \u2014 falling back to redirect");
+      return res.redirect(302, "/");
+    }
     const campaign = await storage.getCampaignById(campaignId);
     if (!campaign || campaign.status === "draft") {
-      console.log(`[SSR] Campaign not found or in draft status: ${campaignId}`);
-      return next();
+      console.log(`[SSR] Campaign not found or draft: ${campaignId} \u2014 serving SPA`);
+      return serveSpa(indexPath, res);
     }
     console.log(`[SSR] Campaign found: ${campaign.title}`);
-    const isDev = process.env.NODE_ENV !== "production";
-    const possiblePaths = isDev ? [import_path.default.join(process.cwd(), "client/index.html")] : [
-      import_path.default.join(process.cwd(), "dist/public/index.html"),
-      import_path.default.join(process.cwd(), "public/index.html"),
-      import_path.default.join(process.cwd(), "index.html"),
-      // Common Vercel/Serverless paths
-      import_path.default.join(_dirname, "../client/index.html"),
-      import_path.default.join(_dirname, "../../client/index.html"),
-      "/var/task/client/index.html",
-      "/var/task/dist/public/index.html"
-    ];
-    let indexPath = "";
-    for (const p of possiblePaths) {
-      if (import_fs.default.existsSync(p)) {
-        indexPath = p;
-        break;
-      }
-    }
-    if (!indexPath) {
-      console.error("[SSR] index.html not found in any of the possible paths:", possiblePaths);
-      return next();
-    }
     let html = import_fs.default.readFileSync(indexPath, "utf-8");
     const title = campaign.title;
     const businessName = campaign.business?.business_name || campaign.individual_profile?.full_name || "Prodizzy";
