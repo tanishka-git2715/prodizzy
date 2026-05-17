@@ -134,8 +134,19 @@ export default function CampaignCreate() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create campaign");
+        let message = "Failed to create campaign";
+        try {
+          const error = await response.json();
+          message = error.message || message;
+        } catch {
+          const text = await response.text().catch(() => "");
+          if (response.status === 413 || text.toLowerCase().includes("too large") || text.toLowerCase().includes("entity")) {
+            message = "File attachment is too large. Please use the Reference Link field instead, or upload a file under 3 MB.";
+          } else if (text) {
+            message = text.slice(0, 120);
+          }
+        }
+        throw new Error(message);
       }
 
       return response.json();
