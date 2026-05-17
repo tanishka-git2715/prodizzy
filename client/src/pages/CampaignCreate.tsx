@@ -511,19 +511,29 @@ export default function CampaignCreate() {
                     type="file"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            attachments: [reader.result as string]
-                          }));
-                        };
-                        reader.readAsDataURL(file);
+                      if (!file) return;
+                      const MAX_BYTES = 3 * 1024 * 1024; // 3 MB
+                      if (file.size > MAX_BYTES) {
+                        toast({
+                          title: "File too large",
+                          description: "Maximum file size is 3 MB. For larger files, paste a link in the Reference Link field above.",
+                          variant: "destructive",
+                        });
+                        e.target.value = "";
+                        return;
                       }
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          attachments: [reader.result as string]
+                        }));
+                      };
+                      reader.readAsDataURL(file);
                     }}
                     className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
                   />
+                  <p className="text-xs text-white/30 mt-1">Max 3 MB. For larger files, use the Reference Link field.</p>
                   {formData.attachments.length > 0 && (
                     <p className="text-xs text-green-400/70 ml-1">File selected and ready to save</p>
                   )}
