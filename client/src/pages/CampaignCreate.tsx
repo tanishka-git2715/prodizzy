@@ -41,7 +41,6 @@ interface CampaignFormData {
   referenceLink?: string;
   attachments: string[];
   customFields?: Record<string, any>;
-  phoneNumber?: string;
   status: "draft" | "active";
 }
 
@@ -83,7 +82,6 @@ export default function CampaignCreate() {
     attachments: [],
     referenceLink: "",
     customFields: {},
-    phoneNumber: "",
     status: "active",
   });
 
@@ -182,15 +180,7 @@ export default function CampaignCreate() {
   });
 
   const handleSubmit = (status: "draft" | "active") => {
-    if (templateId === "fundraising" && !formData.phoneNumber?.trim()) {
-      toast({
-        title: "Phone number required",
-        description: "Please enter a contact phone number to publish this campaign.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setFormData((prev) => ({ ...prev, status }));
+setFormData((prev) => ({ ...prev, status }));
     createCampaignMutation.mutate({ ...formData, status });
   };
 
